@@ -1,203 +1,147 @@
 'use client'
 
+import api from '@/app/api/axiosClient';
 import BarChart from './BarChart';
 import formatter from '@/app/helpers/formatter';
 import {
-    Box
+    Box,
+    Typography
 } from '@mui/material';
-import axios from 'axios';
 import { DateTime } from 'luxon';
 import { useEffect, useMemo, useState } from 'react';
 
 interface BarTileProps {
     title: string;
-    source: string;
+    datasetName: string;
+    groupBySegments: string[];
+    metrics: string[];
+    filters: Record<string, string[]>;
     date_range: string;
-    date_field: string;
-    stat_field?: string;
-    stat_value?: string;
-    filter_extra?: string;
-    buckets: string;
-    locations: any[];
 }
 
 const BarTile = (props: BarTileProps) => {
     const {
         title,
-        source,
-        date_range,
-        date_field,
-        stat_field,
-        stat_value,
-        filter_extra,
-        buckets,
-        locations
+        datasetName,
+        groupBySegments,
+        metrics,
+        filters,
+        date_range
     } = props;
 
-    const value = stat_value || 'count';
-
-    const [/* ready */, set_ready] = useState(false);
     const [results, set_results] = useState<any>(null);
+    const [loading, set_loading] = useState(false);
 
     useEffect(() => {
         const refresh_data = async () => {
+            set_loading(true);
             try {
-                const res = await axios
-                    .get('/api/v1/dashboard/data', {
-                        params: {
-                            source,
-                            date_range,
-                            date_field,
-                            stat_field,
-                            filter_extra,
-                            buckets,
-                            include_comparisons: true,
-                            filter_locations: locations
-                                .filter(location => location.checked)
-                                .map(location => location.location_id)
-                                .join(','),
-                            filter_routes: locations
-                                .filter(location => location.checked)
-                                .reduce((a, c) => a.concat(
-                                    c.routes
-                                        .filter((route: any) => route.checked)
-                                        .map((route: any) => route.route_id)
-                                ), [])
-                                .join(','),
-                        }
-                    });
-
-                if (res.status >= 400) {
-                    console.error('Dashboard API failed:', res.status, res.statusText);
-                    set_results({
-                        aggregations: {
-                            global: { overall: { count: { value: 0 }, sum: { value: 0 }, avg: { value: 0 } } },
-                            global_prev: { overall: { count: { value: 0 }, sum: { value: 0 }, avg: { value: 0 } } }
-                        }
-                    });
-                    set_ready(true);
-                    return;
-                }
-
-                set_results(res.data);
-                set_ready(true);
-            } catch (error) {
-                console.error('Error fetching dashboard data:', error);
-                set_results({
-                    aggregations: {
-                        global: { overall: { count: { value: 0 }, sum: { value: 0 }, avg: { value: 0 } } },
-                        global_prev: { overall: { count: { value: 0 }, sum: { value: 0 }, avg: { value: 0 } } }
+                // Construct filters from props and date_range
+                const apiFilters: any[] = [];
+                
+                // Segment filters
+                Object.keys(filters).forEach(segment => {
+                    if (filters[segment] && filters[segment].length > 0) {
+                        apiFilters.push({
+                            segmentName: segment,
+                            operator: 'in',
+                            value: filters[segment]
+                        });
                     }
                 });
-                set_ready(true);
+
+                // Date filters
+                const now = DateTime.now();
+                if (date_range === 'this_month') {
+                    apiFilters.push({ segmentName: 'Year', operator: 'eq', value: now.year });
+                    apiFilters.push({ segmentName: 'Month', operator: 'eq', value: now.month });
+                } else if (date_range === 'last_month') {
+                    const lastMonth = now.minus({ month: 1 });
+                    apiFilters.push({ segmentName: 'Year', operator: 'eq', value: lastMonth.year });
+                    apiFilters.push({ segmentName: 'Month', operator: 'eq', value: lastMonth.month });
+                } else if (date_range === 'this_year') {
+                    apiFilters.push({ segmentName: 'Year', operator: 'eq', value: now.year });
+                }
+
+                const res = await api.post('/bi/chart', {
+                    datasetName,
+                    groupBySegments,
+                    metrics: metrics.map(m => ({ metricName: m })),
+                    filters: apiFilters.length > 0 ? apiFilters : undefined,
+                    orderBy: [{ field: metrics[0], direction: 'DESC' }],
+                    chartConfig: {
+                        chartType: 'bar',
+                        xAxis: groupBySegments[0],
+                        yAxis: metrics,
+                        showLegend: true
+                    }
+                });
+
+                if (res.status >= 400 || !res.data.success) {
+                    console.error('BI API failed:', res.status, res.statusText);
+                    set_results(null);
+                } else {
+                    set_results(res.data.data);
+                }
+            } catch (error) {
+                console.error('Error fetching BI data:', error);
+                set_results(null);
+            } finally {
+                set_loading(false);
             }
         };
 
-        set_ready(false);
         refresh_data();
-    }, [date_range, locations, source, date_field, stat_field, filter_extra, buckets]);
+    }, [datasetName, groupBySegments, metrics, filters, date_range]);
 
     const content = useMemo(() => {
-        if (!results) {
-            return null;
-        }
+        if (!results || !results.chartData) return null;
+        
+        const { labels, datasets } = results.chartData;
+        
+        const series = datasets.map((ds: any) => ({
+            name: ds.label,
+            type: 'bar', // Force bar as expected by BarChart
+            emphasis: { focus: 'series' },
+            data: ds.data
+        }));
 
-        let format_fn = (val: any) => formatter.with_commas(val, 0);
-        let val_formatter = (value: number) => format_fn(value);
-
-        switch (stat_field) {
-            case 'total':
-                format_fn = formatter.as_currency;
-                val_formatter = (value: number) => formatter.as_currency(value);
-                break;
-        }
-
-        let labels: any[] = [];
-        const data: any[] = [];
-        let primary_bucket: string | undefined;
-
-        for (const bucket of buckets.split(',')) {
-            if (!primary_bucket) {
-                primary_bucket = bucket;
-
-                const date_buckets = [
-                    'hour',
-                    'day',
-                    'week',
-                    'month',
-                    'year',
-                ];
-
-                if (date_buckets.includes(bucket)) {
-                    labels = (results.aggregations[bucket]?.buckets || [])
-                        .map((row: any) => {
-                            const date = DateTime
-                                .fromISO(row.key, { setZone: true });
-                            
-                            let dateStr = '';
-
-                            switch (bucket) {
-                                case 'hour':
-                                    dateStr = date
-                                        .toFormat('h a');
-                                    break;
-                                case 'day':
-                                case 'week':
-                                    dateStr = date
-                                        .toFormat('M/d');
-                                    break;
-                                case 'month':
-                                    dateStr = date
-                                        .toFormat('MMMM');
-                                    break;
-                                case 'year':
-                                    dateStr = date
-                                        .toFormat('yyyy');
-                                    break;
-                                default:
-                                    dateStr = date
-                                        .toLocaleString(DateTime.DATE_SHORT);
-                            }
-
-                            return dateStr;
-                        });
-                } else {
-                    labels = (results.aggregations[bucket]?.buckets || [])
-                        .map((row: any) => row.key)
-                }
-            }
-
-            data.push({
-                name: 'Sales',
-                type: 'bar',
-                emphasis: {
-                    focus: 'series',
-                },
-                data: (results.aggregations[bucket]?.buckets || [])
-                    .map((row: any) => row[value])
-            });
+        let val_formatter = (value: number) => formatter.with_commas(value, 0);
+        if (metrics.some(m => m.includes('Cost') || m.includes('Sales'))) {
+            val_formatter = (value: number) => formatter.as_currency(value);
         }
 
         return (
-            <Box sx={{ p: 2, alignItems: 'center' }}>
-                <h3>{title}</h3>
-                <BarChart
-                    options={{
-                        tooltip: {
-                            trigger: 'item',
-                            valueFormatter: val_formatter
-                        },
-                    }}
-                    labels={labels}
-                    data={data}
-                />
+            <Box sx={{ p: 2, height: '100%', bgcolor: 'background.paper', borderRadius: 2, boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)', display: 'flex', flexDirection: 'column' }}>
+                <Typography variant="h6" fontWeight="bold" color="text.primary" gutterBottom>
+                    {title}
+                </Typography>
+                <Box sx={{ flex: 1, minHeight: 0 }}>
+                    <BarChart
+                        options={{
+                            grid: {
+                                left: '3%',
+                                right: '4%',
+                                bottom: '3%',
+                                containLabel: true
+                            },
+                            tooltip: {
+                                trigger: 'axis',
+                                valueFormatter: val_formatter,
+                                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                                borderColor: '#e5e7eb',
+                                textStyle: {
+                                    color: '#374151'
+                                }
+                            },
+                        }}
+                        labels={labels}
+                        data={series}
+                    />
+                </Box>
             </Box>
         )
-    }, [results, buckets, stat_field, title, value]);
-
-    if (!results) {
-        return null;
-    }
+    }, [results, metrics, title]);
 
     return content;
 };

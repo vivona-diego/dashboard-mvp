@@ -2,296 +2,239 @@
 
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import {
+    Accordion,
+    AccordionSummary,
+    AccordionDetails,
     Box,
     Button,
     ButtonGroup,
     Checkbox,
     ClickAwayListener,
-    Divider,
     Grid,
     Popper,
-    Stack
+    Stack,
+    Typography
 } from '@mui/material';
-import axios from 'axios';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { DateTime } from 'luxon';
 import { useEffect, useState } from 'react';
-import AverageValue from './components/dashboard/AverageValue';
 import BarTile from './components/dashboard/charts/BarTile';
 import DonutTile from './components/dashboard/charts/DonutTile';
-import NewCustomersChart from './components/dashboard/charts/NewCustomersChart';
+import api from './api/axiosClient';
 
 const DATE_RANGES = [
-    { id: 'today', name: 'Today' },
-    { id: 'yesterday', name: 'Yesterday' },
-    { id: 'this_week', name: 'This Week' },
     { id: 'last_week', name: 'Last Week' },
-    { id: 'this_month', name: 'This Month' },
-    { id: 'last_month', name: 'Last Month' },
-    { id: 'this_year', name: 'This Year' },
 ];
 
-interface Route {
-    route_id: string | number;
-    name: string;
-    checked: boolean;
-}
-
-interface Location {
-    location_id: string | number;
-    name: string;
-    checked: boolean;
-    routes: Route[];
-}
+const AVAILABLE_SEGMENTS = ['Yard', 'JobType', 'Status'];
 
 export default function Page() {
 
     const [ready, set_ready] = useState(false);
 
-    const [locations, set_locations] = useState<Location[]>([]);
-    const [storeroutes_anchor, set_storeroutes_anchor] = useState<HTMLElement | null>(null);
+    const [filters, set_filters] = useState<Record<string, string[]>>({});
+    const [segment_values, set_segment_values] = useState<Record<string, string[]>>({});
+    // filters_anchor was defined but not used properly in previous step, renaming to generic or reusing storeroutes_anchor logic but better named
+    const [filters_anchor, set_filters_anchor] = useState<HTMLElement | null>(null);
 
-    const [date_range, set_date_range] = useState('this_week');
-    const [select_all, set_select_all] = useState(false);
+    const [date_range, set_date_range] = useState('last_week');
 
     useEffect(() => {
-        refresh_locations();
+        const refresh_segment_values = async () => {
+            try {
+                const new_values: Record<string, string[]> = {};
+                
+                for (const segment of AVAILABLE_SEGMENTS) {
+                    try {
+                        const res = await api.get('/bi/segment-values', {
+                            params: {
+                                datasetName: 'FCC_Jobs',
+                                segmentName: segment,
+                                includeCount: true
+                            }
+                        });
+                        if (res.data && Array.isArray(res.data)) {
+                            new_values[segment] = res.data.map((item: any) => item.value || item);
+                        }
+                    } catch (e) {
+                        console.error(`Error fetching values for ${segment}`, e);
+                        new_values[segment] = [];
+                    }
+                }
+    
+                set_segment_values(new_values);
+                set_ready(true);
+            } catch (error) {
+                console.error('Error fetching segment values:', error);
+                set_ready(true);
+            }
+        };
+
+        refresh_segment_values();
     }, []);
 
-    useEffect(() => {
-        let all_selected = true;
-
-        if (locations.length === 0) {
-            all_selected = false;
+    const handle_check_all = (segment: string) => {
+        const all_values = segment_values[segment] || [];
+        const current_selected = filters[segment] || [];
+        
+        if (current_selected.length === all_values.length) {
+            const new_filters = { ...filters };
+            delete new_filters[segment];
+            set_filters(new_filters);
         } else {
-            for (const location of locations) {
-                if (!location.checked) {
-                    all_selected = false;
-                    break;
-                }
-
-                for (const route of location.routes) {
-                    if (!route.checked) {
-                        all_selected = false;
-                        break;
-                    }
-                }
-            }
-        }
-
-        set_select_all(all_selected);
-    }, [locations]);
-
-    const refresh_locations = async () => {
-        try {
-            const res = await axios
-                .get('/api/v1/locations', {
-                    params: {
-                        include: ['routes']
-                    }
-                });
-
-            if (res.status >= 400) {
-                console.error('Locations API failed:', res.status, res.statusText);
-                set_locations([]);
-                set_ready(true);
-                return;
-            }
-
-            // Avoid crashing if the response data is empty
-            if (!res.data || !Array.isArray(res.data)) {
-                console.error('Invalid response data:', res.data);
-                set_locations([]);
-                set_ready(true);
-                return;
-            }
-
-            set_locations(res.data.map((location: { location_id: string | number; name: string; routes: { route_id: string | number; name: string }[] }) => {
-                return {
-                    location_id: location.location_id,
-                    name: location.name,
-                    checked: true,
-                    routes: (location.routes || []).map((route: { route_id: string | number; name: string }) => {
-                        return {
-                            route_id: route.route_id,
-                            name: route.name,
-                            checked: true,
-                        }
-                    })
-                }
-            }));
-
-            set_ready(true);
-        } catch (error) {
-            console.error('Error fetching locations:', error);
-            set_locations([]);
-            set_ready(true);
+            set_filters({
+                ...filters,
+                [segment]: all_values
+            });
         }
     };
 
-    const handle_check_all = () => {
-        set_locations(prev => prev.map(location => {
-            return {
-                ...location,
-                checked: !select_all,
-                routes: location.routes.map(route => {
-                    return {
-                        ...route,
-                        checked: !select_all,
-                    }
-                })
-            }
-        }));
-        set_select_all(!select_all);
-    };
+    const toggle_filter = (segment: string, value: string) => {
+        const current = filters[segment] || [];
+        const index = current.indexOf(value);
+        let new_list = [];
 
-    const check_location = (location_id: string | number) => {
-        set_locations(prev => prev.map(location => {
-            // ignored non-matched locations
-            if (location.location_id !== location_id) {
-                return location;
-            }
+        if (index > -1) {
+            new_list = current.filter(v => v !== value);
+        } else {
+            new_list = [...current, value];
+        }
 
-            return {
-                ...location,
-                checked: !location.checked,
-                routes: location.routes.map(route => {
-                    return {
-                        ...route,
-                        checked: !location.checked,
-                    }
-                })
-            }
-        }));
-    };
-
-    const check_route = (route_id: string | number) => {
-        set_locations(prev => prev.map(location => {
-            // ignore locations with non-matched routes
-            if (!location.routes.some(route => route.route_id === route_id)) {
-                return location;
-            }
-
-            const new_routes = location.routes.map(route => {
-                if (route.route_id !== route_id) {
-                    return route;
-                }
-
-                return {
-                    ...route,
-                    checked: !route.checked,
-                }
-            })
-
-            return {
-                ...location,
-                checked: new_routes.some(route => route.checked),
-                routes: new_routes,
-            }
-        }));
+        const new_filters = { ...filters };
+        if (new_list.length > 0) {
+            new_filters[segment] = new_list;
+        } else {
+            delete new_filters[segment];
+        }
+        set_filters(new_filters);
     };
 
     const count_selected = () => {
-        return locations
-            .reduce((a, c) => {
-                if (c.checked) {
-                    ++a;
-                }
-
-                c.routes.forEach(route => {
-                    if (route.checked) {
-                        ++a;
-                    }
-                });
-
-                return a;
-            }, 0);
+        return Object.values(filters).reduce((acc, curr) => acc + curr.length, 0);
     }
 
     return (
-        <Stack spacing={2}>
-            <h2>Analytics Dashboard</h2>
-            <Box sx={{ p: 1 }}>
-                <Stack direction="row" spacing={1}>
-                    <ButtonGroup variant="outlined">
-                        {DATE_RANGES.map(mode => {
-                            return (
-                                <Button
-                                    key={mode.id}
-                                    variant={date_range === mode.id ? 'contained' : 'outlined'}
-                                    onClick={() => set_date_range(mode.id)}
-                                >
-                                    {mode.name}
-                                </Button>
-                            )
-                        })}
-                    </ButtonGroup>
-                    <Box sx={{ flex: 1 }} />
-                    <ClickAwayListener onClickAway={() => set_storeroutes_anchor(null)}>
-                        <Box>
-                            <Button
-                                variant="contained"
-                                endIcon={<ArrowDropDownIcon />}
-                                onClick={e => set_storeroutes_anchor(storeroutes_anchor ? null : e.currentTarget)}
-                            >
-                                Stores/Routes ({count_selected()} selected)
-                            </Button>
-                            <Popper
-                                open={Boolean(storeroutes_anchor)}
-                                anchorEl={storeroutes_anchor}
-                                placement="bottom-end"
-                                modifiers={[
-                                    {
-                                        name: 'offset',
-                                        options: {
-                                            offset: [0, 8],
-                                        },
-                                    },
-                                ]}
-                            >
-                                <Box sx={{ p: 1.5, maxHeight: 500, overflow: 'auto' }}>
-                                    <Stack>
-                                        <Box>
-                                            <Stack direction="row" spacing={1}>
-                                                <Checkbox checked={select_all} onClick={handle_check_all} />
-                                                <h4>Select All</h4>
+        <Box sx={{ minHeight: '100vh', bgcolor: '#f3f4f6', p: 3 }}>
+            <Stack spacing={3}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography variant="h4" fontWeight="bold" color="text.primary">
+                        Business Intelligence Dashboard
+                    </Typography>
+                </Box>
+
+                <Box sx={{ bgcolor: 'background.paper', p: 2, borderRadius: 2, boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)' }}>
+                    <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems="center" justifyContent="space-between">
+                         <Stack direction="row" spacing={1} alignItems="center">
+                            <Typography variant="subtitle2" color="text.secondary" fontWeight="medium">
+                                Controls:
+                            </Typography>
+                            <ClickAwayListener onClickAway={() => set_filters_anchor(null)}>
+                                <Box>
+                                    <Button
+                                        variant="outlined"
+                                        color="inherit"
+                                        endIcon={<ArrowDropDownIcon />}
+                                        onClick={e => set_filters_anchor(filters_anchor ? null : e.currentTarget)}
+                                        sx={{ textTransform: 'none', borderColor: 'divider' }}
+                                    >
+                                        Filters {count_selected() > 0 && `(${count_selected()})`}
+                                    </Button>
+                                    <Popper
+                                        open={Boolean(filters_anchor)}
+                                        anchorEl={filters_anchor}
+                                        placement="bottom-start"
+                                        modifiers={[
+                                            {
+                                                name: 'offset',
+                                                options: {
+                                                    offset: [0, 8],
+                                                },
+                                            },
+                                        ]}
+                                        sx={{ zIndex: 1200 }}
+                                    >
+                                        <Box sx={{ p: 1.5, maxHeight: 500, overflow: 'auto', bgcolor: 'background.paper', boxShadow: 4, borderRadius: 2, minWidth: 320, border: '1px solid', borderColor: 'divider' }}>
+                                            <Stack spacing={1}>
+                                                {AVAILABLE_SEGMENTS.map(segment => {
+                                                    const values = segment_values[segment] || [];
+                                                    const selected = filters[segment] || [];
+                                                    const all_selected = selected.length === values.length && values.length > 0;
+                                                    
+                                                    return (
+                                                        <Accordion key={segment} disableGutters elevation={0} sx={{ '&:before': { display: 'none' }, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
+                                                            <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ minHeight: 48, px: 2, bgcolor: '#f9fafb' }}>
+                                                                <Stack direction="row" alignItems="center" spacing={1} width="100%" onClick={e => e.stopPropagation()}>
+                                                                     <Checkbox 
+                                                                        size="small"
+                                                                        checked={all_selected} 
+                                                                        indeterminate={selected.length > 0 && selected.length < values.length}
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            handle_check_all(segment);
+                                                                        }}
+                                                                     />
+                                                                    <Typography fontWeight="bold" variant="body2">{segment}</Typography>
+                                                                    {selected.length > 0 && (
+                                                                        <Box sx={{ bgcolor: 'primary.light', color: 'primary.contrastText', px: 0.8, py: 0.2, borderRadius: 1, fontSize: '0.7rem' }}>
+                                                                            {selected.length}
+                                                                        </Box>
+                                                                    )}
+                                                                </Stack>
+                                                            </AccordionSummary>
+                                                            <AccordionDetails sx={{ p: 0, maxHeight: 200, overflowY: 'auto' }}>
+                                                                <Stack>
+                                                                    {values.map(val => (
+                                                                        <Stack 
+                                                                            key={val} 
+                                                                            direction="row" 
+                                                                            alignItems="center" 
+                                                                            sx={{ 
+                                                                                px: 2, 
+                                                                                py: 0.5, 
+                                                                                '&:hover': { bgcolor: '#f3f4f6' },
+                                                                                cursor: 'pointer'
+                                                                            }}
+                                                                            onClick={() => toggle_filter(segment, val)}
+                                                                        >
+                                                                            <Checkbox 
+                                                                                size="small"
+                                                                                checked={selected.includes(val)}
+                                                                                onClick={(e) => { e.stopPropagation(); toggle_filter(segment, val); }}
+                                                                            />
+                                                                            <Typography variant="body2">{val}</Typography>
+                                                                        </Stack>
+                                                                    ))}
+                                                                </Stack>
+                                                            </AccordionDetails>
+                                                        </Accordion>
+                                                    )
+                                                })}
                                             </Stack>
                                         </Box>
-                                        <Divider sx={{ my: 1 }} />
-                                        <Stack spacing={1}>
-                                            {locations.map(location => {
-                                                return (
-                                                    <Stack key={location.location_id.toString()} spacing={1}>
-                                                        <Stack direction="row" spacing={1}>
-                                                            <Checkbox
-                                                                checked={location.checked}
-                                                                onClick={() => check_location(location.location_id)}
-                                                            />
-                                                            <h4>{location.name}</h4>
-                                                        </Stack>
-                                                        <Stack spacing={1} sx={{ pl: 2 }}>
-                                                            {location.routes.map(route => {
-                                                                return (
-                                                                    <Stack key={route.route_id.toString()} direction="row" spacing={1}>
-                                                                        <Checkbox
-                                                                            checked={route.checked}
-                                                                            onClick={() => check_route(route.route_id)}
-                                                                        />
-                                                                        <h4>{route.name}</h4>
-                                                                    </Stack>
-                                                                )
-                                                            })}
-                                                        </Stack>
-                                                    </Stack>
-                                                );
-                                            })}
-                                        </Stack>
-                                    </Stack>
+                                    </Popper>
                                 </Box>
-                            </Popper>
-                        </Box>
-                    </ClickAwayListener>
-                </Stack>
-            </Box>
+                            </ClickAwayListener>
+                        </Stack>
+
+                        <Stack direction="row" spacing={2} alignItems="center">
+                             <EffectiveDates mode={date_range} />
+                             <ButtonGroup variant="outlined" size="small">
+                                {DATE_RANGES.map(mode => {
+                                    return (
+                                        <Button
+                                            key={mode.id}
+                                            variant={date_range === mode.id ? 'contained' : 'outlined'}
+                                            onClick={() => set_date_range(mode.id)}
+                                            style={{ textTransform: 'capitalize' }}
+                                        >
+                                            {mode.name}
+                                        </Button>
+                                    )
+                                })}
+                            </ButtonGroup>
+                        </Stack>
+                    </Stack>
+                </Box>
             <Box>
                 <EffectiveDates mode={date_range} />
             </Box>
@@ -302,183 +245,126 @@ export default function Page() {
                 </Box>
             ) : (
                 <Box>
-                    {locations.length === 0 ? (
-                        <Box sx={{ p: 3, textAlign: 'center' }}>
-                            <h3>No locations available</h3>
-                            <p>Unable to load location data.</p>
-                        </Box>
-                    ) : (
                         <Grid container spacing={2}>
                         <Grid size={{ xs: 12, sm: 6 }}>
                             <BarTile
-                                title="Dropoff Sales by Location"
-                                source="invoices"
+                                title="Sales by Yard"
+                                datasetName="FCC_Jobs"
+                                groupBySegments={['Yard']}
+                                metrics={['TotalCost']}
+                                filters={filters}
                                 date_range={date_range}
-                                date_field="dropoff_at"
-                                locations={locations}
-                                stat_field="total"
-                                stat_value="sum"
-                                buckets="locations"
                             />
                         </Grid>
                         <Grid size={{ xs: 12, sm: 6 }}>
                             <BarTile
-                                title="Dropoff Sales by Time Period"
-                                source="invoices"
+                                title="Sales by Time Period"
+                                datasetName="FCC_Jobs"
+                                groupBySegments={['Month']}
+                                metrics={['TotalCost']}
+                                filters={filters}
                                 date_range={date_range}
-                                date_field="dropoff_at"
-                                locations={locations}
-                                stat_field="total"
-                                stat_value="sum"
-                                buckets={{
-                                    today: 'hour',
-                                    yesterday: 'hour',
-                                    this_week: 'day',
-                                    last_week: 'day',
-                                    this_month: 'day',
-                                    last_month: 'day',
-                                    this_year: 'month',
-                                }[date_range] || 'day'}
-                            />
-                        </Grid>
-                        {/* <Grid size={{ xs: 12, sm: 6 }}>
-                        <BarTile
-                            title="Pieces"
-                            source="invoices"
-                            date_range={date_range}
-                            date_field="dropoff_at"
-                            locations={locations}
-                            stat_field="pieces"
-                            stat_value="sum"
-                            buckets="locations"
-                        />
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 6 }}>
-                        <BarTile
-                            title="Pieces"
-                            source="invoices"
-                            date_range={date_range}
-                            date_field="dropoff_at"
-                            locations={locations}
-                            stat_field="pieces"
-                            stat_value="sum"
-                            buckets={{
-                                today: 'hour',
-                                yesterday: 'hour',
-                                this_week: 'day',
-                                last_week: 'day',
-                                this_month: 'day',
-                                last_month: 'day',
-                                this_year: 'month',
-                            }[date_range] || 'day'}
-                        />
-                    </Grid> */}
-                        <Grid size={{ xs: 12, sm: 3 }}>
-                            <DonutTile
-                                title="Dropoff Visits"
-                                source="visits"
-                                date_range={date_range}
-                                date_field="visit_at"
-                                locations={locations}
-                                buckets="locations,routes"
                             />
                         </Grid>
                         <Grid size={{ xs: 12, sm: 3 }}>
                             <DonutTile
-                                title="Dropoff Sales"
-                                source="invoices"
+                                title="Jobs by Yard" // Was Dropoff Visits
+                                datasetName="FCC_Jobs"
+                                groupBySegments={['Yard']}
+                                metrics={['TotalJobs']}
+                                filters={filters}
                                 date_range={date_range}
-                                date_field="dropoff_at"
-                                locations={locations}
-                                stat_field="total"
-                                stat_value="sum"
-                                buckets="locations,routes"
                             />
                         </Grid>
                         <Grid size={{ xs: 12, sm: 3 }}>
                             <DonutTile
-                                title="Dropoff Pieces"
-                                source="invoices"
+                                title="Sales by Yard" // Was Dropoff Sales
+                                datasetName="FCC_Jobs"
+                                groupBySegments={['Yard']}
+                                metrics={['TotalCost']}
+                                filters={filters}
                                 date_range={date_range}
-                                date_field="dropoff_at"
-                                locations={locations}
-                                stat_field="pieces"
-                                stat_value="sum"
-                                buckets="locations,routes"
-                            />
-                        </Grid>
-                        <Grid size={{ xs: 12, sm: 3 }}>
-                            <NewCustomersChart
-                                date_range={date_range}
-                                locations={locations}
-                                buckets="locations,routes"
                             />
                         </Grid>
                         <Grid size={{ xs: 12, sm: 3 }}>
                             <DonutTile
-                                title="Pickup Sales"
-                                source="invoices"
+                                title="Jobs by Status" // Was Dropoff Pieces
+                                datasetName="FCC_Jobs"
+                                groupBySegments={['Status']}
+                                metrics={['TotalJobs']}
+                                filters={filters}
                                 date_range={date_range}
-                                date_field="pickup_at"
-                                locations={locations}
-                                stat_field="total"
-                                stat_value="sum"
-                                buckets="locations,routes"
+                            />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 3 }}>
+                           {/* NewCustomersChart placeholder or replacement */}
+                            <DonutTile
+                                title="Jobs by JobType"
+                                datasetName="FCC_Jobs"
+                                groupBySegments={['JobType']}
+                                metrics={['TotalJobs']}
+                                filters={filters}
+                                date_range={date_range}
                             />
                         </Grid>
                         <Grid size={{ xs: 12, sm: 3 }}>
                             <DonutTile
-                                title="Promotion Visits"
-                                source="visits"
+                                title="Labor Hours by Yard" // Was Pickup Sales
+                                datasetName="FCC_Jobs"
+                                groupBySegments={['Yard']}
+                                metrics={['TotalLaborHours']} // Changed to show something else
+                                filters={filters}
                                 date_range={date_range}
-                                date_field="visit_at"
-                                locations={locations}
-                                filter_extra="promotion"
-                                buckets="locations,routes"
                             />
                         </Grid>
                         <Grid size={{ xs: 12, sm: 3 }}>
                             <DonutTile
-                                title="Promotion Incoming Sales"
-                                source="visits"
+                                title="Average Job Cost by Yard" // Was Promotion Visits (Using AvgJobCost now)
+                                datasetName="FCC_Jobs"
+                                groupBySegments={['Yard']}
+                                metrics={['AvgJobCost']}
+                                filters={filters}
                                 date_range={date_range}
-                                date_field="visit_at"
-                                locations={locations}
-                                filter_extra="promotion"
-                                stat_field="total"
-                                stat_value="sum"
-                                buckets="coupons"
                             />
                         </Grid>
                         <Grid size={{ xs: 12, sm: 3 }}>
-                            <AverageValue
-                                title="Average Incoming Visit Pieces"
-                                source="visits"
+                            <DonutTile
+                                title="Sales by Status" // Was Promotion Incoming Sales
+                                datasetName="FCC_Jobs"
+                                groupBySegments={['Status']}
+                                metrics={['TotalCost']}
+                                filters={filters}
                                 date_range={date_range}
-                                date_field="visit_at"
-                                locations={locations}
-                                stat_field="pieces"
-                                stat_value="avg"
-                                buckets="locations"
                             />
                         </Grid>
                         <Grid size={{ xs: 12, sm: 3 }}>
-                            <AverageValue
-                                title="Average Incoming Visit Amount"
-                                source="visits"
+                             {/* AverageValue placeholder */}
+                             <DonutTile
+                                title="Total Cost (Status)"
+                                datasetName="FCC_Jobs"
+                                groupBySegments={['Status']}
+                                metrics={['TotalCost']}
+                                filters={filters}
                                 date_range={date_range}
-                                date_field="visit_at"
-                                locations={locations}
-                                stat_field="total"
-                                stat_value="avg"
-                                buckets="locations"
-                            />
+                             />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 3 }}>
+                             {/* AverageValue placeholder 2 */}
+                             <DonutTile 
+                                title="Total Jobs (JobType)"
+                                datasetName="FCC_Jobs"
+                                groupBySegments={['JobType']}
+                                metrics={['TotalJobs']}
+                                filters={filters}
+                                date_range={date_range}
+                             />
                         </Grid>
                         </Grid>
-                    )}
+
                 </Box>
             )}
         </Stack>
+        </Box>
     );
 }
 
@@ -488,56 +374,40 @@ const EffectiveDates = ({ mode }: { mode: string }) => {
 
     switch (mode) {
         case 'yesterday':
-            start_date = start_date
-                .minus({ day: 1 });
-            end_date = end_date
-                .minus({ day: 1 });
+            start_date = start_date.minus({ day: 1 });
+            end_date = end_date.minus({ day: 1 });
             break;
         case 'this_week':
-            start_date = start_date
-                .startOf('week');
+            start_date = start_date.startOf('week');
             break;
         case 'last_week':
-            start_date = start_date
-                .minus({ week: 1 })
-                .startOf('week');
-            end_date = end_date
-                .minus({ week: 1 })
-                .endOf('week');
+            start_date = start_date.minus({ week: 1 }).startOf('week');
+            end_date = end_date.minus({ week: 1 }).endOf('week');
             break;
         case 'this_month':
-            start_date = start_date
-                .startOf('month');
+            start_date = start_date.startOf('month');
             break;
         case 'last_month':
-            start_date = start_date
-                .minus({ month: 1 })
-                .startOf('month');
-            end_date = end_date
-                .minus({ month: 1 })
-                .endOf('month');
+            start_date = start_date.minus({ month: 1 }).startOf('month');
+            end_date = end_date.minus({ month: 1 }).endOf('month');
             break;
         case 'this_year':
-            start_date = start_date
-                .startOf('year');
+            start_date = start_date.startOf('year');
             break;
     }
 
-    if (mode === 'today' || mode === 'yesterday') {
-        return (
-            <h3>
-                Effective Date:
-                {' '}
-                {start_date.toFormat('MMMM d, yyyy')}
-            </h3>
-        )
-    } else {
-        return (
-            <h3>
-                Effective Dates:
-                {' '}
-                {start_date.toFormat('MMMM d, yyyy')} to {end_date.toFormat('MMMM d, yyyy')}
-            </h3>
-        )
-    }
+    const dateStr = (mode === 'today' || mode === 'yesterday') 
+        ? start_date.toFormat('MMM d, yyyy')
+        : `${start_date.toFormat('MMM d, yyyy')} - ${end_date.toFormat('MMM d, yyyy')}`;
+
+    return (
+        <Stack direction="row" alignItems="center" spacing={1}>
+             <Typography variant="caption" color="text.secondary" fontWeight="bold" sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                Effective Range:
+            </Typography>
+            <Typography variant="body2" color="text.primary" fontWeight="medium">
+                {dateStr}
+            </Typography>
+        </Stack>
+    );
 }

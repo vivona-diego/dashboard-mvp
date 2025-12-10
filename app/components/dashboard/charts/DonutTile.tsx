@@ -2,151 +2,170 @@
 
 import formatter from '@/app/helpers/formatter';
 import {
-    Box
+    Box,
+    Typography
 } from '@mui/material';
-import axios from 'axios';
+import { DateTime } from 'luxon';
 import { useEffect, useState } from 'react';
 import DonutChart from './DonutChart';
-import ComparisonRow from '../ComparisonRow';
+import api from '@/app/api/axiosClient';
 
 interface DonutTileProps {
     title: string;
-    source: string;
+    datasetName: string;
+    groupBySegments: string[];
+    metrics: string[];
+    filters: Record<string, string[]>;
     date_range: string;
-    date_field: string;
-    stat_field?: string;
-    stat_value?: string;
-    filter_extra?: string;
-    buckets: string;
-    locations: any[];
 }
 
 const DonutTile = (props: DonutTileProps) => {
     const {
         title,
-        source,
-        date_range,
-        date_field,
-        stat_field,
-        stat_value,
-        filter_extra,
-        buckets,
-        locations
+        datasetName,
+        groupBySegments,
+        metrics,
+        filters,
+        date_range
     } = props;
 
-    const value = stat_value || 'count';
-
     const [results, set_results] = useState<any>(null);
+    const [loading, set_loading] = useState(false);
 
     useEffect(() => {
         const refresh_data = async () => {
+            set_loading(true);
             try {
-                const res = await axios
-                    .get('/api/v1/dashboard/data', {
-                        params: {
-                            source,
-                            date_range,
-                            date_field,
-                            stat_field,
-                            filter_extra,
-                            buckets,
-                            include_comparisons: true,
-                            filter_locations: locations
-                                .filter(location => location.checked)
-                                .map(location => location.location_id)
-                                .join(','),
-                            filter_routes: locations
-                                .filter(location => location.checked)
-                                .reduce((a, c) => a.concat(
-                                    c.routes
-                                        .filter((route: any) => route.checked)
-                                        .map((route: any) => route.route_id)
-                                ), [])
-                                .join(','),
-                        }
-                    });
+                 // Construct filters from props and date_range
+                 const apiFilters: any[] = [];
+                
+                 // Segment filters
+                 Object.keys(filters).forEach(segment => {
+                     if (filters[segment] && filters[segment].length > 0) {
+                         apiFilters.push({
+                             segmentName: segment,
+                             operator: 'in',
+                             value: filters[segment]
+                         });
+                     }
+                 });
+ 
+                 // Date filters
+                 const now = DateTime.now();
+                 if (date_range === 'this_month') {
+                     apiFilters.push({ segmentName: 'Year', operator: 'eq', value: now.year });
+                     apiFilters.push({ segmentName: 'Month', operator: 'eq', value: now.month });
+                 } else if (date_range === 'last_month') {
+                     const lastMonth = now.minus({ month: 1 });
+                     apiFilters.push({ segmentName: 'Year', operator: 'eq', value: lastMonth.year });
+                     apiFilters.push({ segmentName: 'Month', operator: 'eq', value: lastMonth.month });
+                 } else if (date_range === 'this_year') {
+                     apiFilters.push({ segmentName: 'Year', operator: 'eq', value: now.year });
+                 }
 
-                if (res.status >= 400) {
-                    console.error('Dashboard API failed:', res.status, res.statusText);
-                    return;
-                }
-
-                set_results(res.data);
-            } catch (error) {
-                console.error('Error fetching dashboard data:', error);
-                // Set empty results to prevent crashes
-                set_results({
-                    aggregations: {}
+                const res = await api.post('/bi/chart', {
+                    datasetName,
+                    groupBySegments,
+                    metrics: metrics.map(m => ({ metricName: m })),
+                    filters: apiFilters.length > 0 ? apiFilters : undefined,
+                    orderBy: [{ field: metrics[0], direction: 'DESC' }],
+                    chartConfig: {
+                        chartType: 'pie',
+                        showLegend: true
+                    }
                 });
+
+                if (res.status >= 400 || !res.data.success) {
+                    console.error('BI API failed:', res.status, res.statusText);
+                    set_results(null);
+                } else {
+                    set_results(res.data.data);
+                }
+            } catch (error) {
+                console.error('Error fetching BI data:', error);
+                set_results(null);
+            } finally {
+                set_loading(false);
             }
         };
 
         refresh_data();
-    }, [date_range, locations, source, date_field, stat_field, filter_extra, buckets]);
+    }, [datasetName, groupBySegments, metrics, filters, date_range]);
 
-    if (!results) {
+    if (!results || !results.chartData) {
         return null;
     }
 
     let format_fn = (val: any) => formatter.with_commas(val, 0);
-    let val_formatter = (value: number) => format_fn(value);
-
-    switch (stat_field) {
-        case 'total':
-            format_fn = formatter.as_currency;
-            val_formatter = (value: number) => formatter.as_currency(value);
-            break;
+    // Currency formatting check
+    if (metrics.some(m => m.includes('Cost') || m.includes('Sales'))) {
+        format_fn = formatter.as_currency;
     }
+    const val_formatter = (value: number) => format_fn(value);
+    
+    const { labels, datasets } = results.chartData;
+    const primaryDataset = datasets[0];
 
-    const data: any[] = [];
-    let primary_bucket: string | undefined;
+    // DonutChart expects `data` to be an array of series.
+    // Each series has `data` which is an array of {name, value}.
+    // We need to zip labels and primaryDataset.data
+    
+    const donutValues = labels.map((label: string, index: number) => ({
+        name: label,
+        value: primaryDataset.data[index]
+    }));
 
-    for (const bucket of buckets.split(',')) {
-        if (!primary_bucket) {
-            primary_bucket = bucket;
-        }
+    const donutSeries = [{
+        radius: ['70%', '95%'],
+        data: donutValues
+    }];
 
-        let radius = ['70%', '95%'];
-
-        if (data.length > 0) {
-            radius = ['50%', '70%'];
-        }
-
-        data.push({
-            radius,
-            data: (results.aggregations[bucket]?.buckets || [])
-                .map((e: any) => {
-                    return {
-                        name: e.key,
-                        value: e[value],
-                    }
-                })
-        });
-    }
+    // Calculate total from API data response if possible, or sum up chart data
+    // The API response `data.data` (the row array) is available in `results.data`
+    // Let's use results.data which contains the raw rows to calculate total accurately
+    // Wait, results.data in the new schema is the array of rows.
+    // results is { success: true, data: [...], metadata: {...}, chartData: {...} }
+    // So results.data is the array of rows.
+    
+    const primaryMetric = metrics[0];
+    const total = (results.data || []).reduce((a: number, c: any) => a + (c[primaryMetric] || 0), 0);
 
     return (
-        <Box sx={{ p: 2, alignItems: 'center' }}>
-            <h3>{title}</h3>
-            <DonutChart
-                options={{
-                    tooltip: {
-                        trigger: 'item',
-                        valueFormatter: val_formatter
-                    },
-                }}
-                data={data}
-                centered_element={
-                    <Box>
-                        <h3>{format_fn(results.aggregations[primary_bucket!]?.overall?.[value] || 0)}</h3>
-                        <h4>Total</h4>
-                    </Box>
-                }
-            />
-            <ComparisonRow
-                date_range={date_range}
-                prev_change={results.aggregations[primary_bucket!]?.overall?.comparison?.prev?.[value] ?? 0}
-                stack_change={results.aggregations[primary_bucket!]?.overall?.comparison?.stack?.[value] ?? 0}
-            />
+        <Box sx={{ p: 2, height: '100%', bgcolor: 'background.paper', borderRadius: 2, boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)', display: 'flex', flexDirection: 'column' }}>
+            <Typography variant="h6" fontWeight="bold" color="text.primary" gutterBottom>
+                {title}
+            </Typography>
+            <Box sx={{ flex: 1, minHeight: 0, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                <DonutChart
+                    options={{
+                        tooltip: {
+                            trigger: 'item',
+                            valueFormatter: val_formatter,
+                            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                            borderColor: '#e5e7eb',
+                            textStyle: {
+                                color: '#374151'
+                            }
+                        },
+                        legend: {
+                            bottom: 0,
+                            left: 'center',
+                            icon: 'circle'
+                        }
+                    }}
+                    data={donutSeries}
+                    centered_element={
+                        <Box sx={{ textAlign: 'center' }}>
+                            <Typography variant="h5" fontWeight="bold" color="text.primary">
+                                {format_fn(total)}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary" sx={{ textTransform: 'uppercase' }}>
+                                Total
+                            </Typography>
+                        </Box>
+                    }
+                />
+            </Box>
         </Box>
     )
 };

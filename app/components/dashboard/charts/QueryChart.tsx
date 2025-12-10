@@ -218,12 +218,12 @@ const QueryChart = (props: QueryChartProps) => {
 
   const donutSeries = [
     {
-      radius: ['70%', '95%'],
+      radius: ['55%', '75%'],
       data: donutValues,
     },
   ];
 
-  const total = values.reduce((a, b) => a + b, 0);
+  const total = values.reduce((a, b) => a + b, 0).toFixed(2);
 
   return (
     <Box
@@ -256,6 +256,7 @@ const QueryChart = (props: QueryChartProps) => {
               bottom: 0,
               left: 'center',
               icon: 'circle',
+              type: 'scroll',
             },
           }}
           data={donutSeries}
@@ -269,6 +270,7 @@ const QueryChart = (props: QueryChartProps) => {
               </Typography>
             </Box>
           }
+          chartPosition={['50%', '40%']}
         />
       </Box>
     </Box>

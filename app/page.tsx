@@ -1,6 +1,6 @@
 'use client';
 
-import { Box, Button, ButtonGroup, CircularProgress, Grid, Stack, Typography } from '@mui/material';
+import { Box, Button, ButtonGroup, CircularProgress, Grid, Skeleton, Stack, Typography } from '@mui/material';
 import { DateTime } from 'luxon';
 import { useEffect, useState, useMemo } from 'react';
 import QueryChart from './components/dashboard/charts/QueryChart';
@@ -170,7 +170,7 @@ export default function Page() {
   }
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: '#f3f4f6', p: 3 }}>
+    <Box sx={{ minHeight: '100vh', bgcolor: '#0B1D35', p: { xs: 1, md: 3 } }}>
       <Stack spacing={3}>
         <Box
           sx={{
@@ -198,11 +198,16 @@ export default function Page() {
               </ButtonGroup>
             </Stack>
 
-            <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap">
-              <Stack direction="row" spacing={1} alignItems="center">
-                <Typography variant="subtitle2" color="text.secondary" fontWeight="medium">
-                  Date:
-                </Typography>
+            <Stack
+              flex={1}
+              direction="row"
+              spacing={2}
+              alignItems="center"
+              flexWrap="wrap"
+              justifyContent="space-between"
+              sx={{ p: { xs: 1, md: 2 }, backgroundColor: '#07101c' }}
+            >
+              <Stack direction="row" spacing={1} alignItems="center" sx={{ maxWidth: '100%', overflowX: 'auto' }}>
                 <ButtonGroup variant="outlined" size="small">
                   {VISUAL_DATE_RANGES.map((mode) => (
                     <Button
@@ -216,7 +221,7 @@ export default function Page() {
                 </ButtonGroup>
               </Stack>
 
-              <Stack direction="row" spacing={1} alignItems="center">
+              <Stack direction="row" spacing={1} alignItems="center" sx={{ maxWidth: '100%', overflowX: 'auto',ml:0 }}>
                 <Typography variant="subtitle2" color="text.secondary" fontWeight="medium">
                   Segment:
                 </Typography>
@@ -245,7 +250,7 @@ export default function Page() {
           </Stack>
         </Box>
         <Box>
-          <EffectiveDates mode={date_range} />
+          <EffectiveDates mode={visual_date_range} />
         </Box>
         {!ready ? (
           <Box sx={{ p: 3, textAlign: 'center' }}>
@@ -289,47 +294,61 @@ export default function Page() {
 }
 
 const EffectiveDates = ({ mode }: { mode: string }) => {
-  let start_date = DateTime.now();
-  let end_date = DateTime.now();
+  // Inicializamos con null para saber que aún no hemos calculado la fecha en el cliente
+  const [dateStr, setDateStr] = useState<string | null>(null);
 
-  switch (mode) {
-    case 'yesterday':
-      start_date = start_date.minus({ day: 1 });
-      end_date = end_date.minus({ day: 1 });
-      break;
-    case 'this_week':
-      start_date = start_date.startOf('week');
-      break;
-    case 'last_week':
-      start_date = start_date.minus({ week: 1 }).startOf('week');
-      end_date = end_date.minus({ week: 1 }).endOf('week');
-      break;
-    case 'this_month':
-      start_date = start_date.startOf('month');
-      break;
-    case 'last_month':
-      start_date = start_date.minus({ month: 1 }).startOf('month');
-      end_date = end_date.minus({ month: 1 }).endOf('month');
-      break;
-    case 'this_year':
-      start_date = start_date.startOf('year');
-      break;
+  useEffect(() => {
+    let start_date = DateTime.now();
+    let end_date = DateTime.now();
+
+    switch (mode) {
+      case 'yesterday':
+        start_date = start_date.minus({ day: 1 });
+        end_date = end_date.minus({ day: 1 });
+        break;
+      case 'this_week':
+        start_date = start_date.startOf('week');
+        // Ojo: end_date sigue siendo "ahora mismo".
+        // Si quieres el fin de semana, usa: end_date = end_date.endOf('week');
+        break;
+      case 'last_week':
+        start_date = start_date.minus({ week: 1 }).startOf('week');
+        end_date = end_date.minus({ week: 1 }).endOf('week');
+        break;
+      case 'this_month':
+        start_date = start_date.startOf('month');
+        break;
+      case 'last_month':
+        start_date = start_date.minus({ month: 1 }).startOf('month');
+        end_date = end_date.minus({ month: 1 }).endOf('month');
+        break;
+      case 'this_year':
+        start_date = start_date.startOf('year');
+        break;
+    }
+
+    const calculatedStr =
+      mode === 'today' || mode === 'yesterday'
+        ? start_date.toFormat('MMM d, yyyy')
+        : `${start_date.toFormat('MMM d, yyyy')} - ${end_date.toFormat('MMM d, yyyy')}`;
+
+    setDateStr(calculatedStr);
+  }, [mode]); // Se recalcula si cambia el 'mode'
+
+  // Mientras carga (o si hay SSR), mostramos un Skeleton o nada para evitar el error de hidratación
+  if (!dateStr) {
+    return <Skeleton variant="text" width={200} />;
   }
-
-  const dateStr =
-    mode === 'today' || mode === 'yesterday'
-      ? start_date.toFormat('MMM d, yyyy')
-      : `${start_date.toFormat('MMM d, yyyy')} - ${end_date.toFormat('MMM d, yyyy')}`;
 
   return (
     <Stack direction="row" alignItems="center" spacing={1}>
       <Typography
-        variant="caption"
+        variant="body1"
         color="text.secondary"
         fontWeight="bold"
         sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}
       >
-        Effective Range:
+        Effective Date:
       </Typography>
       <Typography variant="body2" color="text.primary" fontWeight="medium">
         {dateStr}

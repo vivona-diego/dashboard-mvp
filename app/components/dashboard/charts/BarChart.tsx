@@ -57,7 +57,7 @@ const BarChart = ({ labels, data, options }: BarChartProps) => {
     return (
         <ReactECharts
             option={finalOptions}
-            style={{ height: '300px', width: '100%' }}
+            style={{ height: '350px', width: '100%' }}
             theme={isDark ? 'dark' : undefined}
         />
     );

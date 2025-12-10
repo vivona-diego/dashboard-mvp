@@ -26,7 +26,6 @@ const VISUAL_DATE_RANGES = [
   { id: 'yesterday', name: 'Yesterday' },
   { id: 'this_week', name: 'This Week' },
   { id: 'last_week', name: 'Last Week' },
-  { id: 'this_month', name: 'This Month' },
   { id: 'last_month', name: 'Last Month' },
   { id: 'this_year', name: 'This Year' },
 ];

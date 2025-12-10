@@ -9,7 +9,7 @@ interface DonutChartProps {
     centered_element?: React.ReactNode;
 }
 
-const DonutChart = ({ data, options, centered_element }: DonutChartProps) => {
+const DonutChart = ({ data, options, centered_element, chartPosition = ['50%', '50%'] }: DonutChartProps & { chartPosition?: [string, string] }) => {
     const theme = useTheme();
     const isDark = theme.palette.mode === 'dark';
 
@@ -26,6 +26,7 @@ const DonutChart = ({ data, options, centered_element }: DonutChartProps) => {
         },
         series: data.map(series => ({
             type: 'pie',
+            center: chartPosition,
             avoidLabelOverlap: false,
             itemStyle: {
                 borderRadius: 10,
@@ -50,7 +51,7 @@ const DonutChart = ({ data, options, centered_element }: DonutChartProps) => {
     };
 
     return (
-        <Box sx={{ position: 'relative', height: '300px', width: '100%' }}>
+        <Box sx={{ position: 'relative', height: '350px', width: '100%' }}>
             <ReactECharts
                 option={finalOptions}
                 style={{ height: '100%', width: '100%' }}
@@ -60,9 +61,9 @@ const DonutChart = ({ data, options, centered_element }: DonutChartProps) => {
                 <Box
                     sx={{
                         position: 'absolute',
-                        top: '50%',
-                        left: '50%',
-                        transform: 'translate(-50%, -60%)',
+                        top: chartPosition[1],
+                        left: chartPosition[0],
+                        transform: 'translate(-50%, -50%)',
                         textAlign: 'center',
                         pointerEvents: 'none',
                     }}

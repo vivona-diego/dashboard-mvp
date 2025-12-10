@@ -84,17 +84,17 @@ export default function Header() {
               {error}
             </Typography>
           ) : (
-            <ButtonGroup variant="outlined" size="small">
-              {datasets.map((dataset) => (
-                <Button
-                  key={dataset.name}
-                  variant={selectedDataset === dataset.name ? 'contained' : 'outlined'}
-                  onClick={() => handleDatasetClick(dataset.name)}
-                >
-                  {dataset.name}
-                </Button>
-              ))}
-            </ButtonGroup>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+               {datasets.map((dataset) => (
+                 <Button
+                   key={dataset.name}
+                   variant={selectedDataset === dataset.name ? 'contained' : 'outlined'}
+                   onClick={() => handleDatasetClick(dataset.name)}
+                 >
+                   {dataset.name}
+                 </Button>
+               ))}
+            </Box>
           )}
         </Box>
       </Stack>

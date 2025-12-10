@@ -1,29 +1,27 @@
 'use client';
 
-import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
-import {
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  Box,
-  Button,
-  ButtonGroup,
-  Checkbox,
-  ClickAwayListener,
-  Grid,
-  Popper,
-  Stack,
-  Typography,
-} from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { Box, Button, ButtonGroup, CircularProgress, Grid, Stack, Typography } from '@mui/material';
 import { DateTime } from 'luxon';
-import { useEffect, useState } from 'react';
-import BarTile from './components/dashboard/charts/BarTile';
-import DonutTile from './components/dashboard/charts/DonutTile';
+import { useEffect, useState, useMemo } from 'react';
+import QueryChart from './components/dashboard/charts/QueryChart';
 import api from './api/axiosClient';
-import axios from 'axios';
+import { useDataset } from './contexts/DatasetContext';
 
-const DATE_RANGES = [
+interface DateRange {
+  id: string;
+  name: string;
+}
+
+interface DatasetSegment {
+  columnName: string;
+  segment: {
+    segmentName: string;
+  };
+  isFilterable: boolean;
+  isGroupable: boolean;
+}
+
+const VISUAL_DATE_RANGES = [
   { id: 'today', name: 'Today' },
   { id: 'yesterday', name: 'Yesterday' },
   { id: 'this_week', name: 'This Week' },
@@ -33,100 +31,148 @@ const DATE_RANGES = [
   { id: 'this_year', name: 'This Year' },
 ];
 
-const AVAILABLE_SEGMENTS = ['Yard', 'JobType', 'Status'];
-
 export default function Page() {
+  const { selectedDataset } = useDataset();
   const [ready, set_ready] = useState(false);
 
-  const [filters, set_filters] = useState<Record<string, string[]>>({});
-  const [segment_values, set_segment_values] = useState<Record<string, string[]>>({});
-  const [filters_anchor, set_filters_anchor] = useState<HTMLElement | null>(null);
+  const [selected_segment, set_selected_segment] = useState<string | null>(null);
+  const [available_segments, set_available_segments] = useState<string[]>([]);
+  const [available_metrics, set_available_metrics] = useState<string[]>([]);
+  const [visual_date_range, set_visual_date_range] = useState<string>('last_week');
+  const [loading_segments, set_loading_segments] = useState(false);
 
-  const [date_range, set_date_range] = useState('last_week');
+  const [date_ranges, set_date_ranges] = useState<DateRange[]>([]);
+  const [date_range, set_date_range] = useState<string>('');
 
+  // Fetch dataset info (segments and date ranges) when dataset changes
   useEffect(() => {
-    const refresh_segment_values = async () => {
-      try {
-        const new_values: Record<string, string[]> = {};
+    const fetchDatasetInfo = async () => {
+      // Reset segment selection when dataset changes
+      set_selected_segment(null);
 
-        for (const segment of AVAILABLE_SEGMENTS) {
-          try {
-            const res = await api.get('/bi/segment-values', {
-              params: {
-                datasetName: 'FCC_Jobs',
-                segmentName: segment,
-                includeCount: true,
-              },
-            });
-            if (res.data && Array.isArray(res.data)) {
-              new_values[segment] = res.data.map((item: any) => item.value || item);
-            }
-          } catch (e) {
-            console.error(`Error fetching values for ${segment}`, e);
-            new_values[segment] = [];
-          }
+      if (!selectedDataset) {
+        set_date_ranges([]);
+        set_date_range('');
+        set_available_segments([]);
+        set_available_metrics([]);
+        set_loading_segments(false);
+        return;
+      }
+
+      set_loading_segments(true);
+      try {
+        const response = await api.get(`/bi/datasets/${selectedDataset}`);
+
+        // Handle the response structure: response.data.data.dataset
+        const datasetData = response.data?.data?.dataset || response.data?.dataset || response.data;
+
+        // Extract segments from datasetSegments
+        if (datasetData?.datasetSegments && Array.isArray(datasetData.datasetSegments)) {
+          const segments = datasetData.datasetSegments
+            .filter((ds: DatasetSegment) => ds.isFilterable !== false) // Only include filterable segments
+            .map((ds: DatasetSegment) => ds.segment.segmentName);
+          set_available_segments(segments);
+        } else {
+          set_available_segments([]);
         }
 
-        set_segment_values(new_values);
-        set_ready(true);
+        // Extract metrics from response.data.data.metrics
+        if (response.data?.data?.metrics && Array.isArray(response.data.data.metrics)) {
+          const metrics = response.data.data.metrics
+            .filter((m: any) => m.isActive !== false)
+            .map((m: any) => m.metricName);
+          set_available_metrics(metrics);
+        } else {
+          set_available_metrics([]);
+        }
+
+        // Extract date ranges if available in the response
+        if (response.data?.data?.dateRanges && Array.isArray(response.data.data.dateRanges)) {
+          const ranges = response.data.data.dateRanges.map((item: any) => ({
+            id: item.id || item.name || item,
+            name: item.name || item.id || item,
+          }));
+          set_date_ranges(ranges);
+
+          // Set default date range to first available
+          if (ranges.length > 0) {
+            set_date_range(ranges[0].id);
+          }
+        } else {
+          set_date_ranges([]);
+          set_date_range('');
+        }
       } catch (error) {
-        console.error('Error fetching segment values:', error);
-        set_ready(true);
+        console.error('Error fetching dataset info:', error);
+        set_date_ranges([]);
+        set_date_range('');
+        set_available_segments([]);
+        set_available_metrics([]);
+      } finally {
+        set_loading_segments(false);
       }
     };
 
-    refresh_segment_values();
-  }, []);
+    fetchDatasetInfo();
+  }, [selectedDataset]);
 
-  const handle_check_all = (segment: string) => {
-    const all_values = segment_values[segment] || [];
-    const current_selected = filters[segment] || [];
-
-    if (current_selected.length === all_values.length) {
-      const new_filters = { ...filters };
-      delete new_filters[segment];
-      set_filters(new_filters);
+  // Set ready when segments and metrics are available
+  useEffect(() => {
+    if (available_segments.length > 0 && available_metrics.length > 0) {
+      set_ready(true);
     } else {
-      set_filters({
-        ...filters,
-        [segment]: all_values,
-      });
+      set_ready(false);
     }
+  }, [available_segments, available_metrics]);
+
+  // Memoize groupBySegments to prevent recreating array on each render
+  const groupBySegments = useMemo(() => (selected_segment ? [selected_segment] : []), [selected_segment]);
+
+  // Determine date segment name based on dataset
+  const getDateSegmentName = (datasetName: string): string => {
+    if (datasetName.toLowerCase().includes('quote')) {
+      return 'QuoteDate';
+    }
+    // Default to CreatedDate for Jobs_By_Status and other datasets
+    return 'CreatedDate';
   };
 
-  const toggle_filter = (segment: string, value: string) => {
-    const current = filters[segment] || [];
-    const index = current.indexOf(value);
-    let new_list = [];
-
-    if (index > -1) {
-      new_list = current.filter((v) => v !== value);
-    } else {
-      new_list = [...current, value];
+  // Memoize filters based on visual_date_range and dataset
+  const dateFilters = useMemo(() => {
+    if (!visual_date_range || !selectedDataset) {
+      return [];
     }
+    const dateSegmentName = getDateSegmentName(selectedDataset);
+    return [
+      {
+        segmentName: dateSegmentName,
+        operator: visual_date_range,
+      },
+    ];
+  }, [visual_date_range, selectedDataset]);
 
-    const new_filters = { ...filters };
-    if (new_list.length > 0) {
-      new_filters[segment] = new_list;
-    } else {
-      delete new_filters[segment];
-    }
-    set_filters(new_filters);
-  };
-
-  const count_selected = () => {
-    return Object.values(filters).reduce((acc, curr) => acc + curr.length, 0);
-  };
+  if (!selectedDataset) {
+    return (
+      <Box
+        sx={{
+          minHeight: '100vh',
+          bgcolor: '#f3f4f6',
+          p: 3,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Typography variant="h6" color="text.secondary">
+          Please select a dataset from the header
+        </Typography>
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: '#f3f4f6', p: 3 }}>
       <Stack spacing={3}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Typography variant="h4" fontWeight="bold" color="text.primary">
-            Business Intelligence Dashboard
-          </Typography>
-        </Box>
-
         <Box
           sx={{
             bgcolor: 'background.paper',
@@ -138,12 +184,13 @@ export default function Page() {
           <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems="center" justifyContent="space-between">
             <Stack direction="row" spacing={2} alignItems="center">
               <ButtonGroup variant="outlined">
-                {DATE_RANGES.map((mode) => {
+                {date_ranges.map((mode) => {
                   return (
                     <Button
                       key={mode.id}
                       variant={date_range === mode.id ? 'contained' : 'outlined'}
                       onClick={() => set_date_range(mode.id)}
+                      disabled={!date_range}
                     >
                       {mode.name}
                     </Button>
@@ -152,141 +199,49 @@ export default function Page() {
               </ButtonGroup>
             </Stack>
 
-            <Stack direction="row" spacing={1} alignItems="center">
-              <Typography variant="subtitle2" color="text.secondary" fontWeight="medium">
-                Controls:
-              </Typography>
-              <ClickAwayListener onClickAway={() => set_filters_anchor(null)}>
-                <Box>
-                  <Button
-                    variant="outlined"
-                    color="inherit"
-                    endIcon={<ArrowDropDownIcon />}
-                    onClick={(e) => set_filters_anchor(filters_anchor ? null : e.currentTarget)}
-                    sx={{ textTransform: 'none', borderColor: 'divider' }}
-                  >
-                    Filters {count_selected() > 0 && `(${count_selected()})`}
-                  </Button>
-                  <Popper
-                    open={Boolean(filters_anchor)}
-                    anchorEl={filters_anchor}
-                    placement="bottom-start"
-                    modifiers={[
-                      {
-                        name: 'offset',
-                        options: {
-                          offset: [0, 8],
-                        },
-                      },
-                    ]}
-                    sx={{ zIndex: 1200 }}
-                  >
-                    <Box
-                      sx={{
-                        p: 1.5,
-                        maxHeight: 500,
-                        overflow: 'auto',
-                        bgcolor: 'background.paper',
-                        boxShadow: 4,
-                        borderRadius: 2,
-                        minWidth: 320,
-                        border: '1px solid',
-                        borderColor: 'divider',
-                      }}
+            <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap">
+              <Stack direction="row" spacing={1} alignItems="center">
+                <Typography variant="subtitle2" color="text.secondary" fontWeight="medium">
+                  Date:
+                </Typography>
+                <ButtonGroup variant="outlined" size="small">
+                  {VISUAL_DATE_RANGES.map((mode) => (
+                    <Button
+                      key={mode.id}
+                      variant={visual_date_range === mode.id ? 'contained' : 'outlined'}
+                      onClick={() => set_visual_date_range(mode.id)}
                     >
-                      <Stack spacing={1}>
-                        {AVAILABLE_SEGMENTS.map((segment) => {
-                          const values = segment_values[segment] || [];
-                          const selected = filters[segment] || [];
-                          const all_selected = selected.length === values.length && values.length > 0;
+                      {mode.name}
+                    </Button>
+                  ))}
+                </ButtonGroup>
+              </Stack>
 
-                          return (
-                            <Accordion
-                              key={segment}
-                              disableGutters
-                              elevation={0}
-                              sx={{
-                                '&:before': { display: 'none' },
-                                border: '1px solid',
-                                borderColor: 'divider',
-                                borderRadius: 1,
-                              }}
-                            >
-                              <AccordionSummary
-                                expandIcon={<ExpandMoreIcon />}
-                                sx={{ minHeight: 48, px: 2, bgcolor: '#f9fafb' }}
-                              >
-                                <Stack
-                                  direction="row"
-                                  alignItems="center"
-                                  spacing={1}
-                                  width="100%"
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  <Checkbox
-                                    size="small"
-                                    checked={all_selected}
-                                    indeterminate={selected.length > 0 && selected.length < values.length}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handle_check_all(segment);
-                                    }}
-                                  />
-                                  <Typography fontWeight="bold" variant="body2">
-                                    {segment}
-                                  </Typography>
-                                  {selected.length > 0 && (
-                                    <Box
-                                      sx={{
-                                        bgcolor: 'primary.light',
-                                        color: 'primary.contrastText',
-                                        px: 0.8,
-                                        py: 0.2,
-                                        borderRadius: 1,
-                                        fontSize: '0.7rem',
-                                      }}
-                                    >
-                                      {selected.length}
-                                    </Box>
-                                  )}
-                                </Stack>
-                              </AccordionSummary>
-                              <AccordionDetails sx={{ p: 0, maxHeight: 200, overflowY: 'auto' }}>
-                                <Stack>
-                                  {values.map((val) => (
-                                    <Stack
-                                      key={val}
-                                      direction="row"
-                                      alignItems="center"
-                                      sx={{
-                                        px: 2,
-                                        py: 0.5,
-                                        '&:hover': { bgcolor: '#f3f4f6' },
-                                        cursor: 'pointer',
-                                      }}
-                                      onClick={() => toggle_filter(segment, val)}
-                                    >
-                                      <Checkbox
-                                        size="small"
-                                        checked={selected.includes(val)}
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          toggle_filter(segment, val);
-                                        }}
-                                      />
-                                      <Typography variant="body2">{val}</Typography>
-                                    </Stack>
-                                  ))}
-                                </Stack>
-                              </AccordionDetails>
-                            </Accordion>
-                          );
-                        })}
-                      </Stack>
-                    </Box>
-                  </Popper>
-                </Box>
-              </ClickAwayListener>
+              <Stack direction="row" spacing={1} alignItems="center">
+                <Typography variant="subtitle2" color="text.secondary" fontWeight="medium">
+                  Segment:
+                </Typography>
+                {loading_segments ? (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 2 }}>
+                    <CircularProgress size={16} />
+                    <Typography variant="body2" color="text.secondary">
+                      Loading segments...
+                    </Typography>
+                  </Box>
+                ) : (
+                  <ButtonGroup variant="outlined" size="small">
+                    {available_segments.map((segment: string) => (
+                      <Button
+                        key={segment}
+                        variant={selected_segment === segment ? 'contained' : 'outlined'}
+                        onClick={() => set_selected_segment(selected_segment === segment ? null : segment)}
+                      >
+                        {segment}
+                      </Button>
+                    ))}
+                  </ButtonGroup>
+                )}
+              </Stack>
             </Stack>
           </Stack>
         </Box>
@@ -298,122 +253,34 @@ export default function Page() {
             <h3>Loading dashboard...</h3>
             <p>Please wait while we fetch your data.</p>
           </Box>
+        ) : !selected_segment ? (
+          <Box sx={{ p: 3, textAlign: 'center' }}>
+            <Typography variant="h6" color="text.secondary">
+              Please select a segment to view charts
+            </Typography>
+          </Box>
         ) : (
           <Box>
             <Grid container spacing={2}>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <BarTile
-                  title="Sales by Yard"
-                  datasetName="FCC_Jobs"
-                  groupBySegments={['Yard']}
-                  metrics={['TotalCost']}
-                  filters={filters}
-                  date_range={date_range}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <BarTile
-                  title="Sales by Time Period"
-                  datasetName="FCC_Jobs"
-                  groupBySegments={['Month']}
-                  metrics={['TotalCost']}
-                  filters={filters}
-                  date_range={date_range}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, sm: 3 }}>
-                <DonutTile
-                  title="Jobs by Yard" // Was Dropoff Visits
-                  datasetName="FCC_Jobs"
-                  groupBySegments={['Yard']}
-                  metrics={['TotalJobs']}
-                  filters={filters}
-                  date_range={date_range}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, sm: 3 }}>
-                <DonutTile
-                  title="Sales by Yard" // Was Dropoff Sales
-                  datasetName="FCC_Jobs"
-                  groupBySegments={['Yard']}
-                  metrics={['TotalCost']}
-                  filters={filters}
-                  date_range={date_range}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, sm: 3 }}>
-                <DonutTile
-                  title="Jobs by Status" // Was Dropoff Pieces
-                  datasetName="FCC_Jobs"
-                  groupBySegments={['Status']}
-                  metrics={['TotalJobs']}
-                  filters={filters}
-                  date_range={date_range}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, sm: 3 }}>
-                {/* NewCustomersChart placeholder or replacement */}
-                <DonutTile
-                  title="Jobs by JobType"
-                  datasetName="FCC_Jobs"
-                  groupBySegments={['JobType']}
-                  metrics={['TotalJobs']}
-                  filters={filters}
-                  date_range={date_range}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, sm: 3 }}>
-                <DonutTile
-                  title="Labor Hours by Yard" // Was Pickup Sales
-                  datasetName="FCC_Jobs"
-                  groupBySegments={['Yard']}
-                  metrics={['TotalLaborHours']} // Changed to show something else
-                  filters={filters}
-                  date_range={date_range}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, sm: 3 }}>
-                <DonutTile
-                  title="Average Job Cost by Yard" // Was Promotion Visits (Using AvgJobCost now)
-                  datasetName="FCC_Jobs"
-                  groupBySegments={['Yard']}
-                  metrics={['AvgJobCost']}
-                  filters={filters}
-                  date_range={date_range}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, sm: 3 }}>
-                <DonutTile
-                  title="Sales by Status" // Was Promotion Incoming Sales
-                  datasetName="FCC_Jobs"
-                  groupBySegments={['Status']}
-                  metrics={['TotalCost']}
-                  filters={filters}
-                  date_range={date_range}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, sm: 3 }}>
-                {/* AverageValue placeholder */}
-                <DonutTile
-                  title="Total Cost (Status)"
-                  datasetName="FCC_Jobs"
-                  groupBySegments={['Status']}
-                  metrics={['TotalCost']}
-                  filters={filters}
-                  date_range={date_range}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, sm: 3 }}>
-                {/* AverageValue placeholder 2 */}
-                <DonutTile
-                  title="Total Jobs (JobType)"
-                  datasetName="FCC_Jobs"
-                  groupBySegments={['JobType']}
-                  metrics={['TotalJobs']}
-                  filters={filters}
-                  date_range={date_range}
-                />
-              </Grid>
+              {available_metrics.slice(0, 5).map((metric, index) => {
+                // Alternate between bar and donut, starting with bar for first two, then donut
+                const chartType = index < 2 ? 'bar' : index < 4 ? 'donut' : 'bar';
+                // First two are large (6 cols), rest are medium (4 cols)
+                const gridSize = index < 2 ? { xs: 12, sm: 6 } : { xs: 12, sm: 4 };
+
+                return (
+                  <Grid key={metric} size={gridSize}>
+                    <QueryChart
+                      title={`${metric} by ${selected_segment}`}
+                      datasetName={selectedDataset || ''}
+                      groupBySegments={groupBySegments}
+                      metricName={metric}
+                      chartType={chartType}
+                      filters={dateFilters}
+                    />
+                  </Grid>
+                );
+              })}
             </Grid>
           </Box>
         )}

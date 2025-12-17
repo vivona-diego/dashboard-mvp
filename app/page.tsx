@@ -3,7 +3,7 @@
 import { Box, Button, ButtonGroup, CircularProgress, Grid, Skeleton, Stack, Typography } from '@mui/material';
 import { DateTime } from 'luxon';
 import { useEffect, useState, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import QueryChart from './components/dashboard/charts/QueryChart';
 import api from './api/axiosClient';
 import { useDataset } from './contexts/DatasetContext';
@@ -32,9 +32,11 @@ const VISUAL_DATE_RANGES = [
 ];
 
 export default function Page() {
-  const { selectedDataset } = useDataset();
+  const { selectedDataset, setSelectedDataset } = useDataset();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [ready, set_ready] = useState(false);
+  const [mounted, set_mounted] = useState(false);
 
   const [selected_segment, set_selected_segment] = useState<string | null>(null);
   const [available_segments, set_available_segments] = useState<string[]>([]);
@@ -45,6 +47,19 @@ export default function Page() {
   const [date_ranges, set_date_ranges] = useState<DateRange[]>([]);
   const [date_range, set_date_range] = useState<string>('');
 
+  // Sync dataset and date range from URL
+  useEffect(() => {
+    const urlDataset = searchParams.get('dataset');
+    const urlDateRange = searchParams.get('date_range')
+
+    if (urlDataset && urlDataset !== selectedDataset && mounted) {
+       setSelectedDataset(urlDataset);
+    }
+    if (urlDateRange && VISUAL_DATE_RANGES.find(r => r.id === urlDateRange)) {
+        set_visual_date_range(urlDateRange);
+    }
+  }, [searchParams, mounted, setSelectedDataset]);
+
   const handlePersonClick = (personName: string) => {
     const encodedName = encodeURIComponent(personName);
     const encodedSegment = selected_segment ? encodeURIComponent(selected_segment) : '';
@@ -54,12 +69,24 @@ export default function Page() {
     if (encodedSegment) {
       queryParams.set('segment', encodedSegment);
     }
+    if (visual_date_range) {
+        queryParams.set('date_range', visual_date_range);
+    }
     router.push(`/detail?${queryParams.toString()}`);
   };
 
   const handleTitleClick = () => {
-    router.push('/detail');
+    const encodedSegment = selected_segment ? encodeURIComponent(selected_segment) : '';
+    const queryParams = new URLSearchParams();
+    if (encodedSegment) queryParams.set('segment', encodedSegment);
+    if (visual_date_range) queryParams.set('date_range', visual_date_range);
+    
+    router.push(`/detail?${queryParams.toString()}`);
   };
+
+  useEffect(() => {
+    set_mounted(true);
+  }, []);
 
   // Fetch dataset info (segments and date ranges) when dataset changes
   useEffect(() => {
@@ -89,6 +116,13 @@ export default function Page() {
             .filter((ds: DatasetSegment) => ds.isFilterable !== false) // Only include filterable segments
             .map((ds: DatasetSegment) => ds.segment.segmentName);
           set_available_segments(segments);
+
+           // Restore segment from URL if applicable
+           const urlSegment = searchParams.get('segment');
+           const urlDataset = searchParams.get('dataset');
+           if (urlDataset === selectedDataset && urlSegment && segments.includes(urlSegment)) {
+               set_selected_segment(urlSegment);
+           }
         } else {
           set_available_segments([]);
         }
@@ -131,7 +165,7 @@ export default function Page() {
     };
 
     fetchDatasetInfo();
-  }, [selectedDataset]);
+  }, [selectedDataset, searchParams]);
 
   // Set ready when segments and metrics are available
   useEffect(() => {
@@ -167,6 +201,10 @@ export default function Page() {
       },
     ];
   }, [visual_date_range, selectedDataset]);
+
+  if (!mounted) {
+    return <div className="min-h-dvh bg-black"></div>;
+  }
 
   if (!selectedDataset) {
     return (

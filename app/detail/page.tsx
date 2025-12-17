@@ -1,6 +1,21 @@
 'use client';
 
-import { Box, Typography, Button, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, CircularProgress, Alert, Pagination } from '@mui/material';
+import {
+  Box,
+  Typography,
+  Button,
+  Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  CircularProgress,
+  Alert,
+  Pagination,
+} from '@mui/material';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Suspense, useEffect, useState, useRef } from 'react';
 import api from '@/app/api/axiosClient';
@@ -12,6 +27,7 @@ function DetailContent() {
   const { selectedDataset } = useDataset();
   const personName = searchParams.get('person');
   const segmentName = searchParams.get('segment');
+  const urlDateRange = searchParams.get('date_range')
 
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -69,6 +85,16 @@ function DetailContent() {
           ];
         }
 
+        // Date Range Filter (from URL)
+        if (urlDateRange) {
+           const dateSegment = selectedDataset.toLowerCase().includes('quote') ? 'QuoteDate' : 'CreatedDate';
+           if (!requestBody.filters) requestBody.filters = [];
+           requestBody.filters.push({
+             segmentName: dateSegment,
+             operator: urlDateRange,
+           });
+        }
+
         const res = await api.post('/bi/drilldown', requestBody, {
           signal: abortController.signal,
         });
@@ -77,19 +103,27 @@ function DetailContent() {
           return;
         }
 
-        if (res.data?.success && res.data?.data?.data) {
-          const rows = res.data.data.data;
+        // Check for success in the nested response
+        // Structure: res.data = { success: true, data: { success: true, data: [...], pagination: {...}, metadata: {...} } }
+        const responseData = res.data?.data;
+
+        if (responseData && (responseData.success || Array.isArray(responseData.data))) {
+          const rows = responseData.data || [];
           setData(rows);
 
           // Extract columns from first row if available
           if (rows.length > 0) {
-            setColumns(Object.keys(rows[0]));
+            setColumns(Object.keys(rows[0]).filter((k) => k !== '_RowNum'));
+          } else if (responseData.metadata?.columns) {
+            setColumns(responseData.metadata.columns);
           }
 
           // Get totalPages from pagination metadata
-          const pagination = res.data?.data?.pagination || res.data?.data?.data?.pagination;
-          if (pagination?.totalPages) {
+          const pagination = responseData.pagination;
+          if (pagination) {
             setTotalPages(pagination.totalPages);
+          } else if (responseData.metadata?.totalRows) {
+            setTotalPages(Math.ceil(responseData.metadata.totalRows / pageSize));
           } else {
             // Fallback: if we got less than pageSize, we're on the last page
             setTotalPages(rows.length < pageSize ? page : page + 1);
@@ -119,11 +153,19 @@ function DetailContent() {
         abortControllerRef.current.abort();
       }
     };
-  }, [selectedDataset, personName, segmentName, page]);
+  }, [selectedDataset, personName, segmentName, page, urlDateRange]);
 
   const handlePageChange = (_event: React.ChangeEvent<unknown>, value: number) => {
     setPage(value);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleBackDashboard = () => {
+    const query = new URLSearchParams();
+    if (selectedDataset) query.set('dataset', selectedDataset);
+    if (segmentName) query.set('segment', segmentName);
+    if (urlDateRange) query.set('date_range', urlDateRange);
+    router.push(`/?${query.toString()}`);
   };
 
   const decodedPersonName = personName ? decodeURIComponent(personName) : null;
@@ -138,7 +180,7 @@ function DetailContent() {
       }}
     >
       <Stack spacing={3}>
-        <Button variant="outlined" onClick={() => router.push('/')} sx={{ alignSelf: 'flex-start' }}>
+        <Button variant="outlined" onClick={handleBackDashboard} sx={{ alignSelf: 'flex-start' }}>
           ← Back to Dashboard
         </Button>
 
@@ -247,4 +289,3 @@ export default function DetailPage() {
     </Suspense>
   );
 }
-

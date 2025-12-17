@@ -3,6 +3,7 @@
 import { Box, Button, ButtonGroup, CircularProgress, Grid, Skeleton, Stack, Typography } from '@mui/material';
 import { DateTime } from 'luxon';
 import { useEffect, useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import QueryChart from './components/dashboard/charts/QueryChart';
 import api from './api/axiosClient';
 import { useDataset } from './contexts/DatasetContext';
@@ -32,6 +33,7 @@ const VISUAL_DATE_RANGES = [
 
 export default function Page() {
   const { selectedDataset } = useDataset();
+  const router = useRouter();
   const [ready, set_ready] = useState(false);
 
   const [selected_segment, set_selected_segment] = useState<string | null>(null);
@@ -42,6 +44,22 @@ export default function Page() {
 
   const [date_ranges, set_date_ranges] = useState<DateRange[]>([]);
   const [date_range, set_date_range] = useState<string>('');
+
+  const handlePersonClick = (personName: string) => {
+    const encodedName = encodeURIComponent(personName);
+    const encodedSegment = selected_segment ? encodeURIComponent(selected_segment) : '';
+    const queryParams = new URLSearchParams({
+      person: encodedName,
+    });
+    if (encodedSegment) {
+      queryParams.set('segment', encodedSegment);
+    }
+    router.push(`/detail?${queryParams.toString()}`);
+  };
+
+  const handleTitleClick = () => {
+    router.push('/detail');
+  };
 
   // Fetch dataset info (segments and date ranges) when dataset changes
   useEffect(() => {
@@ -281,6 +299,8 @@ export default function Page() {
                       metricName={metric}
                       chartType={chartType}
                       filters={dateFilters}
+                      onPersonClick={handlePersonClick}
+                      onTitleClick={handleTitleClick}
                     />
                   </Grid>
                 );

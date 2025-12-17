@@ -7,9 +7,10 @@ interface BarChartProps {
     labels: string[];
     data: any[];
     options?: any;
+    onBarClick?: (personName: string) => void;
 }
 
-const BarChart = ({ labels, data, options }: BarChartProps) => {
+const BarChart = ({ labels, data, options, onBarClick }: BarChartProps) => {
     const theme = useTheme();
     const isDark = theme.palette.mode === 'dark';
 
@@ -54,11 +55,20 @@ const BarChart = ({ labels, data, options }: BarChartProps) => {
         ...options,
     };
 
+    const handleEvents = {
+        click: (params: any) => {
+            if (onBarClick && params.name) {
+                onBarClick(params.name);
+            }
+        },
+    };
+
     return (
         <ReactECharts
             option={finalOptions}
             style={{ height: '350px', width: '100%' }}
             theme={isDark ? 'dark' : undefined}
+            onEvents={onBarClick ? handleEvents : undefined}
         />
     );
 };

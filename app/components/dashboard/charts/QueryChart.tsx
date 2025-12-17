@@ -14,10 +14,12 @@ interface QueryChartProps {
   metricName: string;
   chartType: 'bar' | 'donut';
   filters?: Array<{ segmentName: string; operator: string }>;
+  onPersonClick?: (personName: string) => void;
+  onTitleClick?: () => void;
 }
 
 const QueryChart = (props: QueryChartProps) => {
-  const { title, datasetName, groupBySegments, metricName, chartType, filters } = props;
+  const { title, datasetName, groupBySegments, metricName, chartType, filters, onPersonClick, onTitleClick } = props;
 
   const [results, set_results] = useState<any[]>([]);
   const [loading, set_loading] = useState(false);
@@ -180,7 +182,23 @@ const QueryChart = (props: QueryChartProps) => {
           flexDirection: 'column',
         }}
       >
-        <Typography variant="h6" fontWeight="bold" color="text.primary" gutterBottom>
+        <Typography
+          variant="h6"
+          fontWeight="bold"
+          color="text.primary"
+          gutterBottom
+          onClick={onTitleClick}
+          sx={{
+            cursor: onTitleClick ? 'pointer' : 'default',
+            '&:hover': onTitleClick
+              ? {
+                  color: 'primary.main',
+                  textDecoration: 'underline',
+                }
+              : {},
+            transition: 'color 0.2s, text-decoration 0.2s',
+          }}
+        >
           {title}
         </Typography>
         <Box sx={{ flex: 1, minHeight: 0 }}>
@@ -204,6 +222,7 @@ const QueryChart = (props: QueryChartProps) => {
             }}
             labels={labels}
             data={series}
+            onBarClick={onPersonClick}
           />
         </Box>
       </Box>
@@ -237,7 +256,23 @@ const QueryChart = (props: QueryChartProps) => {
         flexDirection: 'column',
       }}
     >
-      <Typography variant="h6" fontWeight="bold" color="text.primary" gutterBottom>
+      <Typography
+        variant="h6"
+        fontWeight="bold"
+        color="text.primary"
+        gutterBottom
+        onClick={onTitleClick}
+        sx={{
+          cursor: onTitleClick ? 'pointer' : 'default',
+          '&:hover': onTitleClick
+            ? {
+                color: 'primary.main',
+                textDecoration: 'underline',
+              }
+            : {},
+          transition: 'color 0.2s, text-decoration 0.2s',
+        }}
+      >
         {title}
       </Typography>
       <Box sx={{ flex: 1, minHeight: 0, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
@@ -271,6 +306,7 @@ const QueryChart = (props: QueryChartProps) => {
             </Box>
           }
           chartPosition={['50%', '40%']}
+          onSliceClick={onPersonClick}
         />
       </Box>
     </Box>

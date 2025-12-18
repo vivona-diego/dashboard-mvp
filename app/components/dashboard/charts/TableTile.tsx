@@ -22,10 +22,11 @@ interface TableTileProps {
     metrics: string[]; // e.g. ['TotalJobs', 'TotalCost']
     filters?: Array<{ segmentName: string; operator: string; value?: any }>;
     useDrilldown?: boolean;
+    headerAction?: React.ReactNode;
 }
 
 const TableTile = (props: TableTileProps) => {
-    const { title, datasetName, groupBySegments, metrics, filters, useDrilldown } = props;
+    const { title, datasetName, groupBySegments, metrics, filters, useDrilldown, headerAction } = props;
 
     const [data, setData] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
@@ -124,9 +125,12 @@ const TableTile = (props: TableTileProps) => {
     if (useDrilldown) {
          return (
             <Box sx={{ p: 2, height: '100%', bgcolor: 'background.paper', borderRadius: 2, boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', display: 'flex', flexDirection: 'column' }}>
-                <Typography variant="h6" fontWeight="bold" color="text.primary" gutterBottom>
-                    {title}
-                </Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                    <Typography variant="h6" fontWeight="bold" color="text.primary">
+                        {title}
+                    </Typography>
+                    {headerAction}
+                </Box>
                 
                 <TableContainer sx={{ flex: 1, overflow: 'auto', maxHeight: 500 }}>
                     <Table size="small" stickyHeader>

@@ -3,7 +3,7 @@
     import { Box, Button, ButtonGroup, Chip, CircularProgress, Grid, Skeleton, Stack, Typography } from '@mui/material';
 import { DateTime } from 'luxon';
 import { useEffect, useState, useMemo } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import QueryChart from './components/dashboard/charts/QueryChart';
 import TableTile from './components/dashboard/charts/TableTile';
 import api from './api/axiosClient';
@@ -35,6 +35,7 @@ const VISUAL_DATE_RANGES = [
 export default function Page() {
   const { selectedDataset, setSelectedDataset } = useDataset();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [ready, set_ready] = useState(false);
   const [mounted, set_mounted] = useState(false);
 
@@ -423,10 +424,25 @@ export default function Page() {
                         <TableTile 
                             title={`All data`}
                             datasetName={selectedDataset || ''}
-                            groupBySegments={[demoSegment]}
+                            groupBySegments={[selected_segment]}
                             metrics={tableMetrics} 
                             filters={tableFilters}
                             useDrilldown={true}
+                            headerAction={
+                                <Button 
+                                    size="small" 
+                                    variant="contained" 
+                                    onClick={() => {
+                                        const query = new URLSearchParams();
+                                        if (selectedDataset) query.set('dataset', selectedDataset);
+                                        if (visual_date_range) query.set('date_range', visual_date_range);
+                                        if (selected_segment) query.set('segment', selected_segment);
+                                        router.push(`/detail?${query.toString()}`);
+                                    }}
+                                >
+                                    View Full Details
+                                </Button>
+                            }
                         />
                     </Grid>
                   );

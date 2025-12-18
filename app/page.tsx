@@ -421,11 +421,12 @@ export default function Page() {
                   return (
                     <Grid size={{ xs: 12 }}>
                         <TableTile 
-                            title={`Jobs by ${demoSegment}`}
+                            title={`All data`}
                             datasetName={selectedDataset || ''}
                             groupBySegments={[demoSegment]}
                             metrics={tableMetrics} 
                             filters={tableFilters}
+                            useDrilldown={true}
                         />
                     </Grid>
                   );

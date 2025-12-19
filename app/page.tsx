@@ -1,10 +1,11 @@
 'use client';
 
-import { Box, Button, ButtonGroup, CircularProgress, Grid, Skeleton, Stack, Typography } from '@mui/material';
+    import { Box, Button, ButtonGroup, Chip, CircularProgress, Grid, Skeleton, Stack, Typography } from '@mui/material';
 import { DateTime } from 'luxon';
 import { useEffect, useState, useMemo } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import QueryChart from './components/dashboard/charts/QueryChart';
+import TableTile from './components/dashboard/charts/TableTile';
 import api from './api/axiosClient';
 import { useDataset } from './contexts/DatasetContext';
 
@@ -33,8 +34,8 @@ const VISUAL_DATE_RANGES = [
 
 export default function Page() {
   const { selectedDataset, setSelectedDataset } = useDataset();
-  const router = useRouter();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [ready, set_ready] = useState(false);
   const [mounted, set_mounted] = useState(false);
 
@@ -47,6 +48,9 @@ export default function Page() {
   const [date_ranges, set_date_ranges] = useState<DateRange[]>([]);
   const [date_range, set_date_range] = useState<string>('');
 
+  // Interactive filter state (from chart clicks) - Array for multi-select
+  const [interactive_filters, set_interactive_filters] = useState<{ segment: string; value: string }[]>([]);
+
   // Sync dataset and date range from URL
   useEffect(() => {
     const urlDataset = searchParams.get('dataset');
@@ -54,6 +58,7 @@ export default function Page() {
 
     if (urlDataset && urlDataset !== selectedDataset && mounted) {
        setSelectedDataset(urlDataset);
+       set_interactive_filters([]); // Clear filters on dataset change
     }
     if (urlDateRange && VISUAL_DATE_RANGES.find(r => r.id === urlDateRange)) {
         set_visual_date_range(urlDateRange);
@@ -61,27 +66,23 @@ export default function Page() {
   }, [searchParams, mounted, setSelectedDataset]);
 
   const handlePersonClick = (personName: string) => {
-    const encodedName = encodeURIComponent(personName);
-    const encodedSegment = selected_segment ? encodeURIComponent(selected_segment) : '';
-    const queryParams = new URLSearchParams({
-      person: encodedName,
-    });
-    if (encodedSegment) {
-      queryParams.set('segment', encodedSegment);
+    // Toggle filter: If exists, remove it; if not, add it.
+    if (selected_segment) {
+        set_interactive_filters(prev => {
+            const exists = prev.find(f => f.segment === selected_segment && f.value === personName);
+            if (exists) {
+                return prev.filter(f => !(f.segment === selected_segment && f.value === personName));
+            } else {
+                return [...prev, { segment: selected_segment, value: personName }];
+            }
+        });
     }
-    if (visual_date_range) {
-        queryParams.set('date_range', visual_date_range);
-    }
-    router.push(`/detail?${queryParams.toString()}`);
   };
 
   const handleTitleClick = () => {
-    const encodedSegment = selected_segment ? encodeURIComponent(selected_segment) : '';
-    const queryParams = new URLSearchParams();
-    if (encodedSegment) queryParams.set('segment', encodedSegment);
-    if (visual_date_range) queryParams.set('date_range', visual_date_range);
-    
-    router.push(`/detail?${queryParams.toString()}`);
+    // Clear all filters for the current segment? Or custom logic.
+    // For now, clear all.
+    set_interactive_filters([]);
   };
 
   useEffect(() => {
@@ -189,7 +190,8 @@ export default function Page() {
   };
 
   // Memoize filters based on visual_date_range and dataset
-  const dateFilters = useMemo(() => {
+  // These are the GLOBAL filters applied to all charts logic (data fetching)
+  const baseFilters = useMemo(() => {
     if (!visual_date_range || !selectedDataset) {
       return [];
     }
@@ -201,6 +203,47 @@ export default function Page() {
       },
     ];
   }, [visual_date_range, selectedDataset]);
+
+  // Combine global filters + interactive filters for the TableTile
+  const tableFilters = useMemo(() => {
+      const filters: Array<{ segmentName: string; operator: string; value?: any }> = [...baseFilters];
+      
+      if (interactive_filters.length > 0) {
+          // Group filters by segment
+          const groups: Record<string, string[]> = {};
+          interactive_filters.forEach(f => {
+              if (!groups[f.segment]) groups[f.segment] = [];
+              groups[f.segment].push(f.value);
+          });
+
+          // Create filter objects
+          Object.keys(groups).forEach(segment => {
+              const values = groups[segment];
+              if (values.length === 1) {
+                  filters.push({
+                      segmentName: segment,
+                      operator: 'eq',
+                      value: values[0]
+                  });
+              } else if (values.length > 1) {
+                   filters.push({
+                      segmentName: segment,
+                      operator: 'in', // Using IN operator for multi-select
+                      value: values
+                  });
+              }
+          });
+      }
+      return filters;
+  }, [baseFilters, interactive_filters]);
+
+  // Construct highlight filters array for charts
+  const highlightFilters = useMemo(() => {
+     return interactive_filters.map(f => ({
+         segmentName: f.segment,
+         value: f.value
+     }));
+  }, [interactive_filters]);
 
   if (!mounted) {
     return <div className="min-h-dvh bg-black"></div>;
@@ -321,6 +364,26 @@ export default function Page() {
           </Box>
         ) : (
           <Box>
+            {interactive_filters.length > 0 && (
+                <Box sx={{ mb: 2, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                    {interactive_filters.map((f) => (
+                        <Chip 
+                            key={`${f.segment}-${f.value}`}
+                            label={`${f.segment}: ${f.value}`} 
+                            onDelete={() => handlePersonClick(f.value)} // Re-clicking acts as toggle/delete
+                            color="primary"
+                            variant="outlined"
+                            sx={{ bgcolor: 'rgba(25, 118, 210, 0.08)', fontWeight: 'bold' }}
+                        />
+                    ))}
+                    <Chip 
+                        label="Clear All" 
+                        onDelete={() => set_interactive_filters([])}
+                        variant="outlined"
+                        size="small"
+                    />
+                </Box>
+            )}
             <Grid container spacing={2}>
               {available_metrics.slice(0, 5).map((metric, index) => {
                 // Alternate between bar and donut, starting with bar for first two, then donut
@@ -336,13 +399,55 @@ export default function Page() {
                       groupBySegments={groupBySegments}
                       metricName={metric}
                       chartType={chartType}
-                      filters={dateFilters}
+                      filters={baseFilters}
+                      highlightFilters={highlightFilters}
                       onPersonClick={handlePersonClick}
                       onTitleClick={handleTitleClick}
                     />
                   </Grid>
                 );
               })}
+
+              {/* Demo Table for Jobs (Prioritize Customer segment as requested) */}
+              {(() => {
+                  const desiredMetrics = ['TotalJobs', 'TotalCost'];
+                  const tableMetrics = desiredMetrics.filter(m => available_metrics.includes(m));
+                  
+                  // Boss requested "Jobs by Customer" specifically for the demo.
+                  // Try to find "Customer" in available segments, otherwise fall back to selected_segment.
+                  const demoSegment = available_segments.includes('Customer') ? 'Customer' : selected_segment;
+
+                  if (tableMetrics.length === 0 || !demoSegment) return null;
+
+                  return (
+                    <Grid size={{ xs: 12 }}>
+                        <TableTile 
+                            title={`All data`}
+                            datasetName={selectedDataset || ''}
+                            groupBySegments={[selected_segment]}
+                            metrics={tableMetrics} 
+                            filters={tableFilters}
+                            useDrilldown={true}
+                            headerAction={
+                                <Button 
+                                    size="small" 
+                                    variant="contained" 
+                                    onClick={() => {
+                                        const query = new URLSearchParams();
+                                        if (selectedDataset) query.set('dataset', selectedDataset);
+                                        if (visual_date_range) query.set('date_range', visual_date_range);
+                                        if (selected_segment) query.set('segment', selected_segment);
+                                        router.push(`/detail?${query.toString()}`);
+                                    }}
+                                >
+                                    View Full Details
+                                </Button>
+                            }
+                        />
+                    </Grid>
+                  );
+              })()}
+             
             </Grid>
           </Box>
         )}

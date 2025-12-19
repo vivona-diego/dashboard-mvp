@@ -4,6 +4,7 @@ import './globals.css';
 import { DatasetProvider } from './contexts/DatasetContext';
 import Header from './components/Header';
 import ThemeRegistry from './components/ThemeRegistry';
+import { Suspense } from 'react';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -31,7 +32,9 @@ export default function RootLayout({
         <ThemeRegistry>
           <DatasetProvider>
             <Header />
-            {children}
+            <Suspense fallback={<div>Loading...</div>}>
+              {children}
+            </Suspense>
           </DatasetProvider>
         </ThemeRegistry>
       </body>

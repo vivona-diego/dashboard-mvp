@@ -5,12 +5,14 @@ import CssBaseline from '@mui/material/CssBaseline';
 
 import { ReactNode, useMemo } from 'react';
 import { getTheme } from './theme';
+import { useTheme } from '../contexts/ThemeContext';
 
 export default function ThemeRegistry({ children }: { children: ReactNode }) {
-  const dark_theme = true; // You can replace this with your theme logic
-  const theme = useMemo(() => getTheme(dark_theme), [dark_theme]);
+  const { theme } = useTheme();
+  const globalTheme = useMemo(() => getTheme(theme === 'dark'), [theme]);
+
   return (
-    <ThemeProvider theme={theme}>
+    <ThemeProvider theme={globalTheme}>
       <CssBaseline />
       {children}
     </ThemeProvider>

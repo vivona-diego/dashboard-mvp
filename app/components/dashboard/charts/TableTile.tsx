@@ -133,11 +133,11 @@ const TableTile = (props: TableTileProps) => {
                 </Box>
                 
                 <TableContainer sx={{ flex: 1, overflow: 'auto', maxHeight: 500 }}>
-                    <Table size="small" stickyHeader>
+                    <Table stickyHeader>
                         <TableHead>
                             <TableRow>
                                 {dynamicColumns.map(col => (
-                                    <TableCell key={col} sx={{ fontWeight: 'bold' }}>{col}</TableCell>
+                                    <TableCell key={col} sx={{ fontWeight: 'bold',bgcolor: 'background.default' }}>{col}</TableCell>
                                 ))}
                             </TableRow>
                         </TableHead>

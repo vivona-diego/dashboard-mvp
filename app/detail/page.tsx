@@ -259,7 +259,7 @@ function DetailContent() {
     <Box
       sx={{
         minHeight: '100vh',
-        bgcolor: '#0B1D35',
+        bgcolor: 'background.default',
         p: 3,
       }}
     >

@@ -269,7 +269,7 @@ export default function Page() {
   }
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: '#0B1D35', p: { xs: 1, md: 3 } }}>
+    <Box sx={{ minHeight: '100vh', p: { xs: 1, md: 3 }, bgcolor: 'background.default' }}>
       <Stack spacing={3}>
         <Box
           sx={{
@@ -279,7 +279,6 @@ export default function Page() {
             boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)',
           }}
         >
-          <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems="center" justifyContent="space-between">
             <Stack direction="row" spacing={2} alignItems="center">
               <ButtonGroup variant="outlined">
                 {date_ranges.map((mode) => {
@@ -296,7 +295,6 @@ export default function Page() {
                 })}
               </ButtonGroup>
             </Stack>
-
             <Stack
               flex={1}
               direction="row"
@@ -304,7 +302,7 @@ export default function Page() {
               alignItems="center"
               flexWrap="wrap"
               justifyContent="space-between"
-              sx={{ p: { xs: 1, md: 2 }, backgroundColor: '#07101c' }}
+              sx={{ p: { xs: 1, md: 2 }}}
             >
               <Stack direction="row" spacing={1} alignItems="center" sx={{ maxWidth: '100%', overflowX: 'auto' }}>
                 <ButtonGroup variant="outlined" size="small">
@@ -346,7 +344,6 @@ export default function Page() {
                 )}
               </Stack>
             </Stack>
-          </Stack>
         </Box>
         <Box>
           <EffectiveDates mode={visual_date_range} />
@@ -373,7 +370,7 @@ export default function Page() {
                             onDelete={() => handlePersonClick(f.value)} // Re-clicking acts as toggle/delete
                             color="primary"
                             variant="outlined"
-                            sx={{ bgcolor: 'rgba(25, 118, 210, 0.08)', fontWeight: 'bold' }}
+                            sx={{ fontWeight: 'bold' }}
                         />
                     ))}
                     <Chip 

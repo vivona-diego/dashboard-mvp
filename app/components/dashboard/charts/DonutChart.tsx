@@ -7,9 +7,10 @@ interface DonutChartProps {
     data: any[];
     options?: any;
     centered_element?: React.ReactNode;
+    onSliceClick?: (personName: string) => void;
 }
 
-const DonutChart = ({ data, options, centered_element, chartPosition = ['50%', '50%'] }: DonutChartProps & { chartPosition?: [string, string] }) => {
+const DonutChart = ({ data, options, centered_element, chartPosition = ['50%', '50%'], onSliceClick }: DonutChartProps & { chartPosition?: [string, string] }) => {
     const theme = useTheme();
     const isDark = theme.palette.mode === 'dark';
 
@@ -50,12 +51,21 @@ const DonutChart = ({ data, options, centered_element, chartPosition = ['50%', '
         ...options,
     };
 
+    const handleEvents = {
+        click: (params: any) => {
+            if (onSliceClick && params.name) {
+                onSliceClick(params.name);
+            }
+        },
+    };
+
     return (
         <Box sx={{ position: 'relative', height: '350px', width: '100%' }}>
             <ReactECharts
                 option={finalOptions}
                 style={{ height: '100%', width: '100%' }}
                 theme={isDark ? 'dark' : undefined}
+                onEvents={onSliceClick ? handleEvents : undefined}
             />
             {centered_element && (
                 <Box

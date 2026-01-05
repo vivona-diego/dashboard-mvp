@@ -4,6 +4,8 @@ import './globals.css';
 import { DatasetProvider } from './contexts/DatasetContext';
 import Header from './components/Header';
 import ThemeRegistry from './components/ThemeRegistry';
+import { Suspense } from 'react';
+import { ThemeProvider } from './contexts/ThemeContext';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -28,12 +30,16 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <ThemeRegistry>
-          <DatasetProvider>
-            <Header />
-            {children}
-          </DatasetProvider>
-        </ThemeRegistry>
+        <ThemeProvider>
+          <ThemeRegistry>
+            <DatasetProvider>
+              <Header />
+              <Suspense fallback={<div>Loading...</div>}>
+                {children}
+              </Suspense>
+            </DatasetProvider>
+          </ThemeRegistry>
+        </ThemeProvider>
       </body>
     </html>
   );

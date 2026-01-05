@@ -13,11 +13,14 @@ interface QueryChartProps {
   groupBySegments: string[];
   metricName: string;
   chartType: 'bar' | 'donut';
-  filters?: Array<{ segmentName: string; operator: string }>;
+  filters?: Array<{ segmentName: string; operator: string; value?: any }>;
+  highlightFilters?: Array<{ segmentName: string; value: string }>;
+  onPersonClick?: (personName: string) => void;
+  onTitleClick?: () => void;
 }
 
 const QueryChart = (props: QueryChartProps) => {
-  const { title, datasetName, groupBySegments, metricName, chartType, filters } = props;
+  const { title, datasetName, groupBySegments, metricName, chartType, filters, highlightFilters, onPersonClick, onTitleClick } = props;
 
   const [results, set_results] = useState<any[]>([]);
   const [loading, set_loading] = useState(false);
@@ -60,7 +63,7 @@ const QueryChart = (props: QueryChartProps) => {
 
         // Add filters if provided
         if (filters && filters.length > 0) {
-          requestBody.filters = filters;
+           requestBody.filters = filters;
         }
 
         const res = await api.post('/bi/query', requestBody, {
@@ -102,7 +105,7 @@ const QueryChart = (props: QueryChartProps) => {
         abortControllerRef.current.abort();
       }
     };
-  }, [datasetName, groupBySegments, metricName, filters]);
+  }, [datasetName, groupBySegments, metricName, filters]); // highlightFilters NOT included here
 
   if (loading) {
     return (
@@ -157,14 +160,35 @@ const QueryChart = (props: QueryChartProps) => {
 
   const format_fn = (val: any) => formatter.with_commas(val, 0);
   const val_formatter = (value: number) => format_fn(value);
+  
+  // Highlight logic: Check if any of the active highlight filters match this chart's segment
+  // If no filters exist for this segment, we don't dim anything (highlightEverything = true)
+  const filtersForThisSegment = highlightFilters?.filter(f => f.segmentName === segmentName);
+  const hasActiveFiltersForThisSegment = filtersForThisSegment && filtersForThisSegment.length > 0;
+
+  const isHighlighted = (value: string) => {
+      if (!hasActiveFiltersForThisSegment) return true; // No filters for this segment -> everything is visible
+      return filtersForThisSegment.some(f => f.value === value);
+  };
 
   if (chartType === 'bar') {
+    const dataWithStyle = values.map((val, idx) => {
+        const label = labels[idx];
+        const isDimmed = !isHighlighted(label);
+        return {
+            value: val,
+            itemStyle: {
+                opacity: isDimmed ? 0.3 : 1
+            }
+        };
+    });
+
     const series = [
       {
         name: metricName,
         type: 'bar',
         emphasis: { focus: 'series' },
-        data: values,
+        data: dataWithStyle,
       },
     ];
 
@@ -180,7 +204,23 @@ const QueryChart = (props: QueryChartProps) => {
           flexDirection: 'column',
         }}
       >
-        <Typography variant="h6" fontWeight="bold" color="text.primary" gutterBottom>
+        <Typography
+          variant="h6"
+          fontWeight="bold"
+          color="text.primary"
+          gutterBottom
+          onClick={onTitleClick}
+          sx={{
+            cursor: onTitleClick ? 'pointer' : 'default',
+            '&:hover': onTitleClick
+              ? {
+                  color: 'primary.main',
+                  textDecoration: 'underline',
+                }
+              : {},
+            transition: 'color 0.2s, text-decoration 0.2s',
+          }}
+        >
           {title}
         </Typography>
         <Box sx={{ flex: 1, minHeight: 0 }}>
@@ -204,6 +244,7 @@ const QueryChart = (props: QueryChartProps) => {
             }}
             labels={labels}
             data={series}
+            onBarClick={onPersonClick}
           />
         </Box>
       </Box>
@@ -211,15 +252,21 @@ const QueryChart = (props: QueryChartProps) => {
   }
 
   // Donut chart
-  const donutValues = labels.map((label, index) => ({
-    name: label,
-    value: values[index],
-  }));
+  const donutValues = labels.map((label, index) => {
+    const isDimmed = !isHighlighted(label);
+    return {
+        name: label,
+        value: values[index],
+        itemStyle: {
+            opacity: isDimmed ? 0.3 : 1
+        }
+    };
+  });
 
   const donutSeries = [
     {
-      radius: ['55%', '75%'],
-      data: donutValues,
+        radius: ['55%', '75%'],
+        data: donutValues,
     },
   ];
 
@@ -237,7 +284,23 @@ const QueryChart = (props: QueryChartProps) => {
         flexDirection: 'column',
       }}
     >
-      <Typography variant="h6" fontWeight="bold" color="text.primary" gutterBottom>
+      <Typography
+        variant="h6"
+        fontWeight="bold"
+        color="text.primary"
+        gutterBottom
+        onClick={onTitleClick}
+        sx={{
+          cursor: onTitleClick ? 'pointer' : 'default',
+          '&:hover': onTitleClick
+            ? {
+                color: 'primary.main',
+                textDecoration: 'underline',
+              }
+            : {},
+          transition: 'color 0.2s, text-decoration 0.2s',
+        }}
+      >
         {title}
       </Typography>
       <Box sx={{ flex: 1, minHeight: 0, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
@@ -271,6 +334,7 @@ const QueryChart = (props: QueryChartProps) => {
             </Box>
           }
           chartPosition={['50%', '40%']}
+          onSliceClick={onPersonClick}
         />
       </Box>
     </Box>

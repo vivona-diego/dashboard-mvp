@@ -405,45 +405,33 @@ export default function Page() {
                 );
               })}
 
-              {/* Demo Table for Jobs (Prioritize Customer segment as requested) */}
-              {(() => {
-                  const desiredMetrics = ['TotalJobs', 'TotalCost'];
-                  const tableMetrics = desiredMetrics.filter(m => available_metrics.includes(m));
-                  
-                  // Boss requested "Jobs by Customer" specifically for the demo.
-                  // Try to find "Customer" in available segments, otherwise fall back to selected_segment.
-                  const demoSegment = available_segments.includes('Customer') ? 'Customer' : selected_segment;
-
-                  if (tableMetrics.length === 0 || !demoSegment) return null;
-
-                  return (
-                    <Grid size={{ xs: 12 }}>
-                        <TableTile 
-                            title={`All data`}
-                            datasetName={selectedDataset || ''}
-                            groupBySegments={[selected_segment]}
-                            metrics={tableMetrics} 
-                            filters={tableFilters}
-                            useDrilldown={true}
-                            headerAction={
-                                <Button 
-                                    size="small" 
-                                    variant="contained" 
-                                    onClick={() => {
-                                        const query = new URLSearchParams();
-                                        if (selectedDataset) query.set('dataset', selectedDataset);
-                                        if (visual_date_range) query.set('date_range', visual_date_range);
-                                        if (selected_segment) query.set('segment', selected_segment);
-                                        router.push(`/detail?${query.toString()}`);
-                                    }}
-                                >
-                                    View Full Details
-                                </Button>
-                            }
-                        />
-                    </Grid>
-                  );
-              })()}
+              {available_metrics.length > 0 && selected_segment && (
+                <Grid size={{ xs: 12 }}>
+                  <TableTile
+                    title="All data"
+                    datasetName={selectedDataset || ''}
+                    groupBySegments={[selected_segment]}
+                    metrics={available_metrics}
+                    filters={tableFilters}
+                    useDrilldown={true}
+                    headerAction={
+                      <Button
+                        size="small"
+                        variant="contained"
+                        onClick={() => {
+                          const query = new URLSearchParams();
+                          if (selectedDataset) query.set('dataset', selectedDataset);
+                          if (visual_date_range) query.set('date_range', visual_date_range);
+                          if (selected_segment) query.set('segment', selected_segment);
+                          router.push(`/detail?${query.toString()}`);
+                        }}
+                      >
+                        View Full Details
+                      </Button>
+                    }
+                  />
+                </Grid>
+              )}
              
             </Grid>
           </Box>

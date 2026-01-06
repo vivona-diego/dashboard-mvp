@@ -61,28 +61,44 @@ export default function JobRevenueForecastPage() {
             // Process KPIs
             const kpis: any = {};
             if (kpiRes.data?.success) {
-                const data = kpiRes.data.data; // Array or object
-                if (Array.isArray(data)) {
-                    data.forEach(d => kpis[d.metricName] = d.value);
+                const responseData = kpiRes.data.data;
+                // Handle new structure: { kpis: [...], metadata: ... }
+                if (responseData?.kpis && Array.isArray(responseData.kpis)) {
+                    responseData.kpis.forEach((d: any) => {
+                        kpis[d.name] = d.value;
+                    });
+                } 
+                // Fallback for flat array or object
+                else if (Array.isArray(responseData)) {
+                    responseData.forEach((d: any) => kpis[d.metricName || d.name] = d.value);
                 } else {
-                    Object.assign(kpis, data);
+                    Object.assign(kpis, responseData);
                 }
             }
             
-            // Calculate Variance for KPIs
-            // Assuming Variance = Actual - Estimated (since no Goal)
-            // Or if user insists on Goal, maybe it's a fixed number? I'll stick to Act vs Est for now.
+            // Calculate Variance for KPIs if not provided by API
             const est = kpis['EstimatedRevenue'] || 0;
             const act = kpis['ActualRevenue'] || 0;
-            kpis['Variance'] = act - est;
-            kpis['VariancePercent'] = est !== 0 ? ((act - est) / est) * 100 : 0;
+            
+            if (kpis['Variance'] === undefined) {
+                kpis['Variance'] = act - est;
+            }
+            
+            if (kpis['VariancePercent'] === undefined) {
+                kpis['VariancePercent'] = est !== 0 ? ((act - est) / est) * 100 : 0;
+            }
             
             setKpiData(kpis);
 
             // Process Chart
             let chartRows: any[] = [];
-            if (chartRes.data?.success && Array.isArray(chartRes.data.data?.data)) {
-                chartRows = chartRes.data.data.data;
+            const chartDataRaw = chartRes.data?.data;
+            // Handle { success: true, data: [ ... ], metadata: ... } nested in axios data
+            if (chartRes.data?.success && chartDataRaw?.data && Array.isArray(chartDataRaw.data)) {
+                chartRows = chartDataRaw.data;
+            } else if (Array.isArray(chartDataRaw)) {
+                 // Fallback if data is directly an array
+                chartRows = chartDataRaw;
             }
             
             // Calculate Variance for Chart

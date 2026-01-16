@@ -1,53 +1,98 @@
-import { createTheme, alpha } from '@mui/material';
+import { createTheme, alpha, ThemeOptions } from '@mui/material';
 import CheckIcon from '@mui/icons-material/Check';
 
 // Color Palette Definitions
 const THEME_COLORS = {
   dark: {
-    background: '#0F172A', // Deep Navy/Slate
-    paper: '#1E293B',      // Lighter Navy/Slate for cards
-    primary: '#6366F1',    // Indigo/Violet accent
-    secondary: '#38BDF8',  // Sky Blue accent
     text: {
-      primary: '#F8FAFC',
-      secondary: '#94A3B8',
+      title: '#F3F4F6',
+      primaryButton: '#F3F4F6',
+      secondaryButton: '#F3F4F6',
     },
-    border: '#334155',
+    button: {
+      primary: '#4C91F7',
+      secondary: '#090C10',
+      outlinedSecondary: '#374151',
+    },
+    background: '#090C10',
+    filterBar: {
+      background: '#2F253E',
+      button: '#302C54',
+      buttonHover: '#302C54',
+      buttonSelected: '#4C91F7',
+      buttonOutlined: '#F3F4F6',
+      buttonText: '#F3F4F6',
+    },
+    container: {
+      title: '#F3F4F6',
+      background: '#1A1423',
+      horizontalLines: '#2D333B',
+      xyText: '#9CA3AF',
+      barColumns: '#2F3C89',
+      primaryText: '#F3F4F6',
+      secondaryText: '#9CA3AF',
+    }
   },
   light: {
-    background: '#F1F5F9', // Light Gray/Slate
-    paper: '#FFFFFF',      // White
-    primary: '#4F46E5',    // Indigo
-    secondary: '#0EA5E9',  // Sky Blue
     text: {
-      primary: '#0F172A',
-      secondary: '#64748B',
+      title: '#111827',
+      primaryButton: '#111827',
+      secondaryButton: '#111827',
     },
-    border: '#E2E8F0',
-  }
+    button: {
+      primary: '#003E82',
+      secondary: '#E8EEF5',
+      outlinedSecondary: '#A9C0DB',
+    },
+    background: '#E8EEF5',
+    filterBar: {
+      background: '#DFECF8',
+      button: '#DFECF8',
+      buttonHover: '#E5F2F9',
+      buttonSelected: '#003E82',
+      buttonOutlined: '#111827',
+      buttonText: '#111827',
+    },
+    container: {
+      title: '#111827',
+      background: '#FFFFFF',
+      horizontalLines: '#D1DCE5',
+      xyText: '#464A53',
+      barColumns: '#A9C0DB',
+      primaryText: '#111827',
+      secondaryText: '#464A53',
+    },
+  },
 };
 
 export const getTheme = (isDarkMode: boolean) => {
   const colors = isDarkMode ? THEME_COLORS.dark : THEME_COLORS.light;
 
-  return createTheme({
+  const themeOptions: ThemeOptions & { customColors?: any } = {
     palette: {
       mode: isDarkMode ? 'dark' : 'light',
       background: {
         default: colors.background,
-        paper: colors.paper,
+        paper: colors.container.background,
       },
       primary: {
-        main: colors.primary,
+        main: colors.button.primary,
       },
       secondary: {
-        main: colors.secondary,
+        main: colors.button.secondary,
       },
       text: {
-        primary: colors.text.primary,
-        secondary: colors.text.secondary,
+        primary: colors.text.title,
+        secondary: colors.text.secondaryButton,
       },
-      divider: colors.border,
+      divider: colors.container.horizontalLines,
+    },
+    customColors: {
+      text: colors.text,
+      button: colors.button,
+      filterBar: colors.filterBar,
+      container: colors.container,
+      background: colors.background,
     },
     typography: {
       fontFamily: '"Topaz", "Inter", "Roboto", "Helvetica", "Arial", sans-serif',
@@ -66,20 +111,20 @@ export const getTheme = (isDarkMode: boolean) => {
         styleOverrides: {
           body: {
             backgroundColor: colors.background,
-            color: colors.text.primary,
+            color: colors.text.title,
             transition: 'background-color 0.3s ease, color 0.3s ease',
             '&::-webkit-scrollbar': {
               width: '10px',
               height: '10px',
             },
             '&::-webkit-scrollbar-track': {
-              backgroundColor: isDarkMode ? '#1e293b' : '#f1f5f9',
+              backgroundColor: colors.container.horizontalLines,
             },
             '&::-webkit-scrollbar-thumb': {
-              backgroundColor: isDarkMode ? '#475569' : '#cbd5e1',
+              backgroundColor: colors.container.horizontalLines,
               borderRadius: '5px',
               '&:hover': {
-                backgroundColor: isDarkMode ? '#64748b' : '#94a3b8',
+                backgroundColor: colors.container.secondaryText,
               },
             },
           },
@@ -89,7 +134,7 @@ export const getTheme = (isDarkMode: boolean) => {
         styleOverrides: {
           root: {
             backgroundImage: 'none', // Remove default MUI overlay
-            backgroundColor: colors.paper,
+            backgroundColor: colors.container.background,
             borderRadius: 16,
             boxShadow: isDarkMode 
               ? '0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.16)' 
@@ -119,7 +164,7 @@ export const getTheme = (isDarkMode: boolean) => {
           root: {
             transition: 'all 0.2s',
             '&:hover': {
-              backgroundColor: alpha(colors.primary, 0.1),
+              backgroundColor: alpha(colors.button.primary, 0.1),
             },
           },
         },
@@ -127,18 +172,18 @@ export const getTheme = (isDarkMode: boolean) => {
       MuiTableCell: {
         styleOverrides: {
           root: {
-            borderBottom: `1px solid ${colors.border}`,
+            borderBottom: `1px solid ${colors.container.horizontalLines}`,
             padding: '16px',
-            color: colors.text.secondary,
+            color: colors.container.secondaryText,
           },
           head: {
-            backgroundColor: isDarkMode ? alpha(colors.primary, 0.05) : alpha(colors.primary, 0.02),
-            color: colors.text.primary,
+            backgroundColor: isDarkMode ? alpha(colors.button.primary, 0.05) : alpha(colors.button.primary, 0.02),
+            color: colors.container.primaryText,
             fontWeight: 600,
             fontSize: '0.875rem',
             textTransform: 'uppercase',
             letterSpacing: '0.05em',
-            borderBottom: `2px solid ${colors.border}`,
+            borderBottom: `2px solid ${colors.container.horizontalLines}`,
           },
         },
       },
@@ -146,7 +191,7 @@ export const getTheme = (isDarkMode: boolean) => {
         styleOverrides: {
           root: {
             '&:hover': {
-              backgroundColor: isDarkMode ? alpha(colors.primary, 0.05) : alpha(colors.primary, 0.02),
+              backgroundColor: isDarkMode ? alpha(colors.button.primary, 0.05) : alpha(colors.button.primary, 0.02),
             },
           },
         },
@@ -155,24 +200,25 @@ export const getTheme = (isDarkMode: boolean) => {
       MuiTooltip: {
         styleOverrides: {
           tooltip: {
-            backgroundColor: isDarkMode ? '#0f172a' : '#1e293b',
-            color: '#fff',
+            backgroundColor: colors.background,
+            color: colors.text.title,
             fontSize: '0.75rem',
             padding: '8px 12px',
             borderRadius: 6,
+            border: `1px solid ${colors.container.horizontalLines}`,
           },
         },
       },
       MuiCheckbox: {
         defaultProps: {
-          icon: <span style={{ width: 18, height: 18, borderRadius: 4, border: `2px solid ${colors.text.secondary}` }} />,
+          icon: <span style={{ width: 18, height: 18, borderRadius: 4, border: `2px solid ${colors.container.secondaryText}` }} />,
           checkedIcon: <CheckIcon style={{ fontSize: 18 }} />,
         },
         styleOverrides: {
           root: {
             padding: 8,
             '&.Mui-checked': {
-              color: colors.primary,
+              color: colors.button.primary,
             },
           },
         },
@@ -181,23 +227,26 @@ export const getTheme = (isDarkMode: boolean) => {
         styleOverrides: {
           root: {
             borderRadius: 10,
-            backgroundColor: isDarkMode ? alpha('#000', 0.2) : '#fff',
+            backgroundColor: colors.container.background,
             '& .MuiOutlinedInput-notchedOutline': {
-              borderColor: colors.border,
+              borderColor: colors.container.horizontalLines,
             },
             '&:hover .MuiOutlinedInput-notchedOutline': {
-              borderColor: colors.text.secondary,
+              borderColor: colors.container.secondaryText,
             },
             '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-              borderColor: colors.primary,
+              borderColor: colors.button.primary,
               borderWidth: 2,
             },
           },
           input: {
             padding: '12px 16px',
+            color: colors.container.primaryText,
           },
         },
       },
     },
-  });
+  };
+
+  return createTheme(themeOptions);
 };

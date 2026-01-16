@@ -1,11 +1,15 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Box, Button, Typography, CircularProgress, Stack, Switch } from '@mui/material';
+import { useEffect, useState, useMemo } from 'react';
+import {
+  Box,
+  Button,
+  Typography,
+  CircularProgress,
+  Stack
+} from '@mui/material';
+import { useSearchParams } from 'next/navigation';
 import { useDataset } from '../contexts/DatasetContext';
-import { useTheme } from '../contexts/ThemeContext';
-import LightModeIcon from '@mui/icons-material/LightMode';
-import DarkModeIcon from '@mui/icons-material/DarkMode';
 import api from '../api/axiosClient';
 
 interface Dataset {
@@ -15,13 +19,12 @@ interface Dataset {
 
 export default function Header() {
   const { selectedDataset, setSelectedDataset } = useDataset();
-  const { theme, toggleTheme } = useTheme();
+  const searchParams = useSearchParams();
+  const forecastParam = searchParams.get('forecast'); // 'job' or 'quote' or null
   const [datasets, setDatasets] = useState<Dataset[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isMounted, setIsMounted] = useState(false);
-
-  const isDarkMode = theme === 'dark';
 
   useEffect(() => {
     setIsMounted(true);
@@ -69,6 +72,20 @@ export default function Header() {
     setSelectedDataset(datasetName);
   };
 
+  // Filter datasets based on forecast parameter
+  const filteredDatasets = useMemo(() => {
+    if (!forecastParam) {
+      return datasets; // Show all datasets if no forecast filter
+    }
+
+    const prefix = forecastParam === 'job' ? 'job_' : 'quote_';
+    return datasets.filter(dataset => dataset.name.toLowerCase().startsWith(prefix));
+  }, [datasets, forecastParam]);
+
+  // Determine which forecast buttons to show
+  const showJobForecast = !forecastParam || forecastParam === 'job';
+  const showQuoteForecast = !forecastParam || forecastParam === 'quote';
+
   if (!isMounted) {
     return null;
   }
@@ -85,45 +102,42 @@ export default function Header() {
       }}
     >
       <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={3}>
-        <Stack direction="row" spacing={2} alignItems="center">
-          <Typography
-            variant="h5"
-            fontWeight="bold"
-            color="text.primary"
-            component="a"
-            href="/"
-            sx={{ textDecoration: 'none', cursor: 'pointer' }}
-          >
-            BI Dashboard
-          </Typography>
+         <Stack direction="row" spacing={2} alignItems="center">
+           <Typography
+             variant="h5"
+             fontWeight="bold"
+             color="text.primary"
+             component="a"
+             href="/"
+             sx={{ textDecoration: 'none', cursor: 'pointer' }}
+           >
+             {forecastParam ? forecastParam.charAt(0).toUpperCase() + forecastParam.slice(1) : 'BI Dashboard'}
+           </Typography>
           <Stack direction="row" spacing={1}>
-            <Button
-              href="/job-revenue-forecast"
-              variant="text"
-              sx={{ color: 'text.secondary', '&:hover': { color: 'primary.main' } }}
-            >
-              Job Forecast
-            </Button>
-            <Button
-              href="/quote-revenue-forecast"
-              variant="text"
-              sx={{ color: 'text.secondary', '&:hover': { color: 'primary.main' } }}
-            >
-              Quote Forecast
-            </Button>
+            <Stack direction="row" spacing={1}>
+              {showJobForecast && (
+                <Button
+                  href="/job-revenue-forecast"
+                  variant="text"
+                  sx={{ color: 'text.secondary', '&:hover': { color: 'primary.main' } }}
+                >
+                  Job Forecast
+                </Button>
+              )}
+              {showQuoteForecast && (
+                <Button
+                  href="/quote-revenue-forecast"
+                  variant="text"
+                  sx={{ color: 'text.secondary', '&:hover': { color: 'primary.main' } }}
+                >
+                  Quote Forecast
+                </Button>
+              )}
+            </Stack>
           </Stack>
         </Stack>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Stack direction="row" spacing={1} alignItems="center">
-            {isDarkMode ? <DarkModeIcon sx={{ color: 'text.secondary' }} /> : <LightModeIcon sx={{ color: 'warning.main' }} />}
-            <Switch
-              checked={isDarkMode}
-              onChange={toggleTheme}
-              inputProps={{ 'aria-label': 'theme toggle' }}
-            />
-          </Stack>
-
           {loading ? (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <CircularProgress size={20} />
@@ -137,9 +151,10 @@ export default function Header() {
             </Typography>
           ) : (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              {datasets.map((dataset) => (
+              {filteredDatasets.map((dataset) => (
                 <Button
                   key={dataset.name}
+                  sx={{borderRadius: '100px'}}
                   variant={selectedDataset === dataset.name ? 'contained' : 'outlined'}
                   onClick={() => handleDatasetClick(dataset.name)}
                 >

@@ -269,7 +269,13 @@ export default function Page() {
   }
 
   return (
-    <Box sx={{ minHeight: '100vh', p: { xs: 1, md: 3 }, bgcolor: 'background.default' }}>
+    <Box 
+      sx={{ 
+        minHeight: '100vh', 
+        p: { xs: 1, md: 3 }, 
+        bgcolor: 'background.default',
+      }}
+    >
       <Stack spacing={3}>
         <Box
           sx={{
@@ -318,8 +324,8 @@ export default function Page() {
                 </ButtonGroup>
               </Stack>
 
-              <Stack direction="row" spacing={1} alignItems="center" sx={{ maxWidth: '100%', overflowX: 'auto',ml:0 }}>
-                <Typography variant="subtitle2" color="text.secondary" fontWeight="medium">
+              <Stack direction="row" spacing={1} alignItems="center" sx={{ flex: 1, minWidth: 0 }}>
+                <Typography variant="subtitle2" color="text.secondary" fontWeight="medium" sx={{ flexShrink: 0 }}>
                   Segment:
                 </Typography>
                 {loading_segments ? (
@@ -330,17 +336,41 @@ export default function Page() {
                     </Typography>
                   </Box>
                 ) : (
-                  <ButtonGroup variant="outlined" size="small">
+                  <Box 
+                    sx={{ 
+                      display: 'flex', 
+                      gap: 0.5, 
+                      overflowX: 'auto',
+                      overflowY: 'hidden',
+                      scrollbarWidth: 'thin',
+                      '&::-webkit-scrollbar': {
+                        height: '6px',
+                      },
+                      '&::-webkit-scrollbar-track': {
+                        backgroundColor: 'transparent',
+                      },
+                      '&::-webkit-scrollbar-thumb': {
+                        backgroundColor: 'action.disabledBackground',
+                        borderRadius: '3px',
+                        '&:hover': {
+                          backgroundColor: 'action.disabled',
+                        },
+                      },
+                      pb: 0.5,
+                    }}
+                  >
                     {available_segments.map((segment: string) => (
                       <Button
                         key={segment}
                         variant={selected_segment === segment ? 'contained' : 'outlined'}
+                        size="small"
                         onClick={() => set_selected_segment(selected_segment === segment ? null : segment)}
+                        sx={{ flexShrink: 0 }}
                       >
                         {segment}
                       </Button>
                     ))}
-                  </ButtonGroup>
+                  </Box>
                 )}
               </Stack>
             </Stack>

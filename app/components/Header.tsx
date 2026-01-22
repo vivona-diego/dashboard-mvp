@@ -1,14 +1,9 @@
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
-import {
-  Box,
-  Button,
-  Typography,
-  CircularProgress,
-  Stack
-} from '@mui/material';
-import { useSearchParams } from 'next/navigation';
+import { Box, Button, Typography, Stack } from '@mui/material';
+import { useSearchParams, usePathname } from 'next/navigation';
+import Link from 'next/link';
 import { useDataset } from '../contexts/DatasetContext';
 import api from '../api/axiosClient';
 
@@ -20,7 +15,9 @@ interface Dataset {
 export default function Header() {
   const { selectedDataset, setSelectedDataset } = useDataset();
   const searchParams = useSearchParams();
+  const pathname = usePathname();
   const forecastParam = searchParams.get('forecast'); // 'job' or 'quote' or null
+  const featureParam = searchParams.get('feature'); // 'job' or null
   const [datasets, setDatasets] = useState<Dataset[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -79,12 +76,17 @@ export default function Header() {
     }
 
     const prefix = forecastParam === 'job' ? 'job_' : 'quote_';
-    return datasets.filter(dataset => dataset.name.toLowerCase().startsWith(prefix));
+    return datasets.filter((dataset) => dataset.name.toLowerCase().startsWith(prefix));
   }, [datasets, forecastParam]);
 
-  // Determine which forecast buttons to show
-  const showJobForecast = !forecastParam || forecastParam === 'job';
-  const showQuoteForecast = !forecastParam || forecastParam === 'quote';
+  const jobMenuItems = [
+    { text: 'Job Forecast', path: '/jobs/revenue/forecast' },
+    { text: 'Job P/L Dashboard', path: '/jobs/pl/dashboard' },
+    { text: 'Job Profit/(Loss) Drilldown', path: '/jobs/pl/drilldown' },
+    { text: 'Jobs Revenue Report', path: '/jobs/revenue' },
+    { text: 'Jobs Unbilled', path: '/jobs/billing' },
+    { text: 'Jobs Revenue Forecast Report By Salesperson', path: '/jobs/revenue/forecast/salesperson' },
+  ];
 
   if (!isMounted) {
     return null;
@@ -94,77 +96,111 @@ export default function Header() {
     <Box
       sx={{
         bgcolor: 'background.paper',
-        borderBottom: '1px solid',
-        borderColor: 'divider',
-        px: 3,
-        py: 2,
-        boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)',
+        boxShadow: '0 1px 3px 0 rgb(0/ 0.1)',
       }}
     >
-      <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={3}>
-         <Stack direction="row" spacing={2} alignItems="center">
-           <Typography
-             variant="h5"
-             fontWeight="bold"
-             color="text.primary"
-             component="a"
-             href="/"
-             sx={{ textDecoration: 'none', cursor: 'pointer' }}
-           >
-             {forecastParam ? forecastParam.charAt(0).toUpperCase() + forecastParam.slice(1) : 'BI Dashboard'}
-           </Typography>
-          <Stack direction="row" spacing={1}>
-            <Stack direction="row" spacing={1}>
-              {showJobForecast && (
-                <Button
-                  href="/job-revenue-forecast"
-                  variant="text"
-                  sx={{ color: 'text.secondary', '&:hover': { color: 'primary.main' } }}
-                >
-                  Job Forecast
-                </Button>
-              )}
-              {showQuoteForecast && (
-                <Button
-                  href="/quote-revenue-forecast"
-                  variant="text"
-                  sx={{ color: 'text.secondary', '&:hover': { color: 'primary.main' } }}
-                >
-                  Quote Forecast
-                </Button>
-              )}
-            </Stack>
-          </Stack>
+      {/* Top Bar */}
+      <Box
+        sx={{
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+          px: 4,
+          py: 1.5,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}
+      >
+        {/* Left: Branding */}
+        <Stack direction="row" spacing={1} alignItems="center">
+          <Typography variant="subtitle1" fontWeight="bold" color="text.primary">
+            Business Intelligence
+          </Typography>
+          <Typography variant="subtitle1" color="text.secondary">
+            | FCC
+          </Typography>
         </Stack>
 
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          {loading ? (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <CircularProgress size={20} />
-              <Typography variant="body2" color="text.secondary">
-                Loading datasets...
-              </Typography>
-            </Box>
-          ) : error ? (
-            <Typography variant="body2" color="error">
-              {error}
-            </Typography>
-          ) : (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              {filteredDatasets.map((dataset) => (
+        {/* Right: Navigation & Datasets */}
+        <Stack direction="row" spacing={1} alignItems="center">
+          {/* Navigation Items (converted from Tabs) */}
+          {!loading &&
+            !error &&
+            filteredDatasets.length > 0 &&
+            filteredDatasets.map((item) => {
+              const isActive = selectedDataset === item.name;
+              return (
                 <Button
-                  key={dataset.name}
-                  sx={{borderRadius: '100px'}}
-                  variant={selectedDataset === dataset.name ? 'contained' : 'outlined'}
-                  onClick={() => handleDatasetClick(dataset.name)}
+                  key={item.name}
+                  variant={isActive ? 'contained' : 'outlined'}
+                  onClick={() => handleDatasetClick(item.name)}
+                  sx={{
+                    borderRadius: '50px',
+                    textTransform: 'none',
+                    fontWeight: 'medium',
+                    px: 2,
+                    py: 0.5,
+                    color: isActive ? 'text.primary' : 'text.secondary',
+                    borderColor: isActive ? 'transparent' : 'divider',
+                    bgcolor: isActive ? 'action.selected' : 'transparent',
+                    boxShadow: 'none',
+                    '&:hover': {
+                      bgcolor: isActive ? 'action.selected' : 'action.hover',
+                      borderColor: isActive ? 'transparent' : 'divider',
+                    },
+                  }}
                 >
-                  {dataset.name}
+                  {item.name.replace(/_/g, ' ')}
                 </Button>
-              ))}
-            </Box>
-          )}
-        </Box>
-      </Stack>
+              );
+            })}
+
+          {/* Datasets (Keep them but maybe verify if they should be here) */}
+          {/* If datasets are distinct from nav, keep them. If user meant these ARE the buttons, we have both now. */}
+          {/* Based on image, it looks clean. I'll keep datasets but maybe style them similarly if needed, or keep as is.
+               The current dataset buttons are rounded 100px. 
+           */}
+          
+        </Stack>
+      </Box>
+
+      {/* Bottom Bar: Page Title */}
+      <Box sx={{ px: 4, py: 2, display: 'flex', flexDirection: 'row', gap: 4, alignItems: 'center' }}>
+        <Typography variant="h5" fontWeight="bold" color="text.primary" component={Link} href={featureParam ? `/?feature=${featureParam}` : '/'}>
+          {forecastParam ? forecastParam.charAt(0).toUpperCase() + forecastParam.slice(1) : 'BI Dashboard'}
+        </Typography>
+        <Stack direction="row" spacing={1} alignItems="center">
+          {featureParam === 'job' &&
+            jobMenuItems.map((item) => {
+              const isActive = pathname === item.path;
+              return (
+                <Button
+                  key={item.path}
+                  component={Link}
+                  href={`${item.path}?feature=${featureParam}`}
+                  variant={isActive ? 'contained' : 'outlined'}
+                  color="inherit"
+                  sx={{
+                    borderRadius: '50px',
+                    textTransform: 'none',
+                    fontWeight: 'medium',
+                    px: 2,
+                    py: 0.5,
+                    borderColor: isActive ? 'transparent' : 'divider',
+                    bgcolor: isActive ? 'action.selected' : 'transparent',
+                    boxShadow: 'none',
+                    '&:hover': {
+                      bgcolor: isActive ? 'action.selected' : 'action.hover',
+                      borderColor: isActive ? 'transparent' : 'divider',
+                    },
+                  }}
+                >
+                  {item.text}
+                </Button>
+              );
+            })}
+        </Stack>
+      </Box>
     </Box>
   );
 }

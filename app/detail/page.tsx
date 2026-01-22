@@ -21,7 +21,7 @@ import {
   Collapse,
   CircularProgress,
 } from '@mui/material';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams, /* useRouter */ } from 'next/navigation';
 import { Suspense, useEffect, useState, useRef } from 'react';
 import api from '@/app/api/axiosClient';
 import { useDataset } from '@/app/contexts/DatasetContext';
@@ -39,7 +39,7 @@ interface FilterItem {
 
 function DetailContent() {
   const searchParams = useSearchParams();
-  const router = useRouter();
+  /* const router = useRouter(); */
   const { selectedDataset } = useDataset();
   const personName = searchParams.get('person');
   const segmentName = searchParams.get('segment');
@@ -244,30 +244,18 @@ function DetailContent() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleBackDashboard = () => {
-    const query = new URLSearchParams();
-    if (selectedDataset) query.set('dataset', selectedDataset);
-    if (segmentName) query.set('segment', segmentName);
-    if (urlDateRange) query.set('date_range', urlDateRange);
-    router.push(`/?${query.toString()}`);
-  };
-
   const decodedPersonName = personName ? decodeURIComponent(personName) : null;
   const decodedSegmentName = segmentName ? decodeURIComponent(segmentName) : null;
 
   return (
     <Box
       sx={{
-        minHeight: '100vh',
+        minHeight: '100%',
         bgcolor: 'background.default',
         p: 3,
       }}
     >
       <Stack spacing={3}>
-        <Button variant="outlined" onClick={handleBackDashboard} sx={{ alignSelf: 'flex-start' }}>
-          ← Back to Dashboard
-        </Button>
-
         <Box
           sx={{
             bgcolor: 'background.paper',

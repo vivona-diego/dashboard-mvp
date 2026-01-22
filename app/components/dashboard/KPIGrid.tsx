@@ -18,9 +18,10 @@ interface KPIGridProps {
   filters?: Array<{ segmentName: string; operator: string; value?: any }>;
   manualData?: Record<string, number>;
   loading?: boolean;
+  gridSize?: { xs?: number; sm?: number; md?: number; lg?: number; xl?: number }; // Optional grid sizing
 }
 
-export default function KPIGrid({ datasetName, metrics, filters, manualData, loading: externalLoading }: KPIGridProps) {
+export default function KPIGrid({ datasetName, metrics, filters, manualData, loading: externalLoading, gridSize }: KPIGridProps) {
   const [data, setData] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(false); // internal loading
   const effectiveLoading = externalLoading || loading;
@@ -82,12 +83,12 @@ export default function KPIGrid({ datasetName, metrics, filters, manualData, loa
   };
 
   return (
-    <Grid container justifyContent={"space-between"}>
+    <Grid container spacing={3}>
       {metrics.map((metric) => {
         const value = data[metric.metricName];
         
         return (
-            <Grid key={metric.label} size={{ xs: 12, sm: 6, md: 2.4 }}> 
+            <Grid key={metric.label} size={gridSize || { xs: 12, sm: 6, md: 2 }}> 
                 <Card elevation={0} sx={{ bgcolor: 'background.paper', height: '100%', borderRadius: 2, boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)' }}>
                      <CardContent sx={{ p: '16px !important', textAlign: 'center' }}>
                           <Typography variant="h5" fontWeight="bold" sx={{ color: getColor(value, metric), fontSize: '1.5rem' }}>

@@ -1,4 +1,4 @@
-import { createTheme, alpha, ThemeOptions } from '@mui/material';
+import { createTheme, alpha, type ThemeOptions } from '@mui/material';
 import CheckIcon from '@mui/icons-material/Check';
 
 // Color Palette Definitions
@@ -68,6 +68,8 @@ const THEME_COLORS = {
 export const getTheme = (isDarkMode: boolean) => {
   const colors = isDarkMode ? THEME_COLORS.dark : THEME_COLORS.light;
 
+  // Nota: Usamos 'as any' o extendemos el tipo para customColors si TypeScript se queja,
+  // pero esta estructura funciona para la creación inicial.
   const themeOptions: ThemeOptions & { customColors?: any } = {
     palette: {
       mode: isDarkMode ? 'dark' : 'light',
@@ -173,7 +175,6 @@ export const getTheme = (isDarkMode: boolean) => {
         styleOverrides: {
           root: {
             borderBottom: `1px solid ${colors.container.horizontalLines}`,
-            padding: '16px',
             color: colors.container.secondaryText,
           },
           head: {
@@ -196,7 +197,6 @@ export const getTheme = (isDarkMode: boolean) => {
           },
         },
       },
-      // Keep existing specialized overrides if they are still relevant
       MuiTooltip: {
         styleOverrides: {
           tooltip: {

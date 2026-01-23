@@ -8,9 +8,9 @@ import MultiMetricQueryChart from '../../components/dashboard/charts/MultiMetric
 import DetailedMonthlyTable, { MonthlyDetailedData } from '../../components/dashboard/DetailedMonthlyTable';
 import CustomerRevenueTable, { CustomerRevenueData } from '../../components/dashboard/CustomerRevenueTable';
 
+const DATASET_NAME = 'Job_Revenue_Forecast';
 
 export default function JobsRevenueForecastReportPage() {
-    const datasetName = 'Jobs_Revenue_Forecast_Report'; // Virtual dataset name for now
 
     // Filter States
     const [company, setCompany] = useState<string | null>('J. J. Curran Crane Company');
@@ -103,6 +103,7 @@ export default function JobsRevenueForecastReportPage() {
                                 segments={['J. J. Curran Crane Company']} // Mock
                                 selectedSegment={company} 
                                 onSelect={setCompany}
+                                label=''
                             />
                         </Box>
                         <Box>
@@ -111,6 +112,7 @@ export default function JobsRevenueForecastReportPage() {
                                 segments={['All', 'Detroit', 'Toledo']} 
                                 selectedSegment={yard} 
                                 onSelect={setYard}
+                                label=''
                             />
                         </Box>
                         <Box>
@@ -120,6 +122,7 @@ export default function JobsRevenueForecastReportPage() {
                                 segments={['2025', '2024', '2023']} 
                                 selectedSegment={year} 
                                 onSelect={setYear}
+                                label=''
                             />
                         </Box>
                     </Box>
@@ -128,7 +131,7 @@ export default function JobsRevenueForecastReportPage() {
                 {/* KPI Grid */}
                 <Box>
                     <KPIGrid 
-                        datasetName={datasetName}
+                        datasetName={DATASET_NAME}
                         metrics={[
                             { metricName: 'RevenueGoal', label: 'Revenue Goal', format: 'currency' },
                             { metricName: 'EstRevenue', label: 'Est. Revenue', format: 'currency' },
@@ -148,7 +151,7 @@ export default function JobsRevenueForecastReportPage() {
                     <Grid size={{ xs: 12, lg: 6 }}>
                         <MultiMetricQueryChart 
                             title="Revenue Goal, Est. Revenue and Act. Revenue by Date"
-                            datasetName={datasetName}
+                            datasetName={DATASET_NAME}
                             groupBySegments={['Month']} 
                             metrics={[
                                 { metricName: 'RevenueGoal', label: 'Revenue Goal', type: 'bar', color: chartColors.goal }, 
@@ -162,7 +165,7 @@ export default function JobsRevenueForecastReportPage() {
                     <Grid size={{ xs: 12, lg: 6 }}>
                         <MultiMetricQueryChart 
                             title="Salesperson - Revenue Goal, Est. Revenue and Act. Revenue by Salesperson"
-                            datasetName={datasetName}
+                            datasetName={DATASET_NAME}
                             groupBySegments={['Salesperson']}
                             metrics={[
                                 { metricName: 'RevenueGoal', label: 'Revenue Goal', type: 'bar', color: chartColors.goal }, 

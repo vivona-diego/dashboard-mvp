@@ -55,6 +55,7 @@ export default function JobsBilledUnbilledRecurringPage() {
                                 segments={['Kensington', 'Detroit', 'Toledo']} 
                                 selectedSegment={yard} 
                                 onSelect={setYard}
+                                label=''
                             />
                         </Box>
                         <Box>
@@ -63,6 +64,7 @@ export default function JobsBilledUnbilledRecurringPage() {
                                 segments={['All']} 
                                 selectedSegment={jobNo} 
                                 onSelect={setJobNo}
+                                label=''
                             />
                         </Box>
                          <Box>
@@ -71,6 +73,7 @@ export default function JobsBilledUnbilledRecurringPage() {
                                 segments={['All', 'Finished', 'Cancelled', 'Confirmed']} 
                                 selectedSegment={jobStatus} 
                                 onSelect={setJobStatus}
+                                label=''
                             />
                         </Box>
                          <Box>
@@ -79,6 +82,7 @@ export default function JobsBilledUnbilledRecurringPage() {
                                 segments={['All', 'McVittie, Matt', 'Gentner, Brian', 'McComas, Chad', 'Weber, Trever']} 
                                 selectedSegment={salesperson} 
                                 onSelect={setSalesperson}
+                                label=''
                             />
                         </Box>
                     </Box>

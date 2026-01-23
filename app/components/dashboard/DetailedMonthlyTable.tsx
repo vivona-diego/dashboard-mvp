@@ -66,23 +66,23 @@ export default function DetailedMonthlyTable({ data }: DetailedMonthlyTableProps
             <Typography variant="h6" gutterBottom component="div" sx={{ fontSize: '1rem', fontWeight: 'bold', mb: 2 }}>
                 Revenue Goal, Est. Revenue and Act. Revenue by Date (Detailed)
             </Typography>
-            <TableContainer component={Paper} elevation={0} sx={{ borderRadius: 2, boxShadow: '0 1px 3px 0 rgba(0,0,0,0.1)' }}>
+            <TableContainer component={Paper} elevation={0} sx={{ borderRadius: 2, boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}>
                 <Table size="small" aria-label="detailed monthly table">
                     <TableHead>
-                        <TableRow sx={{ bgcolor: 'action.hover' }}>
-                            <TableCell sx={{ fontWeight: 'bold', fontSize: '0.75rem', color: 'text.secondary' }}>Month</TableCell>
-                            <TableCell align="right" sx={{ fontWeight: 'bold', fontSize: '0.75rem', color: 'text.secondary' }}>Revenue Goal</TableCell>
-                            <TableCell align="right" sx={{ fontWeight: 'bold', fontSize: '0.75rem', color: 'text.secondary' }}>Est. Revenue</TableCell>
-                            <TableCell align="right" sx={{ fontWeight: 'bold', fontSize: '0.75rem', color: 'text.secondary' }}>High Conf. Quote</TableCell>
-                            <TableCell align="right" sx={{ fontWeight: 'bold', fontSize: '0.75rem', color: 'text.secondary' }}>Total Est.</TableCell>
-                            <TableCell align="right" sx={{ fontWeight: 'bold', fontSize: '0.75rem', color: 'text.secondary' }}>Act. Revenue</TableCell>
-                            <TableCell align="right" sx={{ fontWeight: 'bold', fontSize: '0.75rem', color: 'text.secondary' }}>Cumulative Tot Est</TableCell>
-                            <TableCell align="right" sx={{ fontWeight: 'bold', fontSize: '0.75rem', color: 'text.secondary' }}>Cumulative Act</TableCell>
+                        <TableRow>
+                            <TableCell sx={{ fontWeight: 'bold', bgcolor: 'primary.main', color: 'common.white' }}>Month</TableCell>
+                            <TableCell align="right" sx={{ fontWeight: 'bold', bgcolor: 'primary.main', color: 'common.white' }}>Revenue Goal</TableCell>
+                            <TableCell align="right" sx={{ fontWeight: 'bold', bgcolor: 'primary.main', color: 'common.white' }}>Est. Revenue</TableCell>
+                            <TableCell align="right" sx={{ fontWeight: 'bold', bgcolor: 'primary.main', color: 'common.white' }}>High Conf. Quote</TableCell>
+                            <TableCell align="right" sx={{ fontWeight: 'bold', bgcolor: 'primary.main', color: 'common.white' }}>Total Est.</TableCell>
+                            <TableCell align="right" sx={{ fontWeight: 'bold', bgcolor: 'primary.main', color: 'common.white' }}>Act. Revenue</TableCell>
+                            <TableCell align="right" sx={{ fontWeight: 'bold', bgcolor: 'primary.main', color: 'common.white' }}>Cumulative Tot Est</TableCell>
+                            <TableCell align="right" sx={{ fontWeight: 'bold', bgcolor: 'primary.main', color: 'common.white' }}>Cumulative Act</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
                         {data.map((row) => (
-                            <TableRow key={row.month} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
+                            <TableRow key={row.month} hover sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
                                 <TableCell component="th" scope="row" sx={{ fontWeight: 500 }}>{row.month}</TableCell>
                                 <TableCell align="right">{formatter.as_currency(row.revenueGoal, false)}</TableCell>
                                 <TableCell align="right">{formatter.as_currency(row.estRevenue, false)}</TableCell>

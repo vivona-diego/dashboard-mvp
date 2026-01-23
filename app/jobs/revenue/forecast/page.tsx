@@ -6,7 +6,7 @@ import MultiMetricQueryChart from '../../../components/dashboard/charts/MultiMet
 import { useState } from 'react';
 
 export default function CorporateRevenuePage() {
-  const datasetName = 'Corporate_Revenue_Forecast'; // generic name, logic is mocked
+  const DATASET_NAME = 'Job_Revenue_Forecast'; // generic name, logic is mocked
 
   const theme = 'dark';
 
@@ -79,7 +79,7 @@ export default function CorporateRevenuePage() {
             {/* KPI Grid */}
             <Box>
                 <KPIGrid 
-                    datasetName={datasetName}
+                    datasetName={DATASET_NAME}
                     metrics={[
                         { metricName: 'RevenueGoal', label: 'Revenue Goal', format: 'currency' },
                         { metricName: 'EstimatedRevenue', label: 'Est. Revenue', format: 'currency' },
@@ -99,7 +99,7 @@ export default function CorporateRevenuePage() {
                 <Grid size={{ xs: 12, md: 6 }}>
                     <MultiMetricQueryChart 
                         title="Est. Revenue vs. Revenue Goal"
-                        datasetName={datasetName}
+                        datasetName={DATASET_NAME}
                         groupBySegments={['Month']} 
                         metrics={[
                             { metricName: 'RevenueGoal', label: 'Revenue Goal', type: 'bar', color: chartColors.goal }, 
@@ -115,7 +115,7 @@ export default function CorporateRevenuePage() {
                 <Grid size={{ xs: 12, md: 6 }}>
                     <MultiMetricQueryChart 
                         title="Variance $"
-                        datasetName={datasetName}
+                        datasetName={DATASET_NAME}
                         groupBySegments={['Month']}
                         metrics={[
                             { metricName: 'Variance', label: 'Variance', type: 'bar', color: chartColors.var }

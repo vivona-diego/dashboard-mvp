@@ -34,7 +34,6 @@ export default function JobsPLDrilldownPage() {
   // Fetch Filters
   const fetchFilterData = async (segmentName: string, setter: (data: string[]) => void) => {
     try {
-      console.log(`Fetching segment: ${segmentName}`);
       const res = await api.get('/bi/segment-values', {
         params: {
           datasetName: DATASET_NAME,
@@ -42,9 +41,7 @@ export default function JobsPLDrilldownPage() {
           limit: 100,
         },
       });
-      console.log(`Response for ${segmentName}:`, res.data);
       const values = res.data?.data?.values || res.data?.values || [];
-      console.log(`Mapped values for ${segmentName}:`, values);
       setter(values.map((v: any) => v.displayValue));
     } catch (error) {
       console.error(`Error fetching ${segmentName}:`, error);

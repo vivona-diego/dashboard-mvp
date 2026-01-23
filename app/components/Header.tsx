@@ -75,8 +75,8 @@ export default function Header() {
       return datasets; // Show all datasets if no forecast filter
     }
 
-    const prefix = forecastParam === 'job' ? 'job_' : 'quote_';
-    return datasets.filter((dataset) => dataset.name.toLowerCase().startsWith(prefix));
+    const prefixes = forecastParam === 'job' ? ['job_', 'jobs_'] : ['quote_'];
+    return datasets.filter((dataset) => prefixes.some((prefix) => dataset.name.toLowerCase().startsWith(prefix)));
   }, [datasets, forecastParam]);
 
   const jobMenuItems = [
@@ -166,7 +166,7 @@ export default function Header() {
 
       {/* Bottom Bar: Page Title */}
       <Box sx={{ px: 4, py: 2, display: 'flex', flexDirection: 'row', gap: 4, alignItems: 'center' }}>
-        <Typography variant="h5" fontWeight="bold" color="text.primary" component={Link} href={featureParam ? `/?feature=${featureParam}` : '/'}>
+        <Typography variant="h5" fontWeight="bold" color="text.primary" component={Link} href={featureParam ? `/?feature=${featureParam}&forecast=${featureParam}` : '/'}>
           {forecastParam ? forecastParam.charAt(0).toUpperCase() + forecastParam.slice(1) : 'BI Dashboard'}
         </Typography>
         <Stack direction="row" spacing={1} alignItems="center">
@@ -177,7 +177,7 @@ export default function Header() {
                 <Button
                   key={item.path}
                   component={Link}
-                  href={`${item.path}?feature=${featureParam}`}
+                  href={`${item.path}?feature=${featureParam}&forecast=${featureParam}`}
                   variant={isActive ? 'contained' : 'outlined'}
                   color="inherit"
                   sx={{

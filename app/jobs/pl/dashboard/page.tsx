@@ -77,8 +77,6 @@ export default function JobsPLDashboardPage() {
       });
 
       const kpiData = res.data.data.kpis || [];
-      console.log(kpiData);
-
       setKpiData(kpiData);
     } catch (error) {
       console.error('Error fetching KPIs:', error);

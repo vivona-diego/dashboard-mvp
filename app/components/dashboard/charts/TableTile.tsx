@@ -128,32 +128,56 @@ const TableTile = (props: TableTileProps) => {
 
     // Render Logic
     if (useDrilldown) {
-         return (
-            <Box sx={{ p: 2, height: '100%', bgcolor: 'background.paper', borderRadius: 2, boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', display: 'flex', flexDirection: 'column' }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+        // Render drilldown view
+        return (
+            <Box sx={{ p: 0, height: '100%', bgcolor: 'background.paper', borderRadius: 2, boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                <Box sx={{ p: 2, borderBottom: '1px solid', borderColor: 'divider', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Typography variant="h6" fontWeight="bold" color="text.primary">
                         {title}
                     </Typography>
                     {headerAction}
                 </Box>
                 
-                <TableContainer sx={{ flex: 1, overflow: 'auto', maxHeight: 500 }}>
-                    <Table stickyHeader>
+                <TableContainer sx={{ flex: 1, overflow: 'auto', maxHeight: 600 }}>
+                    <Table stickyHeader size="small">
                         <TableHead>
                             <TableRow>
                                 {dynamicColumns.map(col => (
-                                    <TableCell key={col} sx={{ fontWeight: 'bold',bgcolor: 'background.default' }}>{col}</TableCell>
+                                    <TableCell 
+                                        key={col} 
+                                        sx={{ 
+                                            fontWeight: 'bold',
+                                            bgcolor: 'primary.main',
+                                            color: 'common.white'
+                                        }}
+                                        align={['JobRevenue', 'TotalExpenses', 'Profit', 'ProfitPercent', 'LaborExpenses', 'LaborBurden', 'LaborUnion', 'LaborWC', 'EquipmentExpenses', 'Materials', 'MaterialsOverhead', 'Overhead', 'LaborHours'].includes(col) || typeof data[0]?.[col] === 'number' ? 'right' : 'left'}
+                                    >
+                                        {col}
+                                    </TableCell>
                                 ))}
                             </TableRow>
                         </TableHead>
                         <TableBody>
                             {data.map((row, idx) => (
                                 <TableRow key={idx} hover>
-                                    {dynamicColumns.map(col => (
-                                         <TableCell key={col}>
-                                            {typeof row[col] === 'number' ? formatter.with_commas(row[col], 0) : (row[col] ?? '-')}
-                                         </TableCell>
-                                    ))}
+                                    {dynamicColumns.map(col => {
+                                        const isCurrency = ['JobRevenue', 'TotalExpenses', 'Profit', 'LaborExpenses', 'LaborBurden', 'LaborUnion', 'LaborWC', 'EquipmentExpenses', 'Materials', 'MaterialsOverhead', 'Overhead'].includes(col);
+                                        const isPercent = ['ProfitPercent'].includes(col);
+                                        const isNumber = typeof row[col] === 'number';
+
+                                        return (
+                                            <TableCell key={col} align={isNumber ? "right" : "left"}>
+                                                {isCurrency && isNumber 
+                                                    ? formatter.as_currency(row[col]) 
+                                                    : isPercent && isNumber
+                                                        ? `${row[col].toFixed(2)}%`
+                                                        : isNumber 
+                                                            ? formatter.with_commas(row[col], 0) 
+                                                            : (row[col] ?? '-')
+                                                }
+                                            </TableCell>
+                                        );
+                                    })}
                                 </TableRow>
                             ))}
                              {data.length === 0 && (

@@ -359,19 +359,33 @@ export default function Page() {
               alignItems="center"
               sx={{ maxWidth: "100%", overflowX: "auto" }}
             >
-              <ButtonGroup variant="outlined" size="small">
-                {VISUAL_DATE_RANGES.map((mode) => (
-                  <Button
-                    key={mode.id}
-                    variant={
-                      visual_date_range === mode.id ? "contained" : "outlined"
-                    }
-                    onClick={() => set_visual_date_range(mode.id)}
-                  >
-                    {mode.name}
-                  </Button>
-                ))}
-              </ButtonGroup>
+              <Stack direction="row" spacing={1}>
+                {VISUAL_DATE_RANGES.map((mode) => {
+                  const isActive = visual_date_range === mode.id;
+                  return (
+                    <Button
+                      key={mode.id}
+                      variant={isActive ? "contained" : "outlined"}
+                      onClick={() => set_visual_date_range(mode.id)}
+                      sx={{
+                        textTransform: "none",
+                        borderRadius: "6px",
+                        boxShadow: "none",
+                        borderColor: isActive ? "primary.main" : "#E5E7EB",
+                        bgcolor: isActive ? "primary.main" : "white",
+                        color: isActive ? "white" : "text.primary",
+                        "&:hover": {
+                          bgcolor: isActive ? "primary.dark" : "grey.50",
+                          borderColor: isActive ? "primary.dark" : "#D1D5DB",
+                          boxShadow: "none",
+                        },
+                      }}
+                    >
+                      {mode.name}
+                    </Button>
+                  );
+                })}
+              </Stack>
             </Stack>
 
             {/* Replaced scrollable list with Autocomplete Selector */}
@@ -388,6 +402,7 @@ export default function Page() {
                 selectedSegment={selected_segment}
                 onSelect={set_selected_segment}
                 loading={loading_segments}
+                label=""
               />
             </Box>
           </Stack>

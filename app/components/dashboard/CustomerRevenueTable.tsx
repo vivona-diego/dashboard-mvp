@@ -44,20 +44,20 @@ export default function CustomerRevenueTable({ data }: CustomerRevenueTableProps
             <Typography variant="h6" gutterBottom component="div" sx={{ fontSize: '1rem', fontWeight: 'bold', mb: 2, textAlign: 'center' }}>
                 Revenue By Customers
             </Typography>
-            <TableContainer component={Paper} elevation={0} sx={{ borderRadius: 2, boxShadow: '0 1px 3px 0 rgba(0,0,0,0.1)' }}>
+            <TableContainer component={Paper} elevation={0} sx={{ borderRadius: 2, boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}>
                 <Table size="small" aria-label="customer revenue table">
                     <TableHead>
-                        <TableRow sx={{ bgcolor: 'action.hover' }}>
-                            <TableCell sx={{ fontWeight: 'bold', fontSize: '0.75rem', color: 'text.secondary' }}>Customer</TableCell>
-                            <TableCell align="right" sx={{ fontWeight: 'bold', fontSize: '0.75rem', color: 'text.secondary' }}>Est. Revenue</TableCell>
-                            <TableCell align="right" sx={{ fontWeight: 'bold', fontSize: '0.75rem', color: 'text.secondary' }}>High Conf. Quote</TableCell>
-                            <TableCell align="right" sx={{ fontWeight: 'bold', fontSize: '0.75rem', color: 'text.secondary' }}>Total Est.</TableCell>
-                            <TableCell align="right" sx={{ fontWeight: 'bold', fontSize: '0.75rem', color: 'text.secondary' }}>Act. Revenue</TableCell>
+                        <TableRow>
+                            <TableCell sx={{ fontWeight: 'bold', bgcolor: 'primary.main', color: 'common.white' }}>Customer</TableCell>
+                            <TableCell align="right" sx={{ fontWeight: 'bold', bgcolor: 'primary.main', color: 'common.white' }}>Est. Revenue</TableCell>
+                            <TableCell align="right" sx={{ fontWeight: 'bold', bgcolor: 'primary.main', color: 'common.white' }}>High Conf. Quote</TableCell>
+                            <TableCell align="right" sx={{ fontWeight: 'bold', bgcolor: 'primary.main', color: 'common.white' }}>Total Est.</TableCell>
+                            <TableCell align="right" sx={{ fontWeight: 'bold', bgcolor: 'primary.main', color: 'common.white' }}>Act. Revenue</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
                         {data.map((row, index) => (
-                            <TableRow key={`${row.customerName}-${index}`} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
+                            <TableRow key={`${row.customerName}-${index}`} hover sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
                                 <TableCell component="th" scope="row" sx={{ fontWeight: 500 }}>{row.customerName}</TableCell>
                                 <TableCell align="right">{formatter.as_currency(row.estRevenue, false)}</TableCell>
                                 <TableCell align="right">{row.highConfQuote ? formatter.as_currency(row.highConfQuote, false) : ''}</TableCell>

@@ -10,15 +10,18 @@ interface MultiMetricQueryChartProps {
   title: string;
   datasetName: string;
   groupBySegments: string[]; 
-  metrics: { metricName: string; label: string; type: 'bar' | 'line'; color?: string }[];
+  metrics: { metricName: string; label: string; type: 'bar' | 'line'; color?: string; stack?: string }[];
   filters?: Array<{ segmentName: string; operator: string; value?: any }>;
   orientation?: 'vertical' | 'horizontal'; // Add orientation
   manualData?: any[];
   loading?: boolean;
+  height?: number | string; // Optional custom height
+  orderBy?: Array<{ field: string; direction: 'ASC' | 'DESC' }>;
+  limit?: number;
 }
 
 export default function MultiMetricQueryChart(props: MultiMetricQueryChartProps) {
-  const { title, datasetName, groupBySegments, metrics, filters, orientation = 'vertical', manualData, loading: externalLoading } = props;
+  const { title, datasetName, groupBySegments, metrics, filters, orientation = 'vertical', manualData, loading: externalLoading, height = 400, orderBy, limit } = props;
 
   const [results, set_results] = useState<any[]>([]);
   const [loading, set_loading] = useState(false);
@@ -47,7 +50,8 @@ export default function MultiMetricQueryChart(props: MultiMetricQueryChartProps)
           groupBySegments,
           metrics: metrics.map(m => ({ metricName: m.metricName })),
           filters,
-          orderBy: [{ field: groupBySegments[0], direction: 'ASC' }] // Default sort by X-axis
+          orderBy: orderBy || [{ field: groupBySegments[0], direction: 'ASC' }], // Use prop or default X-axis sort
+          limit: limit || 100
         };
 
         const res = await api.post('/bi/query', requestBody, { signal: abortController.signal });
@@ -72,11 +76,11 @@ export default function MultiMetricQueryChart(props: MultiMetricQueryChartProps)
     return () => {
         if (abortControllerRef.current) abortControllerRef.current.abort();
     };
-  }, [datasetName, groupBySegments, metrics, filters, manualData]);
+  }, [datasetName, groupBySegments, metrics, filters, manualData, orderBy, limit]);
 
   if (effectiveLoading && results.length === 0) {
       return (
-        <Box sx={{ p: 2, height: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: 'background.paper', borderRadius: 2 }}>
+        <Box sx={{ p: 2, height: height, display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: 'background.paper', borderRadius: 2 }}>
             <CircularProgress />
         </Box>
       );
@@ -105,6 +109,7 @@ export default function MultiMetricQueryChart(props: MultiMetricQueryChartProps)
   const series = metrics.map(m => ({
       name: m.label,
       type: m.type,
+      stack: m.stack, // Enable stacking
       data: results.map(row => row[m.metricName]),
       itemStyle: m.color ? { color: m.color } : undefined,
       label: {
@@ -147,7 +152,7 @@ export default function MultiMetricQueryChart(props: MultiMetricQueryChartProps)
        <Typography variant="h6" fontWeight="bold" gutterBottom>
            {title}
        </Typography>
-       <ReactECharts option={options} style={{ height: '400px', width: '100%' }} />
+       <ReactECharts option={options} style={{ height: typeof height === 'number' ? `${height}px` : height, width: '100%' }} />
     </Box>
   );
 }

@@ -20,8 +20,9 @@ interface TableTileProps {
     datasetName: string;
     groupBySegments: string[];
     metrics: string[]; // e.g. ['TotalJobs', 'TotalCost']
-    filters?: Array<{ segmentName: string; operator: string; value?: any }>;
+    filters?: Array<{ segmentName: string; operator: string; value?: any; secondValue?: any }>;
     useDrilldown?: boolean;
+    columns?: string[]; // Specific columns for drilldown
     headerAction?: React.ReactNode;
 }
 
@@ -48,6 +49,10 @@ const TableTile = (props: TableTileProps) => {
 
                     if (filters && filters.length > 0) {
                         requestBody.filters = filters;
+                    }
+                    
+                    if (props.columns && props.columns.length > 0) {
+                        requestBody.columns = props.columns;
                     }
 
                     res = await api.post('/bi/drilldown', requestBody);
@@ -123,32 +128,56 @@ const TableTile = (props: TableTileProps) => {
 
     // Render Logic
     if (useDrilldown) {
-         return (
-            <Box sx={{ p: 2, height: '100%', bgcolor: 'background.paper', borderRadius: 2, boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', display: 'flex', flexDirection: 'column' }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+        // Render drilldown view
+        return (
+            <Box sx={{ p: 0, height: '100%', bgcolor: 'background.paper', borderRadius: 2, boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                <Box sx={{ p: 2, borderBottom: '1px solid', borderColor: 'divider', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Typography variant="h6" fontWeight="bold" color="text.primary">
                         {title}
                     </Typography>
                     {headerAction}
                 </Box>
                 
-                <TableContainer sx={{ flex: 1, overflow: 'auto', maxHeight: 500 }}>
-                    <Table stickyHeader>
+                <TableContainer sx={{ flex: 1, overflow: 'auto', maxHeight: 600 }}>
+                    <Table stickyHeader size="small">
                         <TableHead>
                             <TableRow>
                                 {dynamicColumns.map(col => (
-                                    <TableCell key={col} sx={{ fontWeight: 'bold',bgcolor: 'background.default' }}>{col}</TableCell>
+                                    <TableCell 
+                                        key={col} 
+                                        sx={{ 
+                                            fontWeight: 'bold',
+                                            bgcolor: 'primary.main',
+                                            color: 'common.white'
+                                        }}
+                                        align={['JobRevenue', 'TotalExpenses', 'Profit', 'ProfitPercent', 'LaborExpenses', 'LaborBurden', 'LaborUnion', 'LaborWC', 'EquipmentExpenses', 'Materials', 'MaterialsOverhead', 'Overhead', 'LaborHours'].includes(col) || typeof data[0]?.[col] === 'number' ? 'right' : 'left'}
+                                    >
+                                        {col}
+                                    </TableCell>
                                 ))}
                             </TableRow>
                         </TableHead>
                         <TableBody>
                             {data.map((row, idx) => (
                                 <TableRow key={idx} hover>
-                                    {dynamicColumns.map(col => (
-                                         <TableCell key={col}>
-                                            {typeof row[col] === 'number' ? formatter.with_commas(row[col], 0) : (row[col] ?? '-')}
-                                         </TableCell>
-                                    ))}
+                                    {dynamicColumns.map(col => {
+                                        const isCurrency = ['JobRevenue', 'TotalExpenses', 'Profit', 'LaborExpenses', 'LaborBurden', 'LaborUnion', 'LaborWC', 'EquipmentExpenses', 'Materials', 'MaterialsOverhead', 'Overhead'].includes(col);
+                                        const isPercent = ['ProfitPercent'].includes(col);
+                                        const isNumber = typeof row[col] === 'number';
+
+                                        return (
+                                            <TableCell key={col} align={isNumber ? "right" : "left"}>
+                                                {isCurrency && isNumber 
+                                                    ? formatter.as_currency(row[col]) 
+                                                    : isPercent && isNumber
+                                                        ? `${row[col].toFixed(2)}%`
+                                                        : isNumber 
+                                                            ? formatter.with_commas(row[col], 0) 
+                                                            : (row[col] ?? '-')
+                                                }
+                                            </TableCell>
+                                        );
+                                    })}
                                 </TableRow>
                             ))}
                              {data.length === 0 && (
@@ -168,44 +197,60 @@ const TableTile = (props: TableTileProps) => {
     // Original Aggregate View Logic
     const hasJobs = metrics.includes('TotalJobs');
     const hasCost = metrics.includes('TotalCost');
+    const hasRevenue = metrics.includes('JobRevenue');
+    const hasProfit = metrics.includes('Profit');
     const segmentName = groupBySegments[0];
+
+    // Calculate Profit % if possible
+    const showProfitPercent = hasRevenue && hasProfit;
 
     const processedData = data.map(row => {
         const jobs = row['TotalJobs'] || 0;
         const cost = row['TotalCost'] || 0;
         const avg = jobs > 0 ? cost / jobs : 0;
+        
+        const revenue = row['JobRevenue'] || 0;
+        const profit = row['Profit'] || 0;
+        const profitPercent = revenue !== 0 ? (profit / revenue) * 100 : 0;
+
         return {
             ...row,
-            avgJobValue: avg
+            avgJobValue: avg,
+            profitPercent: profitPercent
         };
     });
 
     return (
-        <Box sx={{ p: 2, height: '100%', bgcolor: 'background.paper', borderRadius: 2, boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', display: 'flex', flexDirection: 'column' }}>
-            <Typography variant="h6" fontWeight="bold" color="text.primary" gutterBottom>
-                {title}
-            </Typography>
+        <Box sx={{ p: 0, height: '100%', bgcolor: 'background.paper', borderRadius: 2, boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <Box sx={{ p: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
+                <Typography variant="h6" fontWeight="bold" color="text.primary">
+                    {title}
+                </Typography>
+            </Box>
             
             <TableContainer sx={{ flex: 1, overflow: 'auto' }}>
                 <Table size="small" stickyHeader>
                     <TableHead>
                         <TableRow>
-                            <TableCell sx={{ fontWeight: 'bold' }}>{segmentName}</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold', bgcolor: 'primary.main', color: 'common.white' }}>{segmentName}</TableCell>
                             {metrics.map(m => (
-                                <TableCell key={m} align="right" sx={{ fontWeight: 'bold' }}>{m}</TableCell>
+                                <TableCell key={m} align="right" sx={{ fontWeight: 'bold', bgcolor: 'primary.main', color: 'common.white' }}>{m}</TableCell>
                             ))}
                             {hasJobs && hasCost && (
-                                <TableCell align="right" sx={{ fontWeight: 'bold' }}>Avg Job Value</TableCell>
+                                <TableCell align="right" sx={{ fontWeight: 'bold', bgcolor: 'primary.main', color: 'common.white' }}>Avg Job Value</TableCell>
+                            )}
+                            {showProfitPercent && (
+                                <TableCell align="right" sx={{ fontWeight: 'bold', bgcolor: 'primary.main', color: 'common.white' }}>Profit %</TableCell>
                             )}
                         </TableRow>
                     </TableHead>
                     <TableBody>
                         {processedData.map((row, idx) => (
                             <TableRow key={idx} hover>
-                                <TableCell>{row[segmentName]}</TableCell>
+                                <TableCell sx={{ fontWeight: 500 }}>{row[segmentName]}</TableCell>
                                 {metrics.map(m => (
                                     <TableCell key={m} align="right">
-                                        {m.includes('Cost') || m.includes('Sales') 
+                                        {m.includes('Cost') || m.includes('Sales') || m.includes('Revenue') || m.includes('Profit')
                                             ? formatter.as_currency(row[m]) 
                                             : formatter.with_commas(row[m], 0)}
                                     </TableCell>
@@ -215,11 +260,28 @@ const TableTile = (props: TableTileProps) => {
                                         {formatter.as_currency(row.avgJobValue)}
                                     </TableCell>
                                 )}
+                                {showProfitPercent && (
+                                    <TableCell align="right" sx={{ width: 120 }}>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 1 }}>
+                                            <Typography variant="body2" fontWeight="bold">
+                                                {row.profitPercent.toFixed(2)}%
+                                            </Typography>
+                                            {/* Simple visual bar */}
+                                            <Box sx={{ width: 50, height: 8, bgcolor: 'grey.200', borderRadius: 1, overflow: 'hidden' }}>
+                                                <Box sx={{ 
+                                                    width: `${Math.min(Math.max(row.profitPercent, 0), 100)}%`, 
+                                                    height: '100%', 
+                                                    bgcolor: row.profitPercent >= 0 ? 'success.main' : 'error.main' 
+                                                }} />
+                                            </Box>
+                                        </Box>
+                                    </TableCell>
+                                )}
                             </TableRow>
                         ))}
                          {processedData.length === 0 && (
                             <TableRow>
-                                <TableCell colSpan={metrics.length + (hasJobs && hasCost ? 2 : 1)} align="center" sx={{ py: 3 }}>
+                                <TableCell colSpan={metrics.length + (hasJobs && hasCost ? 2 : 1) + (showProfitPercent ? 1 : 0)} align="center" sx={{ py: 3 }}>
                                     <Typography variant="body2" color="text.secondary">No data available</Typography>
                                 </TableCell>
                             </TableRow>

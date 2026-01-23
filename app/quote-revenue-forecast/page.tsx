@@ -3,12 +3,11 @@
 import { Box, Stack, Typography, Grid } from '@mui/material';
 import KPIGrid from '../components/dashboard/KPIGrid';
 import MultiMetricQueryChart from '../components/dashboard/charts/MultiMetricQueryChart';
-import { useTheme } from '../contexts/ThemeContext';
 
 export default function QuoteRevenueForecastPage() {
   const datasetName = 'Quote_Revenue_Forecast';
 
-  const { theme } = useTheme();
+    const theme = 'dark';
   const isDarkMode = theme === 'dark';
   
   const chartColors = isDarkMode ? {
@@ -20,7 +19,7 @@ export default function QuoteRevenueForecastPage() {
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', p: 3 }}>
+    <Box sx={{ minHeight: '100%', p: 3 }}>
         <Stack spacing={3}>
             <Box>
                 <Typography variant="h5" fontWeight="bold" color="text.primary">

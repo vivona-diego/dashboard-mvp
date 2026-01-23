@@ -1,11 +1,9 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
-import { DatasetProvider } from './contexts/DatasetContext';
 import Header from './components/Header';
-import ThemeRegistry from './components/ThemeRegistry';
+import Providers from './components/Providers';
 import { Suspense } from 'react';
-import { ThemeProvider } from './contexts/ThemeContext';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -29,19 +27,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <ThemeProvider>
-          <ThemeRegistry>
-            <DatasetProvider>
-              <Suspense fallback={<div>Loading...</div>}>
-                <Header />
-              </Suspense>
-              <Suspense fallback={<div>Loading...</div>}>
-                {children}
-              </Suspense>
-            </DatasetProvider>
-          </ThemeRegistry>
-        </ThemeProvider>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased h-screen flex flex-col`}>
+        <Providers>
+          <Suspense fallback={<div className="p-4">Loading Header...</div>}>
+            <Header />
+          </Suspense>
+
+          <Suspense fallback={<div className="p-4">Loading Content...</div>}>{children}</Suspense>
+        </Providers>
       </body>
     </html>
   );

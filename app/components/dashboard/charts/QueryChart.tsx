@@ -13,14 +13,18 @@ interface QueryChartProps {
   groupBySegments: string[];
   metricName: string;
   chartType: 'bar' | 'donut';
-  filters?: Array<{ segmentName: string; operator: string; value?: any }>;
+  filters?: Array<{ segmentName: string; operator: string; value?: any; secondValue?: any }>;
   highlightFilters?: Array<{ segmentName: string; value: string }>;
   onPersonClick?: (personName: string) => void;
   onTitleClick?: () => void;
+  options?: any; // ECharts options override
+  orientation?: 'vertical' | 'horizontal';
+  height?: number;
+  color?: string;
 }
 
 const QueryChart = (props: QueryChartProps) => {
-  const { title, datasetName, groupBySegments, metricName, chartType, filters, highlightFilters, onPersonClick, onTitleClick } = props;
+  const { title, datasetName, groupBySegments, metricName, chartType, filters, highlightFilters, onPersonClick, onTitleClick, orientation } = props;
 
   const [results, set_results] = useState<any[]>([]);
   const [loading, set_loading] = useState(false);
@@ -225,6 +229,7 @@ const QueryChart = (props: QueryChartProps) => {
         </Typography>
         <Box sx={{ flex: 1, minHeight: 0 }}>
           <BarChart
+            orientation={orientation}
             options={{
               grid: {
                 left: '3%',

@@ -8,11 +8,14 @@ interface BarChartProps {
     data: any[];
     options?: any;
     onBarClick?: (personName: string) => void;
+    orientation?: 'vertical' | 'horizontal';
 }
 
-const BarChart = ({ labels, data, options, onBarClick }: BarChartProps) => {
+const BarChart = ({ labels, data, options, onBarClick, orientation = 'vertical' }: BarChartProps) => {
     const theme = useTheme();
     const isDark = theme.palette.mode === 'dark';
+
+    const isHorizontal = orientation === 'horizontal';
 
     // Merge custom options with defaults
     const finalOptions = {
@@ -21,13 +24,24 @@ const BarChart = ({ labels, data, options, onBarClick }: BarChartProps) => {
             top: 20,
             right: 20,
             bottom: 40,
-            left: 20,
+            left: isHorizontal ? '3%' : 20,
             containLabel: true,
         },
         tooltip: {
             trigger: 'axis',
         },
-        xAxis: {
+        xAxis: isHorizontal ? {
+            type: 'value',
+            splitLine: {
+                lineStyle: {
+                    color: theme.palette.divider,
+                    type: 'dashed',
+                },
+            },
+            axisLabel: {
+                color: theme.palette.text.secondary,
+            },
+        } : {
             type: 'category',
             data: labels,
             axisLabel: {
@@ -39,7 +53,19 @@ const BarChart = ({ labels, data, options, onBarClick }: BarChartProps) => {
                 },
             },
         },
-        yAxis: {
+        yAxis: isHorizontal ? {
+            type: 'category',
+            data: labels,
+            inverse: true,
+            axisLabel: {
+                color: theme.palette.text.secondary,
+            },
+            axisLine: {
+                lineStyle: {
+                    color: theme.palette.divider,
+                },
+            },
+        } : {
             type: 'value',
             splitLine: {
                 lineStyle: {

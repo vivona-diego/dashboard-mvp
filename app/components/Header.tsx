@@ -122,7 +122,26 @@ export default function Header() {
         </Stack>
 
         {/* Right: Navigation & Datasets */}
-        <Stack direction="row" spacing={1} alignItems="center">
+        <Stack
+             direction="row"
+             spacing={1}
+             alignItems="center"
+             sx={{ 
+                maxWidth: '100%', 
+                minWidth: 0, 
+                overflowX: 'auto',
+                pb: { xs: 1, md: 0 }, 
+                // Restore scrollbar for mouse users, style it nicely
+                '&::-webkit-scrollbar': { height: '6px' },
+                '&::-webkit-scrollbar-track': {  background: 'transparent' },
+                '&::-webkit-scrollbar-thumb': { 
+                    backgroundColor: 'rgba(0,0,0,0.1)', 
+                    borderRadius: '4px',
+                    '&:hover': { backgroundColor: 'rgba(0,0,0,0.2)' }
+                },
+                scrollbarWidth: 'thin', // Firefox
+             }}
+        >
           {/* Navigation Items (converted from Tabs) */}
           {!loading &&
             !error &&
@@ -140,6 +159,8 @@ export default function Header() {
                     fontWeight: 'medium',
                     px: 2,
                     py: 0.5,
+                    whiteSpace: 'nowrap',
+                    flexShrink: 0,
                     color: isActive ? 'text.primary' : 'text.secondary',
                     borderColor: isActive ? 'transparent' : 'divider',
                     bgcolor: isActive ? 'action.selected' : 'transparent',
@@ -154,13 +175,6 @@ export default function Header() {
                 </Button>
               );
             })}
-
-          {/* Datasets (Keep them but maybe verify if they should be here) */}
-          {/* If datasets are distinct from nav, keep them. If user meant these ARE the buttons, we have both now. */}
-          {/* Based on image, it looks clean. I'll keep datasets but maybe style them similarly if needed, or keep as is.
-               The current dataset buttons are rounded 100px. 
-           */}
-          
         </Stack>
       </Box>
 
@@ -169,7 +183,25 @@ export default function Header() {
         <Typography variant="h5" fontWeight="bold" color="text.primary" component={Link} href={featureParam ? `/?feature=${featureParam}&forecast=${featureParam}` : '/'}>
           {forecastParam ? forecastParam.charAt(0).toUpperCase() + forecastParam.slice(1) : 'BI Dashboard'}
         </Typography>
-        <Stack direction="row" spacing={1} alignItems="center">
+        <Stack
+            direction="row"
+            spacing={1}
+            alignItems="center"
+            sx={{ 
+                maxWidth: '100%', 
+                minWidth: 0, 
+                overflowX: 'auto',
+                pb: 1, // Ensure space for scrollbar
+                '&::-webkit-scrollbar': { height: '6px' },
+                '&::-webkit-scrollbar-track': {  background: 'transparent' },
+                '&::-webkit-scrollbar-thumb': { 
+                    backgroundColor: 'rgba(0,0,0,0.1)', 
+                    borderRadius: '4px',
+                    '&:hover': { backgroundColor: 'rgba(0,0,0,0.2)' }
+                },
+                scrollbarWidth: 'thin',
+             }}
+        >
           {featureParam === 'job' &&
             jobMenuItems.map((item) => {
               const isActive = pathname === item.path;
@@ -186,6 +218,8 @@ export default function Header() {
                     fontWeight: 'medium',
                     px: 2,
                     py: 0.5,
+                    whiteSpace: 'nowrap',
+                    flexShrink: 0,
                     borderColor: isActive ? 'transparent' : 'divider',
                     bgcolor: isActive ? 'action.selected' : 'transparent',
                     boxShadow: 'none',

@@ -349,10 +349,9 @@ export default function Page() {
           </Stack>
           <Stack
             flex={1}
-            direction="row"
+            direction={{ xs: 'column', md: 'row' }}
             spacing={2}
-            alignItems="center"
-            flexWrap="wrap"
+            alignItems={{ xs: 'stretch', md: 'center' }}
             justifyContent="space-between"
             sx={{ p: { xs: 1, md: 2 } }}
           >
@@ -360,9 +359,23 @@ export default function Page() {
               direction="row"
               spacing={1}
               alignItems="center"
-              sx={{ maxWidth: "100%", overflowX: "auto" }}
+              sx={{ 
+                maxWidth: '100%', 
+                minWidth: 0,
+                flex: { md: 1 }, 
+                overflowX: 'auto',
+                pb: 1, // Space for scrollbar
+                '&::-webkit-scrollbar': { height: '6px' },
+                '&::-webkit-scrollbar-track': {  background: 'transparent' },
+                '&::-webkit-scrollbar-thumb': { 
+                    backgroundColor: 'rgba(0,0,0,0.1)', 
+                    borderRadius: '4px',
+                    '&:hover': { backgroundColor: 'rgba(0,0,0,0.2)' }
+                },
+                scrollbarWidth: 'thin',
+              }}
             >
-              <Stack direction="row" spacing={1}>
+              <Stack direction="row" spacing={1} sx={{ minWidth: 'min-content' }}>
                 {VISUAL_DATE_RANGES.map((mode) => {
                   const isActive = visual_date_range === mode.id;
                   return (
@@ -382,6 +395,7 @@ export default function Page() {
                           borderColor: isActive ? "primary.dark" : "#D1D5DB",
                           boxShadow: "none",
                         },
+                        whiteSpace: 'nowrap',
                       }}
                     >
                       {mode.name}

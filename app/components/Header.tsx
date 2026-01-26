@@ -75,8 +75,8 @@ export default function Header() {
       return datasets; // Show all datasets if no forecast filter
     }
 
-    const prefixes = forecastParam === 'job' ? ['job_', 'jobs_'] : ['quote_'];
-    return datasets.filter((dataset) => prefixes.some((prefix) => dataset.name.toLowerCase().startsWith(prefix)));
+    const prefixes = forecastParam === 'job' ? 'job_' : 'quote_';
+    return datasets.filter((dataset) => dataset.name.toLowerCase().startsWith(prefixes));
   }, [datasets, forecastParam]);
 
   const jobMenuItems = [

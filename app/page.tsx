@@ -223,6 +223,9 @@ export default function Page() {
     if (datasetName.toLowerCase().includes("quote")) {
       return "QuoteDate";
     }
+    if (datasetName === "jobs_profit_loss") {
+      return "JobStartDate";
+    }
     // Default to CreatedDate for Jobs_By_Status and other datasets
     return "CreatedDate";
   };

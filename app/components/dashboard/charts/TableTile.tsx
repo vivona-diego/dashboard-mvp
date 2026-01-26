@@ -24,10 +24,11 @@ interface TableTileProps {
     useDrilldown?: boolean;
     columns?: string[]; // Specific columns for drilldown
     headerAction?: React.ReactNode;
+    height?: number | string;
 }
 
 const TableTile = (props: TableTileProps) => {
-    const { title, datasetName, groupBySegments, metrics, filters, useDrilldown, headerAction } = props;
+    const { title, datasetName, groupBySegments, metrics, filters, useDrilldown, headerAction, height } = props;
 
     const [data, setData] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
@@ -111,7 +112,7 @@ const TableTile = (props: TableTileProps) => {
 
     if (loading) {
         return (
-             <Box sx={{ p: 2, height: '100%', minHeight: 400, bgcolor: 'background.paper', borderRadius: 2, boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}>
+             <Box sx={{ p: 2, height: height || '100%', minHeight: height || 400, bgcolor: 'background.paper', borderRadius: 2, boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', overflow: 'hidden' }}>
                 <Typography variant="h6" fontWeight="bold" gutterBottom>{title}</Typography>
                 <TableSkeleton rows={10} columns={useDrilldown ? 5 : metrics.length + 1} />
              </Box>
@@ -120,7 +121,7 @@ const TableTile = (props: TableTileProps) => {
 
     if (error) {
         return (
-            <Box sx={{ p: 2, height: '100%', bgcolor: 'background.paper', borderRadius: 2, boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Box sx={{ p: 2, height: height || '100%', minHeight: height || 400, bgcolor: 'background.paper', borderRadius: 2, boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Typography color="error">{error}</Typography>
             </Box>
         );
@@ -138,7 +139,7 @@ const TableTile = (props: TableTileProps) => {
                     {headerAction}
                 </Box>
                 
-                <TableContainer sx={{ flex: 1, overflow: 'auto', maxHeight: 600 }}>
+                <TableContainer sx={{ flex: 1, overflow: 'auto', maxHeight: height || 600 }}>
                     <Table stickyHeader size="small">
                         <TableHead>
                             <TableRow>

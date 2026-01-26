@@ -394,10 +394,7 @@ export default function Page() {
             {/* Replaced scrollable list with Autocomplete Selector */}
             <Box
               sx={{
-                flex: 1,
-                display: "flex",
-                justifyContent: "flex-end",
-                minWidth: 0,
+                width: 250
               }}
             >
               <SegmentSelector

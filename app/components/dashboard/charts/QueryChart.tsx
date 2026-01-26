@@ -24,7 +24,7 @@ interface QueryChartProps {
 }
 
 const QueryChart = (props: QueryChartProps) => {
-  const { title, datasetName, groupBySegments, metricName, chartType, filters, highlightFilters, onPersonClick, onTitleClick, orientation } = props;
+  const { title, datasetName, groupBySegments, metricName, chartType, filters, highlightFilters, onPersonClick, onTitleClick, orientation, height } = props;
 
   const [results, set_results] = useState<any[]>([]);
   const [loading, set_loading] = useState(false);
@@ -116,7 +116,7 @@ const QueryChart = (props: QueryChartProps) => {
       <Box
         sx={{
           p: 2,
-          height: '100%',
+          height: height || '100%',
           bgcolor: 'background.paper',
           borderRadius: 2,
           boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
@@ -124,7 +124,7 @@ const QueryChart = (props: QueryChartProps) => {
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          minHeight: 300,
+          minHeight: height || 300,
         }}
       >
         <CircularProgress />
@@ -140,7 +140,7 @@ const QueryChart = (props: QueryChartProps) => {
       <Box
         sx={{
           p: 2,
-          height: '100%',
+          height: height || '100%',
           bgcolor: 'background.paper',
           borderRadius: 2,
           boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
@@ -148,7 +148,7 @@ const QueryChart = (props: QueryChartProps) => {
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          minHeight: 300,
+          minHeight: height || 300,
         }}
       >
         <Typography variant="body2" color="error">

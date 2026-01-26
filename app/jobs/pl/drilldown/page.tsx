@@ -90,7 +90,7 @@ export default function JobsPLDrilldownPage() {
         <Stack
           direction={{ xs: 'column', md: 'row' }}
           justifyContent="space-between"
-          alignItems={{ xs: 'start', md: 'center' }}
+          alignItems={{ xs: 'flex-start', md: 'center' }}
           spacing={2}
         >
           <Typography variant="h5" fontWeight="bold" color="text.primary">
@@ -98,68 +98,87 @@ export default function JobsPLDrilldownPage() {
           </Typography>
 
           {/* Date Range */}
-          <Stack direction="row" spacing={2} alignItems="center">
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              fontWeight="bold"
-              display="block"
-              mb={0.5}
-              sx={{ textTransform: 'uppercase', letterSpacing: 0.5, fontSize: '0.75rem' }}
-            >
-              Date Range
-            </Typography>
-            <Stack
-              direction="row"
-              spacing={1}
-              alignItems="center"
-              sx={{
-                bgcolor: 'background.default',
-                p: 0.5,
-                borderRadius: 1.5,
-                border: '1px solid',
-                borderColor: 'divider',
-              }}
-            >
-              <TextField
-                type="date"
-                size="small"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                sx={{
-                  '& .MuiOutlinedInput-notchedOutline': { border: 'none' },
-                  '& .MuiInputBase-input': { py: 0.5, fontSize: '0.875rem' },
-                }}
-              />
-              <Typography variant="body2" color="text.secondary">
-                -
+          <Stack
+            direction={{ xs: 'column', sm: 'row' }}
+            spacing={2}
+            alignItems={{ xs: 'stretch', sm: 'center' }}
+            width={{ xs: '100%', sm: 'auto' }}
+          >
+            <Stack direction="row" spacing={2} alignItems="center">
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                fontWeight="bold"
+                display={{ xs: 'none', sm: 'block' }}
+                sx={{ textTransform: 'uppercase', letterSpacing: 0.5, fontSize: '0.75rem' }}
+              >
+                Date Range
               </Typography>
-              <TextField
-                type="date"
-                size="small"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
+              <Stack
+                direction="row"
+                spacing={1}
+                alignItems="center"
                 sx={{
-                  '& .MuiOutlinedInput-notchedOutline': { border: 'none' },
-                  '& .MuiInputBase-input': { py: 0.5, fontSize: '0.875rem' },
+                  bgcolor: 'background.default',
+                  p: 0.5,
+                  borderRadius: 1.5,
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  width: { xs: '100%', sm: 'auto' },
+                  justifyContent: 'space-between',
                 }}
-              />
+              >
+                <TextField
+                  type="date"
+                  size="small"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  sx={{
+                    '& .MuiOutlinedInput-notchedOutline': { border: 'none' },
+                    '& .MuiInputBase-input': { py: 0.5, fontSize: '0.875rem' },
+                    width: { xs: '130px', sm: 'auto' },
+                  }}
+                />
+                <Typography variant="body2" color="text.secondary">
+                  -
+                </Typography>
+                <TextField
+                  type="date"
+                  size="small"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  sx={{
+                    '& .MuiOutlinedInput-notchedOutline': { border: 'none' },
+                    '& .MuiInputBase-input': { py: 0.5, fontSize: '0.875rem' },
+                    width: { xs: '130px', sm: 'auto' },
+                  }}
+                />
+              </Stack>
             </Stack>
           </Stack>
         </Stack>
       </Box>
 
-      <Grid container spacing={1}>
-        {/* Sidebar Filters */}
-        <Grid size={{ xs: 12, md: 2 }} sx={{ minWidth: 200 }}>
-          <Stack spacing={2} sx={{ bgcolor: 'background.paper', p: 2, borderRadius: 2 }}>
+      <Grid container spacing={{ xs: 2, md: 3 }}>
+        {/* Row 1: Sidebar Filters & Top Charts */}
+        <Grid size={{ xs: 12, md: 3, lg: 3 }}>
+          <Stack
+            spacing={2}
+            sx={{
+              p: 2,
+              height: '100%',
+              bgcolor: 'background.paper',
+              borderRadius: 2,
+              boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
+            }}
+          >
             <SegmentSelector
               label="Select a Yard"
               segments={yards}
               selectedSegment={selectedYard}
               onSelect={setSelectedYard}
               loading={loadingFilters}
-              orientation='vertical'
+              orientation="vertical"
             />
             <SegmentSelector
               label="Select a Customer"
@@ -167,7 +186,7 @@ export default function JobsPLDrilldownPage() {
               selectedSegment={selectedCustomer}
               onSelect={setSelectedCustomer}
               loading={loadingFilters}
-              orientation='vertical'
+              orientation="vertical"
             />
             <SegmentSelector
               label="Select a Salesperson"
@@ -175,7 +194,7 @@ export default function JobsPLDrilldownPage() {
               selectedSegment={selectedSalesperson}
               onSelect={setSelectedSalesperson}
               loading={loadingFilters}
-              orientation='vertical'
+              orientation="vertical"
             />
             <SegmentSelector
               label="Select a Job Code"
@@ -183,7 +202,7 @@ export default function JobsPLDrilldownPage() {
               selectedSegment={selectedJobCode}
               onSelect={setSelectedJobCode}
               loading={loadingFilters}
-              orientation='vertical'
+              orientation="vertical"
             />
             <SegmentSelector
               label="Select a Job Status"
@@ -191,38 +210,39 @@ export default function JobsPLDrilldownPage() {
               selectedSegment={selectedJobStatus}
               onSelect={setSelectedJobStatus}
               loading={loadingFilters}
-              orientation='vertical'
+              orientation="vertical"
             />
           </Stack>
         </Grid>
 
-        {/* Main Content */}
-        <Grid size={{ xs: 12, md: 10 }}>
-          {/* Top Section: Chart & Summary Table */}
-          <Grid container spacing={2} mb={3}>
-            <Grid size={{ xs: 12, md: 6 }}>
+        <Grid size={{ xs: 12, md: 9, lg: 9 }}>
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 12, lg: 6 }}>
               <QueryChart
                 title="Profit % by Yard & Department"
                 datasetName={DATASET_NAME}
-                groupBySegments={['Yard']} // Grouping by Yard as per image context
-                metricName="Profit" // Using backend metric if available
+                groupBySegments={['Yard']}
+                metricName="Profit"
                 chartType="bar"
                 filters={FILTERS}
                 height={300}
                 color="#00bfa5"
               />
             </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
+            <Grid size={{ xs: 12, lg: 6 }}>
               <TableTile
                 title="Summary"
                 datasetName={DATASET_NAME}
                 groupBySegments={['Yard']}
                 metrics={['JobRevenue', 'TotalExpenses', 'Profit']}
                 filters={FILTERS}
+                height={300}
               />
             </Grid>
           </Grid>
         </Grid>
+
+        {/* Row 2: Detailed Job Data (Full Width) */}
         <Grid size={12}>
           <Box sx={{ height: 600 }}>
             <TableTile
@@ -251,6 +271,7 @@ export default function JobsPLDrilldownPage() {
                 'LaborHours',
               ]}
               filters={FILTERS}
+              height={600}
             />
           </Box>
         </Grid>

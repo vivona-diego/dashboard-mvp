@@ -82,9 +82,11 @@ export default function Header() {
   const jobMenuItems = [
     { text: 'Job Forecast', path: '/jobs/revenue/forecast' },
     { text: 'Job P/L Dashboard', path: '/jobs/pl/dashboard' },
+    { text: 'Finish Jobs Dashboard', path: '/jobs/pl/dashboard/finish' },
     { text: 'Job Profit/(Loss) Drilldown', path: '/jobs/pl/drilldown' },
     { text: 'Jobs Revenue Report', path: '/jobs/revenue' },
     { text: 'Jobs Unbilled', path: '/jobs/billing' },
+    { text: 'Jobs Revenue Forecast Details', path: '/jobs/revenue/forecast/details' },
     { text: 'Jobs Revenue Forecast Report By Salesperson', path: '/jobs/revenue/forecast/salesperson' },
   ];
 
@@ -116,31 +118,28 @@ export default function Header() {
           <Typography variant="subtitle1" fontWeight="bold" color="text.primary">
             Business Intelligence
           </Typography>
-          <Typography variant="subtitle1" color="text.secondary">
-            | FCC
-          </Typography>
         </Stack>
 
         {/* Right: Navigation & Datasets */}
         <Stack
-             direction="row"
-             spacing={1}
-             alignItems="center"
-             sx={{ 
-                maxWidth: '100%', 
-                minWidth: 0, 
-                overflowX: 'auto',
-                pb: { xs: 1, md: 0 }, 
-                // Restore scrollbar for mouse users, style it nicely
-                '&::-webkit-scrollbar': { height: '6px' },
-                '&::-webkit-scrollbar-track': {  background: 'transparent' },
-                '&::-webkit-scrollbar-thumb': { 
-                    backgroundColor: 'rgba(0,0,0,0.1)', 
-                    borderRadius: '4px',
-                    '&:hover': { backgroundColor: 'rgba(0,0,0,0.2)' }
-                },
-                scrollbarWidth: 'thin', // Firefox
-             }}
+          direction="row"
+          spacing={1}
+          alignItems="center"
+          sx={{
+            maxWidth: '100%',
+            minWidth: 0,
+            overflowX: 'auto',
+            pb: { xs: 1, md: 0 },
+            // Restore scrollbar for mouse users, style it nicely
+            '&::-webkit-scrollbar': { height: '6px' },
+            '&::-webkit-scrollbar-track': { background: 'transparent' },
+            '&::-webkit-scrollbar-thumb': {
+              backgroundColor: 'rgba(0,0,0,0.1)',
+              borderRadius: '4px',
+              '&:hover': { backgroundColor: 'rgba(0,0,0,0.2)' },
+            },
+            scrollbarWidth: 'thin', // Firefox
+          }}
         >
           {/* Navigation Items (converted from Tabs) */}
           {!loading &&
@@ -180,27 +179,33 @@ export default function Header() {
 
       {/* Bottom Bar: Page Title */}
       <Box sx={{ px: 4, py: 2, display: 'flex', flexDirection: 'row', gap: 4, alignItems: 'center' }}>
-        <Typography variant="h5" fontWeight="bold" color="text.primary" component={Link} href={featureParam ? `/?feature=${featureParam}&forecast=${featureParam}` : '/'}>
+        <Typography
+          variant="h5"
+          fontWeight="bold"
+          color="text.primary"
+          component={Link}
+          href={featureParam ? `/?feature=${featureParam}&forecast=${featureParam}` : '/'}
+        >
           {forecastParam ? forecastParam.charAt(0).toUpperCase() + forecastParam.slice(1) : 'BI Dashboard'}
         </Typography>
         <Stack
-            direction="row"
-            spacing={1}
-            alignItems="center"
-            sx={{ 
-                maxWidth: '100%', 
-                minWidth: 0, 
-                overflowX: 'auto',
-                pb: 1, // Ensure space for scrollbar
-                '&::-webkit-scrollbar': { height: '6px' },
-                '&::-webkit-scrollbar-track': {  background: 'transparent' },
-                '&::-webkit-scrollbar-thumb': { 
-                    backgroundColor: 'rgba(0,0,0,0.1)', 
-                    borderRadius: '4px',
-                    '&:hover': { backgroundColor: 'rgba(0,0,0,0.2)' }
-                },
-                scrollbarWidth: 'thin',
-             }}
+          direction="row"
+          spacing={1}
+          alignItems="center"
+          sx={{
+            maxWidth: '100%',
+            minWidth: 0,
+            overflowX: 'auto',
+            pb: 1, // Ensure space for scrollbar
+            '&::-webkit-scrollbar': { height: '6px' },
+            '&::-webkit-scrollbar-track': { background: 'transparent' },
+            '&::-webkit-scrollbar-thumb': {
+              backgroundColor: 'rgba(0,0,0,0.1)',
+              borderRadius: '4px',
+              '&:hover': { backgroundColor: 'rgba(0,0,0,0.2)' },
+            },
+            scrollbarWidth: 'thin',
+          }}
         >
           {featureParam === 'job' &&
             jobMenuItems.map((item) => {

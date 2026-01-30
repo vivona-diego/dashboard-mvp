@@ -1,21 +1,45 @@
 'use client';
 
-import { Box, Stack, Typography, Grid } from '@mui/material';
-import { useState } from 'react';
-import KPIGrid from '../../components/dashboard/KPIGrid';
+import { Box, Stack, Typography, Grid, Card, CardContent, Skeleton } from '@mui/material';
+import { useState, useEffect } from 'react';
+import api from '../../api/axiosClient';
 import SegmentSelector from '../../components/dashboard/SegmentSelector';
 import MultiMetricQueryChart from '../../components/dashboard/charts/MultiMetricQueryChart';
 import DetailedMonthlyTable, { MonthlyDetailedData } from '../../components/dashboard/DetailedMonthlyTable';
 import CustomerRevenueTable, { CustomerRevenueData } from '../../components/dashboard/CustomerRevenueTable';
 
+interface KPI {
+    name: string;
+    value: number;
+    formatted: string;
+}
+
 const DATASET_NAME = 'Job_Revenue_Forecast';
+
+const KPI_METRICS = [
+    { metricName: 'EstimatedRevenue', label: 'Revenue Goal', format: 'currency' as const },
+    { metricName: 'AvgEstimatedRevenue', label: 'Est. Revenue', format: 'currency' as const },
+    { metricName: 'ActualRevenue', label: 'Act. Revenue', format: 'currency' as const },
+    { metricName: 'JobCount', label: 'Total Jobs', format: 'number' as const },
+    // { metricName: 'HighConfQuote', label: 'High Conf Quote', format: 'currency' },
+    // { metricName: 'TotalEst', label: 'Total Est.', format: 'currency' },
+    // { metricName: 'TotalCustomers', label: 'Total Customers', format: 'number' },
+];
 
 export default function JobsRevenueForecastReportPage() {
 
     // Filter States
-    const [company, setCompany] = useState<string | null>('J. J. Curran Crane Company');
-    const [yard, setYard] = useState<string | null>('All');
-    const [year, setYear] = useState<string | null>('2025');
+    const [company, setCompany] = useState<string | null>(null);
+    const [yard, setYard] = useState<string | null>(null);
+    const [year, setYear] = useState<string | null>(null);
+
+    // Filter Options
+    const [companyOptions, setCompanyOptions] = useState<string[]>([]);
+    const [yardOptions, setYardOptions] = useState<string[]>([]);
+    const [yearOptions, setYearOptions] = useState<string[]>([]);
+    
+    // Loading States
+    const [loadingFilters, setLoadingFilters] = useState(false);
 
     const theme = 'dark';
 
@@ -30,61 +54,186 @@ export default function JobsRevenueForecastReportPage() {
         goal: '#4caf50', // Green from image
         var: '#d32f2f'
     };
-
-    // Manual Data - MOCK to match image
-    const kpiData = {
-        'RevenueGoal': 13000000,
-        'EstRevenue': 8000000,
-        'ActRevenue': 9000000,
-        'HighConfQuote': 19000,
-        'TotalEst': 8000000,
-        'TotalCustomers': 232,
-        'TotalJobs': 868
+    
+    // Helpers to fetch filters
+    const fetchFilterData = async (segmentName: string, setter: (data: string[]) => void) => {
+        try {
+            const res = await api.get('/bi/segment-values', {
+                params: {
+                    datasetName: DATASET_NAME,
+                    segmentName: segmentName,
+                    limit: 100,
+                },
+            });
+            const values = res.data?.data?.values || res.data?.values || [];
+            setter(values.map((v: any) => v.displayValue));
+        } catch (error) {
+            console.error(`Error fetching ${segmentName}:`, error);
+        }
     };
 
-    const monthlyData: MonthlyDetailedData[] = [
-        { month: 'Jan', revenueGoal: 900000, estRevenue: 515181, highConfQuote: 0, totalEst: 515181, actRevenue: 577121, cumulativeTotEst: 515181, cumulativeAct: 577121 },
-        { month: 'Feb', revenueGoal: 1000000, estRevenue: 641958, highConfQuote: 0, totalEst: 641958, actRevenue: 784844, cumulativeTotEst: 1157139, cumulativeAct: 1361964 },
-        { month: 'Mar', revenueGoal: 1000000, estRevenue: 790300, highConfQuote: 18753, totalEst: 809053, actRevenue: 915811, cumulativeTotEst: 1966192, cumulativeAct: 2277775 },
-        { month: 'Apr', revenueGoal: 1100000, estRevenue: 708667, highConfQuote: 0, totalEst: 708667, actRevenue: 910329, cumulativeTotEst: 2674859, cumulativeAct: 3188104 },
-        { month: 'May', revenueGoal: 1200000, estRevenue: 525593, highConfQuote: 0, totalEst: 525593, actRevenue: 744447, cumulativeTotEst: 3200452, cumulativeAct: 3932551 },
-        { month: 'Jun', revenueGoal: 1200000, estRevenue: 528260, highConfQuote: 0, totalEst: 528260, actRevenue: 639613, cumulativeTotEst: 3728712, cumulativeAct: 4572164 },
-        { month: 'Jul', revenueGoal: 1200000, estRevenue: 619708, highConfQuote: 0, totalEst: 619708, actRevenue: 728738, cumulativeTotEst: 4348420, cumulativeAct: 5300902 },
-        { month: 'Aug', revenueGoal: 1200000, estRevenue: 774315, highConfQuote: 0, totalEst: 774315, actRevenue: 807833, cumulativeTotEst: 5122735, cumulativeAct: 6108735 },
-        { month: 'Sep', revenueGoal: 1200000, estRevenue: 720917, highConfQuote: 0, totalEst: 720917, actRevenue: 916421, cumulativeTotEst: 5843652, cumulativeAct: 7025156 },
-        { month: 'Oct', revenueGoal: 1200000, estRevenue: 930274, highConfQuote: 0, totalEst: 930274, actRevenue: 945417, cumulativeTotEst: 6773926, cumulativeAct: 7970573 },
-        { month: 'Nov', revenueGoal: 1100000, estRevenue: 512217, highConfQuote: 0, totalEst: 512217, actRevenue: 437645, cumulativeTotEst: 7286143, cumulativeAct: 8408218 },
-        { month: 'Dec', revenueGoal: 1000000, estRevenue: 567250, highConfQuote: 0, totalEst: 567250, actRevenue: 454798, cumulativeTotEst: 7853392, cumulativeAct: 8863016 },
+    const loadFilters = async () => {
+        setLoadingFilters(true);
+        await Promise.all([
+             fetchFilterData('Company', setCompanyOptions), 
+             fetchFilterData('Yard', setYardOptions),
+             fetchFilterData('Year', setYearOptions)
+        ]);
+        setLoadingFilters(false);
+    };
+
+    useEffect(() => {
+        loadFilters();
+    }, []);
+
+    // Filter Logic
+    const FILTERS = [
+        ...(company && company !== 'All' ? [{ segmentName: 'Company', operator: 'eq', value: company }] : []),
+        ...(yard && yard !== 'All' ? [{ segmentName: 'Yard', operator: 'eq', value: yard }] : []),
+        ...(year ? [{ segmentName: 'JobYear', operator: 'eq', value: year }] : [])
     ];
 
-    const customerData: CustomerRevenueData[] = [
-        { customerName: 'Mid-American Group', estRevenue: 710576, highConfQuote: 0, totalEst: 710576, actRevenue: 780732 },
-        { customerName: 'Barton Malow', estRevenue: 545425, highConfQuote: 0, totalEst: 545425, actRevenue: 1042390 },
-        { customerName: 'Songer Steel Services', estRevenue: 330967, highConfQuote: 0, totalEst: 330967, actRevenue: 378410 },
-        { customerName: 'Connelly, L W & Son Inc', estRevenue: 278031, highConfQuote: 0, totalEst: 278031, actRevenue: 269237 },
-        { customerName: 'Kaiser Industrial', estRevenue: 255152, highConfQuote: 0, totalEst: 255152, actRevenue: 202174 },
-        { customerName: 'Jay Dee Contractors Inc.', estRevenue: 240787, highConfQuote: 0, totalEst: 240787, actRevenue: 250607 },
-        { customerName: 'Nicholson Terminal & Dock', estRevenue: 215986, highConfQuote: 0, totalEst: 215986, actRevenue: 248174 },
-        { customerName: 'Detroit Edison - Fermi', estRevenue: 205976, highConfQuote: 0, totalEst: 205976, actRevenue: 222080 },
-        { customerName: 'Ideal Contracting', estRevenue: 200599, highConfQuote: 0, totalEst: 200599, actRevenue: 167187 },
-    ];
+    // KPI State
+    const [kpiData, setKpiData] = useState<KPI[]>([]);
+    const [loadingKpis, setLoadingKpis] = useState(true);
+  
+    // Fetch KPI Data
+    const fetchKPIs = async () => {
+      try {
+          setLoadingKpis(true);
+          
+          const requestBody = {
+              datasetName: DATASET_NAME,
+              metrics: KPI_METRICS.map(m => ({ metricName: m.metricName })),
+              filters: FILTERS
+          };
+  
+          const res = await api.post('/bi/kpis', requestBody);
+  
+          const fetchedKpis = res.data?.data?.kpis || [];
+          setKpiData(fetchedKpis);
+  
+      } catch (error) {
+          console.error("Error fetching KPIs:", error);
+      } finally {
+          setLoadingKpis(false);
+      }
+    };
+  
+    useEffect(() => {
+        fetchKPIs();
+    }, []);
 
-    // Chart Data Transformation
-    // Grouped Bar: Month, Est, Act, Goal
-    const revenueByDateChartData = monthlyData.map(d => ({
-        Month: d.month,
-        RevenueGoal: d.revenueGoal,
-        EstimatedRevenue: d.estRevenue,
-        ActualRevenue: d.actRevenue
-    }));
-    
-    // Salesperson Chart Data (Mock)
-    const salespersonChartData = [
-        { Salesperson: 'Matt McVittie', RevenueGoal: 7600000, EstimatedRevenue: 2600000, ActualRevenue: 2900000 },
-        { Salesperson: 'Trever Weber', RevenueGoal: 2700000, EstimatedRevenue: 2300000, ActualRevenue: 2400000 },
-        { Salesperson: 'Chad McComas', RevenueGoal: 1700000, EstimatedRevenue: 2600000, ActualRevenue: 3300000 },
-        { Salesperson: 'Brogan Roback', RevenueGoal: 1000000, EstimatedRevenue: 300000, ActualRevenue: 300000 },
-    ];
+    // Map to full list to ensure order and placeholders if loading
+    const displayKpiData = (loadingKpis && kpiData.length === 0)
+      ? KPI_METRICS.map(m => ({ name: m.metricName, formatted: '', value: 0 } as KPI))
+      : KPI_METRICS.map(metricConfig => {
+          const found = kpiData.find(d => d.name === metricConfig.metricName);
+          return found || { name: metricConfig.metricName, value: 0, formatted: '-' };
+      });
+
+    // Table Data State
+    const [monthlyData, setMonthlyData] = useState<MonthlyDetailedData[]>([]);
+    const [customerData, setCustomerData] = useState<CustomerRevenueData[]>([]);
+    const [loadingTables, setLoadingTables] = useState(false);
+
+    // Fetch Monthly Data
+    const fetchMonthlyData = async () => {
+        try {
+            const res = await api.post('/bi/query', {
+                datasetName: DATASET_NAME,
+                groupBySegments: ['Month'],
+                metrics: [
+                    { metricName: 'EstimatedRevenue' },  // Goal
+                    { metricName: 'AvgEstimatedRevenue' }, // Est
+                    { metricName: 'ActualRevenue' }, // Act
+                    { metricName: 'JobCount' } 
+                ],
+                filters: FILTERS,
+                orderBy: [{ field: 'Month', direction: 'ASC' }] 
+            });
+
+            if (res.data?.success && res.data?.data?.data) {
+                const rawData = res.data.data.data;
+                // Client-side cumulative calculation
+                let cumulativeTotEst = 0;
+                let cumulativeAct = 0;
+                
+                // Sort months properly if returned as strings
+                const monthOrder = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                const sortedData = rawData.sort((a: any, b: any) => {
+                    return monthOrder.indexOf(a.Month) - monthOrder.indexOf(b.Month);
+                });
+
+                const processed = sortedData.map((row: any) => {
+                    // Mapping matches KPI config
+                    const estRevenue = row['AvgEstimatedRevenue'] || 0; 
+                    const actRevenue = row['ActualRevenue'] || 0;
+                    
+                    cumulativeTotEst += estRevenue;
+                    cumulativeAct += actRevenue;
+
+                    return {
+                        month: row['Month'],
+                        revenueGoal: row['EstimatedRevenue'] || 0,
+                        estRevenue: estRevenue,
+                        highConfQuote: 0, // Not available in basic metrics yet
+                        totalEst: estRevenue, // Using Est Revenue as Total Est for now
+                        actRevenue: actRevenue,
+                        cumulativeTotEst,
+                        cumulativeAct
+                    };
+                });
+                setMonthlyData(processed);
+            }
+        } catch (error) {
+            console.error("Error fetching monthly data:", error);
+        }
+    };
+
+    // Fetch Customer Data
+    const fetchCustomerData = async () => {
+        try {
+            const res = await api.post('/bi/query', {
+                datasetName: DATASET_NAME,
+                groupBySegments: ['Customer'],
+                metrics: [
+                    { metricName: 'AvgEstimatedRevenue' }, 
+                    { metricName: 'ActualRevenue' }
+                ],
+                filters: FILTERS,
+                orderBy: [{ field: 'ActualRevenue', direction: 'DESC' }],
+                pagination: { page: 1, pageSize: 20 }
+            });
+
+            if (res.data?.success && res.data?.data?.data) {
+                 const processed = res.data.data.data.map((row: any) => ({
+                    customerName: row['Customer'],
+                    estRevenue: row['AvgEstimatedRevenue'] || 0,
+                    highConfQuote: 0,
+                    totalEst: row['AvgEstimatedRevenue'] || 0,
+                    actRevenue: row['ActualRevenue'] || 0
+                 }));
+                 setCustomerData(processed);
+            }
+        } catch (error) {
+            console.error("Error fetching customer data:", error);
+        }
+    };
+
+    const refreshData = async () => {
+        setLoadingTables(true);
+        await Promise.all([
+            fetchKPIs(), // Re-fetch KPIs with filters
+            fetchMonthlyData(),
+            fetchCustomerData()
+        ]);
+        setLoadingTables(false);
+    };
+
+    useEffect(() => {
+        refreshData();
+    }, [year, company, yard]); // Trigger on filter change
 
     return (
         <Box sx={{ minHeight: '100%', p: 3, bgcolor: 'background.default' }}>
@@ -100,51 +249,67 @@ export default function JobsRevenueForecastReportPage() {
                         <Box>
                             <Typography variant="caption" display="block" color="text.secondary" mb={0.5}>Select a Company</Typography>
                             <SegmentSelector 
-                                segments={['J. J. Curran Crane Company']} // Mock
+                                segments={companyOptions} 
                                 selectedSegment={company} 
                                 onSelect={setCompany}
+                                loading={loadingFilters}
                                 label=''
                             />
                         </Box>
                         <Box>
                             <Typography variant="caption" display="block" color="text.secondary" mb={0.5}>Select a Yard</Typography>
                             <SegmentSelector 
-                                segments={['All', 'Detroit', 'Toledo']} 
+                                segments={yardOptions} 
                                 selectedSegment={yard} 
                                 onSelect={setYard}
+                                loading={loadingFilters}
                                 label=''
                             />
                         </Box>
                         <Box>
-                             {/* Year Selector styled as toggle buttons in image, but using dropdown for now as placeholder */}
                              <Typography variant="caption" display="block" color="text.secondary" mb={0.5}>Year</Typography>
                              <SegmentSelector 
-                                segments={['2025', '2024', '2023']} 
+                                segments={yearOptions} 
                                 selectedSegment={year} 
                                 onSelect={setYear}
+                                loading={loadingFilters}
                                 label=''
                             />
                         </Box>
                     </Box>
                 </Box>
 
-                {/* KPI Grid */}
-                <Box>
-                    <KPIGrid 
-                        datasetName={DATASET_NAME}
-                        metrics={[
-                            { metricName: 'RevenueGoal', label: 'Revenue Goal', format: 'currency' },
-                            { metricName: 'EstRevenue', label: 'Est. Revenue', format: 'currency' },
-                            { metricName: 'ActRevenue', label: 'Act. Revenue', format: 'currency' },
-                            { metricName: 'HighConfQuote', label: 'High Conf Quote', format: 'currency' },
-                            { metricName: 'TotalEst', label: 'Total Est.', format: 'currency' },
-                            { metricName: 'TotalCustomers', label: 'Total Customers', format: 'number' },
-                            { metricName: 'TotalJobs', label: 'Total Jobs', format: 'number' }
-                        ]}
-                        manualData={kpiData}
-                        gridSize={{ xs: 12, sm: 6, md: 1.7 }} // Custom sizing to fit 7 items roughly 
-                    />
-                </Box>
+                {/* KPI Cards */}
+                <Grid container spacing={3}>
+                    {displayKpiData.map((metric) => {
+                        const metricConfig = KPI_METRICS.find(m => m.metricName === metric.name);
+                        const label = metricConfig ? metricConfig.label : metric.name;
+                        
+                        return (
+                            <Grid key={label} size={{ xs: 12, sm: 6, md: 3 }}>
+                                <Card elevation={0} sx={{ bgcolor: 'background.paper', height: '100%', borderRadius: 2, boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)' }}>
+                                    <CardContent sx={{ p: '16px !important', textAlign: 'center' }}>
+                                        {loadingKpis && kpiData.length === 0 ? (
+                                            <Stack alignItems="center" spacing={1}>
+                                                <Skeleton variant="text" width="60%" height={32} />
+                                                <Skeleton variant="text" width="40%" height={20} />
+                                            </Stack>
+                                        ) : (
+                                            <>
+                                                <Typography variant="h5" fontWeight="bold" sx={{ color: 'text.primary', fontSize: '1.5rem' }}>
+                                                    {metric.formatted.replace('-', '')} 
+                                                </Typography>
+                                                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                                                    {label}
+                                                </Typography>
+                                            </>
+                                        )}
+                                    </CardContent>
+                                </Card>
+                            </Grid>
+                        );
+                    })}
+                </Grid>
 
                 {/* Charts Row */}
                 <Grid container spacing={3}>
@@ -154,26 +319,26 @@ export default function JobsRevenueForecastReportPage() {
                             datasetName={DATASET_NAME}
                             groupBySegments={['Month']} 
                             metrics={[
-                                { metricName: 'RevenueGoal', label: 'Revenue Goal', type: 'bar', color: chartColors.goal }, 
-                                { metricName: 'EstimatedRevenue', label: 'Est. Revenue', type: 'bar', color: chartColors.est }, 
+                                { metricName: 'EstimatedRevenue', label: 'Revenue Goal', type: 'bar', color: chartColors.goal }, 
+                                { metricName: 'AvgEstimatedRevenue', label: 'Est. Revenue', type: 'bar', color: chartColors.est }, 
                                 { metricName: 'ActualRevenue', label: 'Act. Revenue', type: 'bar', color: chartColors.act } 
                             ]}
+                            filters={FILTERS}
                             orientation="vertical"
-                            manualData={revenueByDateChartData}
                         />
                     </Grid>
                     <Grid size={{ xs: 12, lg: 6 }}>
                         <MultiMetricQueryChart 
                             title="Salesperson - Revenue Goal, Est. Revenue and Act. Revenue by Salesperson"
                             datasetName={DATASET_NAME}
-                            groupBySegments={['Salesperson']}
+                            groupBySegments={['SalesPerson']}
                             metrics={[
-                                { metricName: 'RevenueGoal', label: 'Revenue Goal', type: 'bar', color: chartColors.goal }, 
-                                { metricName: 'EstimatedRevenue', label: 'Est. Revenue', type: 'bar', color: chartColors.est }, 
+                                { metricName: 'EstimatedRevenue', label: 'Revenue Goal', type: 'bar', color: chartColors.goal }, 
+                                { metricName: 'AvgEstimatedRevenue', label: 'Est. Revenue', type: 'bar', color: chartColors.est }, 
                                 { metricName: 'ActualRevenue', label: 'Act. Revenue', type: 'bar', color: chartColors.act } 
                             ]}
+                            filters={FILTERS}
                             orientation="vertical"
-                             manualData={salespersonChartData}
                         />
                     </Grid>
                 </Grid>
@@ -181,10 +346,22 @@ export default function JobsRevenueForecastReportPage() {
                 {/* Tables Row */}
                 <Grid container spacing={3}>
                     <Grid size={{ xs: 12, lg: 7 }}>
-                        <DetailedMonthlyTable data={monthlyData} />
+                         {loadingTables ? (
+                             <Card sx={{ p: 2, height: '100%', minHeight: 400 }}>
+                                 <Skeleton variant="rectangular" height={350} />
+                             </Card>
+                         ) : (
+                            <DetailedMonthlyTable data={monthlyData} /> 
+                         )}
                     </Grid>
                     <Grid size={{ xs: 12, lg: 5 }}>
-                         <CustomerRevenueTable data={customerData} />
+                         {loadingTables ? (
+                             <Card sx={{ p: 2, height: '100%', minHeight: 400 }}>
+                                 <Skeleton variant="rectangular" height={350} />
+                             </Card>
+                         ) : (
+                            <CustomerRevenueTable data={customerData} />
+                         )}
                     </Grid>
                 </Grid>
             </Stack>

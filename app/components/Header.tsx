@@ -142,7 +142,8 @@ export default function Header() {
           }}
         >
           {/* Navigation Items (converted from Tabs) */}
-          {!loading &&
+          {pathname === '/' &&
+            !loading &&
             !error &&
             filteredDatasets.length > 0 &&
             filteredDatasets.map((item) => {

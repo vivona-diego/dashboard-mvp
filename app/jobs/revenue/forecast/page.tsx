@@ -15,11 +15,11 @@ interface KPI {
 const DATASET_NAME = 'Job_Revenue_Forecast';
 
 const KPI_METRICS = [
-    { metricName: 'EstimatedRevenue', label: 'Revenue Goal', format: 'currency' as const },
-    { metricName: 'AvgEstimatedRevenue', label: 'Est. Revenue', format: 'currency' as const },
-    { metricName: 'ActualRevenue', label: 'Act. Revenue', format: 'currency' as const },
-    { metricName: 'Variance', label: 'Variance', format: 'currency' as const, highlightNegative: true },
-    { metricName: 'VariancePercent', label: 'Variance %', format: 'percent' as const, highlightNegative: true }
+    { metricName: 'EstimatedRevenue', label: 'Revenue Goal', format: 'currency' as const, highlightNegative: false },
+    { metricName: 'AvgEstimatedRevenue', label: 'Est. Revenue', format: 'currency' as const, highlightNegative: false },
+    { metricName: 'ActualRevenue', label: 'Act. Revenue', format: 'currency' as const, highlightNegative: false },
+    // { metricName: 'Variance', label: 'Variance', format: 'currency' as const, highlightNegative: true },
+    // { metricName: 'VariancePercent', label: 'Variance %', format: 'percent' as const, highlightNegative: true }
 ];
 
 export default function CorporateRevenuePage() {
@@ -165,16 +165,16 @@ export default function CorporateRevenuePage() {
 
                 {/* Right Chart: Variance $ */}
                 <Grid size={{ xs: 12, md: 6 }}>
-                    <MultiMetricQueryChart 
+                     <MultiMetricQueryChart 
                         title="Variance $"
                         datasetName={DATASET_NAME}
                         groupBySegments={['Month']}
                         metrics={[
-                            { metricName: 'Variance', label: 'Variance', type: 'bar', color: chartColors.var }
+                            { metricName: 'AvgActualRevenue', label: 'Variance', type: 'bar', color: chartColors.var }
                         ]}
                         orientation="horizontal"
                         loading={false}
-                    />
+                    /> 
                 </Grid>
             </Grid>
         </Stack>

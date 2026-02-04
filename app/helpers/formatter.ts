@@ -63,6 +63,13 @@ class Formatter {
 
     return `${part1}-${part2}-${part3}`;
   }
+
+  as_percent(number: number, decimals: number = 2) {
+    if (isNaN(number)) {
+      return '0%';
+    }
+    return number.toFixed(decimals) + '%';
+  }
 }
 
 const formatter = new Formatter();

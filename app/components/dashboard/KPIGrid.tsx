@@ -8,7 +8,7 @@ import formatter from '@/app/helpers/formatter';
 interface MetricConfig {
   metricName: string;
   label: string; // Display name
-  format?: 'currency' | 'number' | 'percent';
+  format?: 'currency' | 'currency_dense' | 'number' | 'percent';
   highlightNegative?: boolean; // If true, negative values will be red
 }
 
@@ -73,6 +73,7 @@ export default function KPIGrid({ datasetName, metrics, filters, manualData, loa
   const formatValue = (value: number, format?: string) => {
       if (value === undefined || value === null) return '-';
       if (format === 'currency') return formatter.as_currency(value, false); 
+      if (format === 'currency_dense') return formatter.as_currency(value, true); 
       if (format === 'percent') return `${value.toFixed(1)} %`; 
       return formatter.with_commas(value, 0); // Corrected: with_commas takes 2 args
   };

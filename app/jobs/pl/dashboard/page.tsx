@@ -7,6 +7,8 @@ import SegmentSelector from '../../../components/dashboard/SegmentSelector';
 import MultiMetricQueryChart from '../../../components/dashboard/charts/MultiMetricQueryChart';
 import QueryChart from '../../../components/dashboard/charts/QueryChart';
 import TableTile from '../../../components/dashboard/charts/TableTile';
+import DrilldownListModal from '@/app/components/ui/DrilldownListModal';
+import JobDetailModal from '@/app/components/ui/JobDetailModal';
 
 interface Yard {
   displayValue: string;
@@ -39,6 +41,15 @@ export default function JobsPLDashboardPage() {
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
 
+  // Drilldown States
+  const [drilldownType, setDrilldownType] = useState<'SalesPerson' | 'Customer' | null>(null);
+  const [drilldownValue, setDrilldownValue] = useState<string | null>(null);
+  const [isDrilldownOpen, setIsDrilldownOpen] = useState(false);
+
+  const [selectedJobCode, setSelectedJobCode] = useState<string | null>(null);
+  const [isJobDetailOpen, setIsJobDetailOpen] = useState(false);
+
+
   const FILTERS = [
     ...(startDate && endDate
       ? [{ segmentName: 'JobStartDate', operator: 'between', value: startDate, secondValue: endDate }]
@@ -47,6 +58,7 @@ export default function JobsPLDashboardPage() {
   ];
 
   const fetchYards = async () => {
+    // ... existing fetchYards implementation ...
     setLoadingSegments(true);
     try {
       const res = await api.get('/bi/segment-values', {
@@ -68,6 +80,7 @@ export default function JobsPLDashboardPage() {
   };
 
   const fetchKPIs = async () => {
+     // ... existing fetchKPIs implementation ...
     setLoadingKPIs(true);
     try {
       const res = await api.post('/bi/kpis', {
@@ -111,6 +124,27 @@ export default function JobsPLDashboardPage() {
   const displayKpiData = (loadingKPIs && kpiData.length === 0) 
     ? KPI_METRICS.map(m => ({ name: m.metricName, formatted: '', value: 0 } as KPI))
     : currentKpiData;
+
+  const handleSalesPersonClick = (row: any) => {
+    if (row && row.SalesPerson) {
+      setDrilldownType('SalesPerson');
+      setDrilldownValue(row.SalesPerson);
+      setIsDrilldownOpen(true);
+    }
+  };
+
+  const handleCustomerClick = (row: any) => {
+    if (row && row.Customer) {
+      setDrilldownType('Customer');
+      setDrilldownValue(row.Customer);
+      setIsDrilldownOpen(true);
+    }
+  };
+
+  const handleJobClick = (jobCode: string) => {
+    setSelectedJobCode(jobCode);
+    setIsJobDetailOpen(true);
+  };
 
   return (
     <Box sx={{ p: { xs: 2, md: 3 }, bgcolor: 'background.default', minHeight: '100vh' }}>
@@ -301,6 +335,7 @@ export default function JobsPLDashboardPage() {
               filters={FILTERS}
               useDrilldown={false}
               height={400}
+              onRowClick={handleSalesPersonClick}
             />
           )}
         </Grid>
@@ -341,10 +376,27 @@ export default function JobsPLDashboardPage() {
               filters={FILTERS}
               useDrilldown={false}
               height={400}
+              onRowClick={handleCustomerClick}
             />
           )}
         </Grid>
       </Grid>
+
+      {/* Drilldown Modals */}
+      <DrilldownListModal 
+        open={isDrilldownOpen}
+        onClose={() => setIsDrilldownOpen(false)}
+        type={drilldownType}
+        value={drilldownValue}
+        dateFilters={{ startDate, endDate }}
+        onJobClick={handleJobClick}
+      />
+      
+      <JobDetailModal
+        open={isJobDetailOpen}
+        onClose={() => setIsJobDetailOpen(false)}
+        jobCode={selectedJobCode}
+      />
     </Box>
   );
 }

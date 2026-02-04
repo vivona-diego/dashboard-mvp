@@ -25,6 +25,7 @@ interface TableTileProps {
     columns?: string[]; // Specific columns for drilldown
     headerAction?: React.ReactNode;
     height?: number | string;
+    onRowClick?: (row: any) => void;
 }
 
 const TableTile = (props: TableTileProps) => {
@@ -160,7 +161,17 @@ const TableTile = (props: TableTileProps) => {
                         </TableHead>
                         <TableBody>
                             {data.map((row, idx) => (
-                                <TableRow key={idx} hover>
+                                <TableRow 
+                                    key={idx} 
+                                    hover 
+                                    onClick={() => props.onRowClick && props.onRowClick(row)}
+                                    sx={{ 
+                                        cursor: props.onRowClick ? 'pointer' : 'default',
+                                        '&:hover': {
+                                            bgcolor: props.onRowClick ? 'action.hover' : undefined
+                                        }
+                                    }}
+                                >
                                     {dynamicColumns.map(col => {
                                         const isCurrency = ['JobRevenue', 'TotalExpenses', 'Profit', 'LaborExpenses', 'LaborBurden', 'LaborUnion', 'LaborWC', 'EquipmentExpenses', 'Materials', 'MaterialsOverhead', 'Overhead'].includes(col);
                                         const isPercent = ['ProfitPercent'].includes(col);
@@ -247,7 +258,17 @@ const TableTile = (props: TableTileProps) => {
                     </TableHead>
                     <TableBody>
                         {processedData.map((row, idx) => (
-                            <TableRow key={idx} hover>
+                            <TableRow 
+                                key={idx} 
+                                hover
+                                onClick={() => props.onRowClick && props.onRowClick(row)}
+                                sx={{ 
+                                    cursor: props.onRowClick ? 'pointer' : 'default',
+                                    '&:hover': {
+                                        bgcolor: props.onRowClick ? 'action.hover' : undefined
+                                    }
+                                }}
+                            >
                                 <TableCell sx={{ fontWeight: 500 }}>{row[segmentName]}</TableCell>
                                 {metrics.map(m => (
                                     <TableCell key={m} align="right">

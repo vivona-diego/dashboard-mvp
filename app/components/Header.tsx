@@ -90,6 +90,13 @@ export default function Header() {
     { text: 'Jobs Revenue Forecast Report By Salesperson', path: '/jobs/revenue/forecast/salesperson' },
   ];
 
+  const quoteMenuItems = [
+    { text: 'Quote Profit Forecast', path: '/quote/forecast/profit' },
+    { text: 'Quote Profit Detail', path: '/quote/forecast/detail' },
+    { text: 'Quote Forecast Comparison', path: '/quote/forecast/comparison' },
+    { text: 'Billing', path: '/quote/billing' },
+  ];
+
   if (!isMounted) {
     return null;
   }
@@ -210,6 +217,37 @@ export default function Header() {
         >
           {featureParam === 'job' &&
             jobMenuItems.map((item) => {
+              const isActive = pathname === item.path;
+              return (
+                <Button
+                  key={item.path}
+                  component={Link}
+                  href={`${item.path}?feature=${featureParam}&forecast=${featureParam}`}
+                  variant={isActive ? 'contained' : 'outlined'}
+                  color="inherit"
+                  sx={{
+                    borderRadius: '50px',
+                    textTransform: 'none',
+                    fontWeight: 'medium',
+                    px: 2,
+                    py: 0.5,
+                    whiteSpace: 'nowrap',
+                    flexShrink: 0,
+                    borderColor: isActive ? 'transparent' : 'divider',
+                    bgcolor: isActive ? 'action.selected' : 'transparent',
+                    boxShadow: 'none',
+                    '&:hover': {
+                      bgcolor: isActive ? 'action.selected' : 'action.hover',
+                      borderColor: isActive ? 'transparent' : 'divider',
+                    },
+                  }}
+                >
+                  {item.text}
+                </Button>
+              );
+            })}
+          {featureParam === 'quote' &&
+            quoteMenuItems.map((item) => {
               const isActive = pathname === item.path;
               return (
                 <Button

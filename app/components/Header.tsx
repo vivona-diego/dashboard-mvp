@@ -94,6 +94,7 @@ export default function Header() {
     { text: 'Quote Profit Forecast', path: '/quote/forecast/profit' },
     { text: 'Quote Profit Detail', path: '/quote/forecast/detail' },
     { text: 'Quote Forecast Comparison', path: '/quote/forecast/comparison' },
+    { text: 'QPF YoY Analysis', path: '/quote/forecast/yoy' },
     { text: 'Billing', path: '/quote/billing' },
   ];
 

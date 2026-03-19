@@ -54,9 +54,6 @@ export default function YoYProfitChart({ data }: YoYProfitChartProps) {
         },
         yAxis: {
             type: 'value',
-            min: 10,
-            max: 30,
-            interval: 5,
             axisLabel: {
                 formatter: '{value} %',
                 fontSize: 11,

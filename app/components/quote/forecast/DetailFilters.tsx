@@ -2,7 +2,9 @@
 
 import { Box, Typography, TextField, Stack } from '@mui/material';
 import { DateTime } from 'luxon';
+import { useEffect, useState } from 'react';
 import SegmentSelector from '@/app/components/dashboard/SegmentSelector';
+import api from '@/app/lib/axiosClient';
 
 interface DetailFiltersProps {
     dateRange: { start: DateTime | null; end: DateTime | null };
@@ -24,6 +26,31 @@ export default function DetailFilters({
     onFilterChange
 }: DetailFiltersProps) {
     
+    const DATASET_NAME = 'quote_profit_forecast';
+
+    const [salespersonOptions, setSalespersonOptions] = useState<string[]>([]);
+    const [loadingOptions, setLoadingOptions] = useState(false);
+
+    useEffect(() => {
+        const loadOptions = async () => {
+            try {
+                setLoadingOptions(true);
+                const res = await api.get('/bi/segment-values', {
+                    params: { datasetName: DATASET_NAME, segmentName: 'CreatedBy', limit: 100 },
+                });
+                const values = res.data?.data?.values || res.data?.values || [];
+                setSalespersonOptions(values.map((v: any) => v.displayValue));
+            } catch (err) {
+                console.error('Error loading Detail filters:', err);
+                setSalespersonOptions([]);
+            } finally {
+                setLoadingOptions(false);
+            }
+        };
+
+        loadOptions();
+    }, []);
+
     const formatDate = (date: DateTime | null) => {
         return date ? date.toFormat('yyyy-MM-dd') : '';
     };
@@ -42,7 +69,7 @@ export default function DetailFilters({
             {/* Row 1 */}
             <SegmentSelector 
                 label="Select a Company"
-                segments={['All', 'Company A', 'Company B']}
+                segments={['All']}
                 selectedSegment={filters.company}
                 onSelect={(val) => onFilterChange('company', val || 'All')}
                 orientation="vertical"
@@ -50,7 +77,7 @@ export default function DetailFilters({
             
             <SegmentSelector 
                 label="Select a Yard"
-                segments={['All', 'Yard 1', 'Yard 2']}
+                segments={['All']}
                 selectedSegment={filters.yard}
                 onSelect={(val) => onFilterChange('yard', val || 'All')}
                 orientation="vertical"
@@ -58,7 +85,7 @@ export default function DetailFilters({
 
             <SegmentSelector 
                 label="Select a Department"
-                segments={['All', 'Dept A', 'Dept B']}
+                segments={['All']}
                 selectedSegment={filters.department}
                 onSelect={(val) => onFilterChange('department', val || 'All')}
                 orientation="vertical"
@@ -66,24 +93,26 @@ export default function DetailFilters({
 
             <SegmentSelector 
                 label="Salesperson"
-                segments={['All', 'Matt McVittie', 'Chad McComas', 'Trever Weber']}
+                segments={['All', ...salespersonOptions]}
                 selectedSegment={filters.salesperson}
                 onSelect={(val) => onFilterChange('salesperson', val || 'All')}
+                loading={loadingOptions}
                 orientation="vertical"
             />
 
             {/* Row 2 */}
             <SegmentSelector 
                 label="Salesperson" // Duplicate in screenshot? Keeping as is for now, maybe user meant 'Project Manager' or similar? Or it's just repeating.
-                segments={['All', 'Matt McVittie', 'Chad McComas', 'Trever Weber']}
+                segments={['All', ...salespersonOptions]}
                 selectedSegment={filters.salesperson}
                 onSelect={(val) => onFilterChange('salesperson', val || 'All')}
+                loading={loadingOptions}
                 orientation="vertical"
             />
 
             <SegmentSelector 
                 label="Quote Status"
-                segments={['All', 'Draft', 'Sent', 'Accepted', 'Did Job']}
+                segments={['All', 'Did Job', 'Budgetary']}
                 selectedSegment={filters.status}
                 onSelect={(val) => onFilterChange('status', val || 'All')}
                 orientation="vertical"

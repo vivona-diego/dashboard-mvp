@@ -28,11 +28,38 @@ export default function QuoteForecastComparisonPage() {
     const [error, setError] = useState<string | null>(null);
     const [rows, setRows] = useState<any[]>([]);
 
+    const startStr = dateRange.start ? dateRange.start.toFormat('yyyy-MM-dd') : null;
+    const endStr = dateRange.end ? dateRange.end.toFormat('yyyy-MM-dd') : null;
+
     useEffect(() => {
         const fetch = async () => {
             try {
                 setLoading(true);
                 setError(null);
+
+                const requestFilters: any[] = [];
+                if (startStr && endStr) {
+                    requestFilters.push({
+                        segmentName: 'CreatedDate',
+                        operator: 'between',
+                        value: startStr,
+                        secondValue: endStr,
+                    });
+                }
+                const effectiveSalesperson =
+                    filters.salesperson !== 'All'
+                        ? filters.salesperson
+                        : filters.salesperson2 !== 'All'
+                          ? filters.salesperson2
+                          : null;
+
+                if (effectiveSalesperson) {
+                    requestFilters.push({
+                        segmentName: 'CreatedBy',
+                        operator: 'eq',
+                        value: effectiveSalesperson,
+                    });
+                }
 
                 const requestBody = {
                     datasetName: 'quote_profit_forecast',
@@ -43,6 +70,7 @@ export default function QuoteForecastComparisonPage() {
                         { metricName: 'DirectExpense' },
                         { metricName: 'IndirectExpense' },
                     ],
+                    ...(requestFilters.length > 0 ? { filters: requestFilters } : {}),
                     limit: 2000,
                 };
 
@@ -61,25 +89,10 @@ export default function QuoteForecastComparisonPage() {
         };
 
         fetch();
-    }, []);
+    }, [startStr, endStr, filters.salesperson, filters.salesperson2]);
 
     const gridData: ComparisonGridData[] = useMemo(() => {
-        const start = dateRange.start;
-        const end = dateRange.end;
-        const inRange = (iso?: string | null) => {
-            if (!start && !end) return true;
-            if (!iso) return true;
-            const dt = DateTime.fromISO(iso);
-            if (!dt.isValid) return true;
-            if (start && dt < start.startOf('day')) return false;
-            if (end && dt > end.endOf('day')) return false;
-            return true;
-        };
-
-        const matchSalesperson = filters.salesperson !== 'All' ? filters.salesperson : null;
-        const filtered = rows
-            .filter((r) => inRange(r.CreatedDate))
-            .filter((r) => (matchSalesperson ? r.CreatedBy === matchSalesperson : true));
+        const filtered = rows;
 
         const byQuote = new Map<string, { est?: any; act?: any }>();
         for (const r of filtered) {
@@ -137,7 +150,7 @@ export default function QuoteForecastComparisonPage() {
         }
 
         return out.sort((a, b) => (b.estimatedDollar ?? 0) - (a.estimatedDollar ?? 0)).slice(0, 200);
-    }, [rows, dateRange.start, dateRange.end, filters.salesperson]);
+    }, [rows]);
 
     return (
         <Box sx={{ p: 4, height: '100%', display: 'flex', flexDirection: 'column', gap: 4 }}>

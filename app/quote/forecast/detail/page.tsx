@@ -30,11 +30,43 @@ export default function QuoteProfitForecastDetailPage() {
     const [error, setError] = useState<string | null>(null);
     const [rawRows, setRawRows] = useState<any[]>([]);
 
+    const startStr = dateRange.start ? dateRange.start.toFormat('yyyy-MM-dd') : null;
+    const endStr = dateRange.end ? dateRange.end.toFormat('yyyy-MM-dd') : null;
+
     useEffect(() => {
         const fetchDetailRows = async () => {
             try {
                 setLoading(true);
                 setError(null);
+
+                const requestFilters: any[] = [];
+
+                if (startStr && endStr) {
+                    requestFilters.push({
+                        segmentName: 'CreatedDate',
+                        operator: 'between',
+                        value: startStr,
+                        secondValue: endStr,
+                    });
+                }
+
+                if (filters.salesperson && filters.salesperson !== 'All') {
+                    requestFilters.push({
+                        segmentName: 'CreatedBy',
+                        operator: 'eq',
+                        value: filters.salesperson,
+                    });
+                }
+
+                if (filters.status && filters.status !== 'All') {
+                    // Item=true => con job linkage (convención: Did Job)
+                    const itemValue = filters.status === 'Did Job';
+                    requestFilters.push({
+                        segmentName: 'Item',
+                        operator: 'eq',
+                        value: itemValue,
+                    });
+                }
 
                 const requestBody = {
                     datasetName: 'quote_profit_forecast',
@@ -53,6 +85,7 @@ export default function QuoteProfitForecastDetailPage() {
                         { metricName: 'DirectExpense' },
                         { metricName: 'IndirectExpense' },
                     ],
+                    ...(requestFilters.length > 0 ? { filters: requestFilters } : {}),
                     limit: 500,
                 };
 
@@ -76,34 +109,10 @@ export default function QuoteProfitForecastDetailPage() {
         };
 
         fetchDetailRows();
-    }, []);
+    }, [startStr, endStr, filters.salesperson, filters.status]);
 
     const gridData: DetailGridData[] = useMemo(() => {
-        const start = dateRange.start;
-        const end = dateRange.end;
-        const inRange = (iso?: string | null) => {
-            if (!start && !end) return true;
-            if (!iso) return true;
-            const dt = DateTime.fromISO(iso);
-            if (!dt.isValid) return true;
-            if (start && dt < start.startOf('day')) return false;
-            if (end && dt > end.endOf('day')) return false;
-            return true;
-        };
-
-        const matchSalesperson =
-            filters.salesperson && filters.salesperson !== 'All'
-                ? filters.salesperson
-                : null;
-        const matchStatus =
-            filters.status && filters.status !== 'All' ? filters.status : null;
-
-        const rows = rawRows
-            .filter((r) => inRange(r.CreatedDate))
-            .filter((r) =>
-                matchSalesperson ? r.CreatedBy === matchSalesperson : true
-            )
-            .map((r, idx) => {
+        const rows = rawRows.map((r, idx) => {
                 const estimated = Number(r.Revenue ?? 0);
                 const direct = Number(r.DirectExpense ?? 0);
                 const indirect = Number(r.IndirectExpense ?? 0);
@@ -141,11 +150,10 @@ export default function QuoteProfitForecastDetailPage() {
                     netProfit,
                     margin,
                 };
-            })
-            .filter((r) => (matchStatus ? r.status === matchStatus : true));
+            });
 
         return rows;
-    }, [rawRows, dateRange.start, dateRange.end, filters.salesperson, filters.status]);
+    }, [rawRows]);
 
     return (
         <Box sx={{ p: 4, height: '100%', display: 'flex', flexDirection: 'column', gap: 4 }}>

@@ -2,7 +2,9 @@
 
 import { Box, Typography, TextField, Stack } from '@mui/material';
 import { DateTime } from 'luxon';
+import { useEffect, useState } from 'react';
 import SegmentSelector from '@/app/components/dashboard/SegmentSelector';
+import api from '@/app/lib/axiosClient';
 
 interface ForecastFiltersProps {
     dateRange: { start: DateTime | null; end: DateTime | null };
@@ -21,7 +23,45 @@ export default function ForecastFilters({
     filters,
     onFilterChange
 }: ForecastFiltersProps) {
-    
+    const DATASET_NAME = 'quote_profit_forecast';
+
+    const [salespersonOptions, setSalespersonOptions] = useState<string[]>([]);
+    const [quoteNoOptions, setQuoteNoOptions] = useState<string[]>([]);
+    const [loadingOptions, setLoadingOptions] = useState(false);
+
+    useEffect(() => {
+        const loadOptions = async () => {
+            try {
+                setLoadingOptions(true);
+
+                const [salesRes, quoteRes] = await Promise.all([
+                    api.get('/bi/segment-values', {
+                        params: { datasetName: DATASET_NAME, segmentName: 'CreatedBy', limit: 100 },
+                    }),
+                    api.get('/bi/segment-values', {
+                        params: { datasetName: DATASET_NAME, segmentName: 'QuoteNumber', limit: 100 },
+                    }),
+                ]);
+
+                const salesValues =
+                    salesRes.data?.data?.values || salesRes.data?.values || [];
+                const quoteValues =
+                    quoteRes.data?.data?.values || quoteRes.data?.values || [];
+
+                setSalespersonOptions(salesValues.map((v: any) => v.displayValue));
+                setQuoteNoOptions(quoteValues.map((v: any) => v.displayValue));
+            } catch (err) {
+                console.error('Error loading Forecast filters:', err);
+                setSalespersonOptions([]);
+                setQuoteNoOptions([]);
+            } finally {
+                setLoadingOptions(false);
+            }
+        };
+
+        loadOptions();
+    }, []);
+
     // Format Luxon date to string yyyy-MM-dd for input type="date"
     const formatDate = (date: DateTime | null) => {
         return date ? date.toFormat('yyyy-MM-dd') : '';
@@ -88,7 +128,7 @@ export default function ForecastFilters({
                 {/* Status Filter */}
                 <SegmentSelector 
                     label="Quote Status"
-                    segments={['All', 'Draft', 'Sent', 'Accepted']}
+                    segments={['All', 'Budgetary', 'Accepted']}
                     selectedSegment={filters.status}
                     onSelect={(val) => onFilterChange('status', val || 'All')}
                     orientation="vertical"
@@ -97,18 +137,20 @@ export default function ForecastFilters({
                  {/* Salesperson Filter */}
                  <SegmentSelector 
                     label="Salesperson"
-                    segments={['All', 'Matt McVittie', 'Chad McComas', 'Trever Weber']}
+                    segments={['All', ...salespersonOptions]}
                     selectedSegment={filters.salesperson}
                     onSelect={(val) => onFilterChange('salesperson', val || 'All')}
+                    loading={loadingOptions}
                     orientation="vertical"
                 />
 
                 {/* Quote No Filter */}
                 <SegmentSelector 
                     label="Quote No"
-                    segments={['All', 'Q-1001', 'Q-1002']}
+                    segments={['All', ...quoteNoOptions]}
                     selectedSegment={filters.quoteNo}
                     onSelect={(val) => onFilterChange('quoteNo', val || 'All')}
+                    loading={loadingOptions}
                     orientation="vertical"
                 />
             </Box>

@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import ForecastDetailsTable, { ForecastDetailRow } from '../../../../components/dashboard/ForecastDetailsTable';
 import SegmentSelector from '../../../../components/dashboard/SegmentSelector';
 import formatter from '@/app/helpers/formatter';
-import api from '../../../../api/axiosClient';
+import api from '@/app/lib/axiosClient';
 
 export default function ForecastDetailsPage() {
   const DATASET_NAME = 'jobs_profit_loss';

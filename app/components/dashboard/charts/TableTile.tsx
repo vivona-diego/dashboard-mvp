@@ -1,6 +1,6 @@
 'use client';
 
-import api from '@/app/api/axiosClient';
+import api from '@/app/lib/axiosClient';
 import formatter from '@/app/helpers/formatter';
 import {
     Box,

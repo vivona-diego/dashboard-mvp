@@ -5,7 +5,7 @@ import { Box, Button, Typography, Stack } from '@mui/material';
 import { useSearchParams, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useDataset } from '../contexts/DatasetContext';
-import api from '../api/axiosClient';
+import api from '@/app/lib/axiosClient';
 
 interface Dataset {
   name: string;
@@ -35,7 +35,7 @@ export default function Header() {
       try {
         setLoading(true);
         setError(null);
-        const response = await api.get('/bi/datasets');
+        const response = await api.get('api/bi/datasets');
 
         // Handle response structure: response.data.data.datasets
         const datasetsArray = response.data?.data?.datasets || response.data?.datasets || response.data;
@@ -88,6 +88,14 @@ export default function Header() {
     { text: 'Jobs Unbilled', path: '/jobs/billing' },
     { text: 'Jobs Revenue Forecast Details', path: '/jobs/revenue/forecast/details' },
     { text: 'Jobs Revenue Forecast Report By Salesperson', path: '/jobs/revenue/forecast/salesperson' },
+  ];
+
+  const quoteMenuItems = [
+    { text: 'Quote Profit Forecast', path: '/quote/forecast/profit' },
+    { text: 'Quote Profit Detail', path: '/quote/forecast/detail' },
+    { text: 'Quote Forecast Comparison', path: '/quote/forecast/comparison' },
+    { text: 'QPF YoY Analysis', path: '/quote/forecast/yoy' },
+    { text: 'Billing', path: '/quote/billing' },
   ];
 
   if (!isMounted) {
@@ -210,6 +218,37 @@ export default function Header() {
         >
           {featureParam === 'job' &&
             jobMenuItems.map((item) => {
+              const isActive = pathname === item.path;
+              return (
+                <Button
+                  key={item.path}
+                  component={Link}
+                  href={`${item.path}?feature=${featureParam}&forecast=${featureParam}`}
+                  variant={isActive ? 'contained' : 'outlined'}
+                  color="inherit"
+                  sx={{
+                    borderRadius: '50px',
+                    textTransform: 'none',
+                    fontWeight: 'medium',
+                    px: 2,
+                    py: 0.5,
+                    whiteSpace: 'nowrap',
+                    flexShrink: 0,
+                    borderColor: isActive ? 'transparent' : 'divider',
+                    bgcolor: isActive ? 'action.selected' : 'transparent',
+                    boxShadow: 'none',
+                    '&:hover': {
+                      bgcolor: isActive ? 'action.selected' : 'action.hover',
+                      borderColor: isActive ? 'transparent' : 'divider',
+                    },
+                  }}
+                >
+                  {item.text}
+                </Button>
+              );
+            })}
+          {featureParam === 'quote' &&
+            quoteMenuItems.map((item) => {
               const isActive = pathname === item.path;
               return (
                 <Button

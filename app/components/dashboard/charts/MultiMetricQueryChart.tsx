@@ -1,6 +1,6 @@
 'use client';
 
-import api from '@/app/api/axiosClient';
+import api from '@/app/lib/axiosClient';
 import { Box, Typography, CircularProgress } from '@mui/material';
 import { useEffect, useState, useRef } from 'react';
 import ReactECharts from 'echarts-for-react';

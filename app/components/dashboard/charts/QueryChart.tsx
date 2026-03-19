@@ -1,6 +1,6 @@
 'use client';
 
-import api from '@/app/api/axiosClient';
+import api from '@/app/lib/axiosClient';
 import BarChart from './BarChart';
 import DonutChart from './DonutChart';
 import formatter from '@/app/helpers/formatter';

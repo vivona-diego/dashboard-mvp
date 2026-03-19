@@ -23,7 +23,7 @@ import {
 } from '@mui/material';
 import { useSearchParams, /* useRouter */ } from 'next/navigation';
 import { Suspense, useEffect, useState, useRef } from 'react';
-import api from '@/app/api/axiosClient';
+import api from '@/app/lib/axiosClient';
 import { useDataset } from '@/app/contexts/DatasetContext';
 import { DateTime } from 'luxon';
 // Icons

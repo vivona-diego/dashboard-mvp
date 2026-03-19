@@ -34,11 +34,52 @@ export default function QuoteProfitForecastPage() {
     };
 
     // Carga de datos reales desde quote_profit_forecast
+    const startStr = dateRange.start ? dateRange.start.toFormat('yyyy-MM-dd') : null;
+    const endStr = dateRange.end ? dateRange.end.toFormat('yyyy-MM-dd') : null;
+
     useEffect(() => {
         const fetchData = async () => {
             try {
                 setLoading(true);
                 setError(null);
+
+                const requestFilters: any[] = [];
+
+                if (startStr && endStr) {
+                    requestFilters.push({
+                        segmentName: 'CreatedDate',
+                        operator: 'between',
+                        value: startStr,
+                        secondValue: endStr,
+                    });
+                }
+
+                if (filters.salesperson && filters.salesperson !== 'All') {
+                    requestFilters.push({
+                        segmentName: 'CreatedBy',
+                        operator: 'eq',
+                        value: filters.salesperson,
+                    });
+                }
+
+                if (filters.quoteNo && filters.quoteNo !== 'All') {
+                    requestFilters.push({
+                        segmentName: 'QuoteNumber',
+                        operator: 'eq',
+                        value: filters.quoteNo,
+                    });
+                }
+
+                if (filters.status && filters.status !== 'All') {
+                    // Item=true => con "job linkage"/aceptado/did job (según convención del backend)
+                    const itemValue =
+                        filters.status === 'Accepted' ? true : false;
+                    requestFilters.push({
+                        segmentName: 'Item',
+                        operator: 'eq',
+                        value: itemValue,
+                    });
+                }
 
                 const requestBody = {
                     datasetName: 'quote_profit_forecast',
@@ -50,6 +91,7 @@ export default function QuoteProfitForecastPage() {
                         { metricName: 'TotalExpense' },
                         { metricName: 'Quantity' },
                     ],
+                    ...(requestFilters.length > 0 ? { filters: requestFilters } : {}),
                     limit: 50,
                 };
 
@@ -130,7 +172,7 @@ export default function QuoteProfitForecastPage() {
         };
 
         fetchData();
-    }, []);
+    }, [startStr, endStr, filters.status, filters.salesperson, filters.quoteNo]);
 
     return (
         <Box sx={{ p: 4, height: '100%', display: 'flex', flexDirection: 'column', gap: 4 }}>

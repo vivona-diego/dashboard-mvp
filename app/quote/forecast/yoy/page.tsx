@@ -8,8 +8,9 @@ import api from '@/app/lib/axiosClient';
 
 export default function QPFYoYAnalysisPage() {
     const [dateRange, setDateRange] = useState<{ start: DateTime | null; end: DateTime | null }>({
-        start: DateTime.fromObject({ year: 2024, month: 1, day: 1 }),
-        end: DateTime.fromObject({ year: 2024, month: 6, day: 30 }),
+        // Usamos un rango "reciente" para que el gráfico tenga data desde el inicio.
+        start: DateTime.now().minus({ months: 6 }).startOf('day'),
+        end: DateTime.now().endOf('day'),
     });
 
     const formatDate = (date: DateTime | null) => {
@@ -25,11 +26,24 @@ export default function QPFYoYAnalysisPage() {
     const [error, setError] = useState<string | null>(null);
     const [rows, setRows] = useState<any[]>([]);
 
+    const startStr = dateRange.start ? dateRange.start.toFormat('yyyy-MM-dd') : null;
+    const endStr = dateRange.end ? dateRange.end.toFormat('yyyy-MM-dd') : null;
+
     useEffect(() => {
         const fetch = async () => {
             try {
                 setLoading(true);
                 setError(null);
+
+                const requestFilters: any[] = [];
+                if (startStr && endStr) {
+                    requestFilters.push({
+                        segmentName: 'CreatedDate',
+                        operator: 'between',
+                        value: startStr,
+                        secondValue: endStr,
+                    });
+                }
 
                 const requestBody = {
                     datasetName: 'quote_profit_forecast',
@@ -40,14 +54,16 @@ export default function QPFYoYAnalysisPage() {
                         { metricName: 'DirectExpense' },
                         { metricName: 'IndirectExpense' },
                     ],
+                    ...(requestFilters.length > 0 ? { filters: requestFilters } : {}),
                     limit: 5000,
                 };
 
                 const res = await api.post('/bi/query', requestBody);
-                if (!res.data?.success || !res.data?.data?.data) {
+                const apiData = res.data?.data;
+                if (!res.data?.success || !Array.isArray(apiData)) {
                     throw new Error('Invalid response from BI query');
                 }
-                setRows(res.data.data.data);
+                setRows(apiData);
             } catch (err: any) {
                 console.error('Error fetching YoY data:', err);
                 setError(err.response?.data?.message || err.message || 'Failed to load YoY data');
@@ -58,20 +74,15 @@ export default function QPFYoYAnalysisPage() {
         };
 
         fetch();
-    }, []);
+    }, [startStr, endStr]);
 
     const chartData = useMemo(() => {
-        const start = dateRange.start;
-        const end = dateRange.end;
-
         const bucket = new Map<string, { rev: number; exp: number; dt: DateTime }>();
         for (const r of rows) {
             const iso = r.CreatedDate;
             if (!iso) continue;
             const dt = DateTime.fromISO(iso);
             if (!dt.isValid) continue;
-            if (start && dt < start.startOf('day')) continue;
-            if (end && dt > end.endOf('day')) continue;
 
             const key = dt.toFormat('yyyy-LL');
             const rev = Number(r.Revenue ?? 0);
@@ -94,7 +105,7 @@ export default function QPFYoYAnalysisPage() {
             });
 
         return points;
-    }, [rows, dateRange.start, dateRange.end]);
+    }, [rows]);
 
     return (
         <Box sx={{ p: 4, height: '100%', display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -110,6 +121,11 @@ export default function QPFYoYAnalysisPage() {
             {loading && (
                 <Typography variant="body2" color="text.secondary">
                     Cargando...
+                </Typography>
+            )}
+            {!loading && !error && chartData.length === 0 && (
+                <Typography variant="body2" color="text.secondary">
+                    No hay datos para el rango seleccionado.
                 </Typography>
             )}
 

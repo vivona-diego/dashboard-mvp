@@ -3,6 +3,8 @@
 import { Box, Typography, TextField, Stack } from '@mui/material';
 import { DateTime } from 'luxon';
 import SegmentSelector from '@/app/components/dashboard/SegmentSelector';
+import { useEffect, useState } from 'react';
+import api from '@/app/lib/axiosClient';
 
 interface ComparisonFiltersProps {
     dateRange: { start: DateTime | null; end: DateTime | null };
@@ -22,6 +24,30 @@ export default function ComparisonFilters({
     filters,
     onFilterChange
 }: ComparisonFiltersProps) {
+    const DATASET_NAME = 'quote_profit_forecast';
+
+    const [salespersonOptions, setSalespersonOptions] = useState<string[]>([]);
+    const [loadingOptions, setLoadingOptions] = useState(false);
+
+    useEffect(() => {
+        const loadOptions = async () => {
+            try {
+                setLoadingOptions(true);
+                const res = await api.get('/bi/segment-values', {
+                    params: { datasetName: DATASET_NAME, segmentName: 'CreatedBy', limit: 100 },
+                });
+                const values = res.data?.data?.values || res.data?.values || [];
+                setSalespersonOptions(values.map((v: any) => v.displayValue));
+            } catch (err) {
+                console.error('Error loading Comparison filters:', err);
+                setSalespersonOptions([]);
+            } finally {
+                setLoadingOptions(false);
+            }
+        };
+
+        loadOptions();
+    }, []);
 
     const formatDate = (date: DateTime | null) => {
         return date ? date.toFormat('yyyy-MM-dd') : '';
@@ -49,15 +75,16 @@ export default function ComparisonFilters({
         >
             <SegmentSelector
                 label="Salesperson"
-                segments={['All', 'Trever Weber', 'Matt McVittie', 'Chad McComas']}
+                segments={['All', ...salespersonOptions]}
                 selectedSegment={filters.salesperson}
                 onSelect={(val) => onFilterChange('salesperson', val || 'All')}
+                loading={loadingOptions}
                 orientation="vertical"
             />
 
             <SegmentSelector
-                label="Customer"
-                segments={['All', 'J&J Industrial Contracting', 'SAV\'S WELDING', 'LAMAR', 'Mama Services']}
+                label="Customer (N/A)"
+                segments={['All']}
                 selectedSegment={filters.customer}
                 onSelect={(val) => onFilterChange('customer', val || 'All')}
                 orientation="vertical"
@@ -65,15 +92,16 @@ export default function ComparisonFilters({
 
             <SegmentSelector
                 label="Salesperson"
-                segments={['All', 'Trever Weber', 'Matt McVittie', 'Chad McComas']}
+                segments={['All', ...salespersonOptions]}
                 selectedSegment={filters.salesperson2}
                 onSelect={(val) => onFilterChange('salesperson2', val || 'All')}
+                loading={loadingOptions}
                 orientation="vertical"
             />
 
             <SegmentSelector
-                label="Job Code"
-                segments={['All', 'C-34421', 'C-34408', 'C-34443', 'C-34533']}
+                label="Job Code (N/A)"
+                segments={['All']}
                 selectedSegment={filters.jobCode}
                 onSelect={(val) => onFilterChange('jobCode', val || 'All')}
                 orientation="vertical"

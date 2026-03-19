@@ -20,11 +20,30 @@ export default function BillingPage() {
     const [error, setError] = useState<string | null>(null);
     const [rows, setRows] = useState<any[]>([]);
 
+    const billingCodeValue = filters.billingCode !== 'All' ? filters.billingCode : null;
+    const measureValue = filters.measure !== 'All' ? filters.measure : null;
+
     useEffect(() => {
         const fetch = async () => {
             try {
                 setLoading(true);
                 setError(null);
+
+                const requestFilters: any[] = [];
+                if (billingCodeValue) {
+                    requestFilters.push({
+                        segmentName: 'BillingDescription',
+                        operator: 'eq',
+                        value: billingCodeValue,
+                    });
+                }
+                if (measureValue) {
+                    requestFilters.push({
+                        segmentName: 'Measure',
+                        operator: 'eq',
+                        value: measureValue,
+                    });
+                }
 
                 // Usamos BillingDescription + Measure porque el dataset no trae
                 // fechas efectivas de billing code. Calculamos costos "por unidad"
@@ -43,6 +62,7 @@ export default function BillingPage() {
                         { metricName: 'IndirectExpense' },
                         { metricName: 'TotalExpense' },
                     ],
+                    ...(requestFilters.length > 0 ? { filters: requestFilters } : {}),
                     limit: 2000,
                 };
 
@@ -61,18 +81,12 @@ export default function BillingPage() {
         };
 
         fetch();
-    }, []);
+    }, [billingCodeValue, measureValue]);
 
     const gridData: BillingGridData[] = useMemo(() => {
-        const matchBilling = filters.billingCode !== 'All' ? filters.billingCode : null;
-        const matchMeasure = filters.measure !== 'All' ? filters.measure : null;
-
         const safeDiv = (a: number, b: number) => (b !== 0 ? a / b : 0);
 
-        const mapped = rows
-            .filter((r) => (matchBilling ? r.BillingDescription === matchBilling : true))
-            .filter((r) => (matchMeasure ? r.Measure === matchMeasure : true))
-            .map((r, idx) => {
+        const mapped = rows.map((r, idx) => {
                 const qty = Number(r.Quantity ?? 0);
 
                 const equipment = Number(r.EquipmentExpense ?? 0);
@@ -107,7 +121,7 @@ export default function BillingPage() {
         return mapped
             .sort((a, b) => (a.billingCode || '').localeCompare(b.billingCode || ''))
             .slice(0, 300);
-    }, [rows, filters.billingCode, filters.measure]);
+    }, [rows]);
 
     return (
         <Box sx={{ p: 4, height: '100%', display: 'flex', flexDirection: 'column', gap: 4 }}>

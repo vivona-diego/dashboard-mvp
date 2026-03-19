@@ -59,11 +59,10 @@ export default function QPFYoYAnalysisPage() {
                 };
 
                 const res = await api.post('/bi/query', requestBody);
-                const apiData = res.data?.data;
-                if (!res.data?.success || !Array.isArray(apiData)) {
+                if (!res.data?.success || !res.data?.data?.data) {
                     throw new Error('Invalid response from BI query');
                 }
-                setRows(apiData);
+                setRows(res.data.data.data);
             } catch (err: any) {
                 console.error('Error fetching YoY data:', err);
                 setError(err.response?.data?.message || err.message || 'Failed to load YoY data');

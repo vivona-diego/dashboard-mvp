@@ -1,9 +1,10 @@
 'use client';
 
 import { Box, Typography, TextField, Stack } from '@mui/material';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { DateTime } from 'luxon';
 import YoYProfitChart from '@/app/components/quote/forecast/YoYProfitChart';
+import api from '@/app/lib/axiosClient';
 
 export default function QPFYoYAnalysisPage() {
     const [dateRange, setDateRange] = useState<{ start: DateTime | null; end: DateTime | null }>({
@@ -20,18 +21,97 @@ export default function QPFYoYAnalysisPage() {
         setDateRange((prev) => ({ ...prev, [type]: newDate }));
     };
 
-    // Mock data matching the screenshot line chart
-    const chartData = [
-        { month: 'Jan 2024', profitPct: 11.2 },
-        { month: 'Feb 2024', profitPct: 27.5 },
-        { month: 'Mar 2024', profitPct: 20.8 },
-    ];
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [rows, setRows] = useState<any[]>([]);
+
+    useEffect(() => {
+        const fetch = async () => {
+            try {
+                setLoading(true);
+                setError(null);
+
+                const requestBody = {
+                    datasetName: 'quote_profit_forecast',
+                    groupBySegments: ['CreatedDate'],
+                    metrics: [
+                        { metricName: 'Revenue' },
+                        { metricName: 'TotalExpense' },
+                        { metricName: 'DirectExpense' },
+                        { metricName: 'IndirectExpense' },
+                    ],
+                    limit: 5000,
+                };
+
+                const res = await api.post('/bi/query', requestBody);
+                if (!res.data?.success || !res.data?.data?.data) {
+                    throw new Error('Invalid response from BI query');
+                }
+                setRows(res.data.data.data);
+            } catch (err: any) {
+                console.error('Error fetching YoY data:', err);
+                setError(err.response?.data?.message || err.message || 'Failed to load YoY data');
+                setRows([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetch();
+    }, []);
+
+    const chartData = useMemo(() => {
+        const start = dateRange.start;
+        const end = dateRange.end;
+
+        const bucket = new Map<string, { rev: number; exp: number; dt: DateTime }>();
+        for (const r of rows) {
+            const iso = r.CreatedDate;
+            if (!iso) continue;
+            const dt = DateTime.fromISO(iso);
+            if (!dt.isValid) continue;
+            if (start && dt < start.startOf('day')) continue;
+            if (end && dt > end.endOf('day')) continue;
+
+            const key = dt.toFormat('yyyy-LL');
+            const rev = Number(r.Revenue ?? 0);
+            const exp = Number(
+                r.TotalExpense ??
+                    (Number(r.DirectExpense ?? 0) + Number(r.IndirectExpense ?? 0))
+            );
+
+            const prev = bucket.get(key);
+            if (!prev) bucket.set(key, { rev, exp, dt: dt.startOf('month') });
+            else bucket.set(key, { rev: prev.rev + rev, exp: prev.exp + exp, dt: prev.dt });
+        }
+
+        const points = Array.from(bucket.values())
+            .sort((a, b) => a.dt.toMillis() - b.dt.toMillis())
+            .map((b) => {
+                const profit = b.rev - b.exp;
+                const pct = b.rev !== 0 ? (profit / b.rev) * 100 : 0;
+                return { month: b.dt.toFormat('LLL yyyy'), profitPct: Number(pct.toFixed(1)) };
+            });
+
+        return points;
+    }, [rows, dateRange.start, dateRange.end]);
 
     return (
         <Box sx={{ p: 4, height: '100%', display: 'flex', flexDirection: 'column', gap: 4 }}>
             <Typography variant="h5" fontWeight="bold" gutterBottom>
                 QPF Year-over-Year Analysis
             </Typography>
+
+            {error && (
+                <Typography color="error" variant="body2">
+                    {error}
+                </Typography>
+            )}
+            {loading && (
+                <Typography variant="body2" color="text.secondary">
+                    Cargando...
+                </Typography>
+            )}
 
             {/* Date Range Filter */}
             <Box

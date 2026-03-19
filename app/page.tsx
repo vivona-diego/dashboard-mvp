@@ -15,7 +15,7 @@ import { useEffect, useState, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import QueryChart from "./components/dashboard/charts/QueryChart";
 import TableTile from "./components/dashboard/charts/TableTile";
-import api from "./api/axiosClient";
+import api from "@/app/lib/axiosClient";
 import SegmentSelector from "./components/dashboard/SegmentSelector";
 import { useDataset } from "./contexts/DatasetContext";
 

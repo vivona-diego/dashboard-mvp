@@ -1,10 +1,11 @@
 'use client';
 
 import { Box, Typography } from '@mui/material';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { DateTime } from 'luxon';
 import ComparisonFilters from '@/app/components/quote/forecast/ComparisonFilters';
 import ComparisonGrid, { ComparisonGridData } from '@/app/components/quote/forecast/ComparisonGrid';
+import api from '@/app/lib/axiosClient';
 
 export default function QuoteForecastComparisonPage() {
     const [dateRange, setDateRange] = useState<{ start: DateTime | null; end: DateTime | null }>({
@@ -23,478 +24,137 @@ export default function QuoteForecastComparisonPage() {
         setFilters((prev) => ({ ...prev, [key]: value }));
     };
 
-    // Mock data based on the screenshot
-    const gridData: ComparisonGridData[] = [
-        {
-            id: '1',
-            quoteNo: 'C-18542',
-            customer: 'J&J Industrial Contracting',
-            date: '28/05/2024',
-            estimatedDollar: 17263,
-            expenseDollar: 2157,
-            netProfit: 15106,
-            marginPct: 87.5,
-            jobCode: 'C-34421',
-            hasLink: true,
-            startDt: '17/06/2024',
-            endDt: '19/06/2024',
-            status: 'Finished',
-            actRevenue: 11511,
-            actExpense: 4519,
-            profitDollar: 6993,
-            profitPct: 60.75,
-            varDollar: -8113,
-            varPct: -54,
-        },
-        {
-            id: '2',
-            quoteNo: 'C-18569',
-            customer: "SAV'S WELDING",
-            date: '23/05/2024',
-            estimatedDollar: 6045,
-            expenseDollar: 713,
-            netProfit: 5332,
-            marginPct: 88.2,
-            jobCode: 'C-34408',
-            hasLink: true,
-            startDt: '29/05/2024',
-            endDt: '31/05/2024',
-            status: 'Finished',
-            actRevenue: 6045,
-            actExpense: 5466,
-            profitDollar: 579,
-            profitPct: 9.58,
-            varDollar: -4753,
-            varPct: -89,
-        },
-        {
-            id: '3',
-            quoteNo: 'C-18624',
-            customer: 'LAMAR',
-            date: '04/06/2024',
-            estimatedDollar: 4033,
-            expenseDollar: 1278,
-            netProfit: 2755,
-            marginPct: 68.3,
-            jobCode: 'C-34443',
-            hasLink: true,
-            startDt: '18/06/2024',
-            endDt: '19/06/2024',
-            status: 'Finished',
-            actRevenue: 5484,
-            actExpense: 4612,
-            profitDollar: 872,
-            profitPct: 15.9,
-            varDollar: -1883,
-            varPct: -68,
-        },
-        {
-            id: '4',
-            quoteNo: 'C-18701',
-            customer: 'Mama Services',
-            date: '24/06/2024',
-            estimatedDollar: 4777,
-            expenseDollar: 1175,
-            netProfit: 3602,
-            marginPct: 75.4,
-            jobCode: 'C-34533',
-            hasLink: true,
-            startDt: '22/07/2024',
-            endDt: '22/07/2024',
-            status: 'Finished',
-            actRevenue: 4777,
-            actExpense: 3709,
-            profitDollar: 1068,
-            profitPct: 22.35,
-            varDollar: -2534,
-            varPct: -70,
-        },
-        {
-            id: '5',
-            quoteNo: 'C-18703',
-            customer: 'Maxair Intelligence',
-            date: '24/06/2024',
-            estimatedDollar: 3998,
-            expenseDollar: 910,
-            netProfit: 3088,
-            marginPct: 77.2,
-            jobCode: 'C-34628',
-            hasLink: true,
-            startDt: '19/06/2024',
-            endDt: '19/06/2024',
-            status: 'Finished',
-            actRevenue: 3998,
-            actExpense: 3359,
-            profitDollar: 639,
-            profitPct: 15.99,
-            varDollar: -2449,
-            varPct: -79,
-        },
-        {
-            id: '6',
-            quoteNo: 'C-18714',
-            customer: 'CONSOLIDATED FABRICATION',
-            date: '26/06/2024',
-            estimatedDollar: 3005,
-            expenseDollar: 262,
-            netProfit: 2742,
-            marginPct: 91.3,
-            jobCode: 'C-34492',
-            hasLink: true,
-            startDt: '28/06/2024',
-            endDt: '28/06/2024',
-            status: 'Finished',
-            actRevenue: 3005,
-            actExpense: 1807,
-            profitDollar: 1197,
-            profitPct: 39.85,
-            varDollar: -1545,
-            varPct: -56,
-        },
-        {
-            id: '7',
-            quoteNo: 'C-18716',
-            customer: 'Linde, Inc.',
-            date: '27/06/2024',
-            estimatedDollar: 1681,
-            expenseDollar: 414,
-            netProfit: 1267,
-            marginPct: 75.4,
-            jobCode: 'C-34510',
-            hasLink: true,
-            startDt: '08/07/2024',
-            endDt: '08/07/2024',
-            status: 'Finished',
-            actRevenue: 2407,
-            actExpense: 1743,
-            profitDollar: 664,
-            profitPct: 27.6,
-            varDollar: -603,
-            varPct: -48,
-        },
-        {
-            id: '8',
-            quoteNo: 'C-18639',
-            customer: 'LAMAR',
-            date: '07/06/2024',
-            estimatedDollar: 2025,
-            expenseDollar: 77,
-            netProfit: 1948,
-            marginPct: 96.2,
-            jobCode: 'C-34791',
-            hasLink: true,
-            startDt: '20/11/2024',
-            endDt: '20/11/2024',
-            status: 'Finished',
-            actRevenue: 2025,
-            actExpense: 1751,
-            profitDollar: 274,
-            profitPct: 13.54,
-            varDollar: -1674,
-            varPct: -86,
-        },
-        // Quotes without job linkage yet
-        {
-            id: '9',
-            quoteNo: 'C-18716',
-            customer: 'Havel Home Improvement',
-            date: '04/01/2024',
-            estimatedDollar: 11004,
-            expenseDollar: 1400,
-            netProfit: 9604,
-            marginPct: 87.3,
-            jobCode: null,
-            hasLink: false,
-            startDt: null,
-            endDt: null,
-            status: null,
-            actRevenue: null,
-            actExpense: null,
-            profitDollar: null,
-            profitPct: null,
-            varDollar: -9604,
-            varPct: -100,
-        },
-        {
-            id: '10',
-            quoteNo: 'C-18530',
-            customer: 'CSM Mechanical',
-            date: '16/05/2024',
-            estimatedDollar: 3474,
-            expenseDollar: 51,
-            netProfit: 3423,
-            marginPct: 98.5,
-            jobCode: null,
-            hasLink: false,
-            startDt: null,
-            endDt: null,
-            status: null,
-            actRevenue: null,
-            actExpense: null,
-            profitDollar: null,
-            profitPct: null,
-            varDollar: -3423,
-            varPct: -100,
-        },
-        {
-            id: '11',
-            quoteNo: 'C-18573',
-            customer: 'CMF Group',
-            date: '23/05/2024',
-            estimatedDollar: 4268,
-            expenseDollar: 979,
-            netProfit: 3849,
-            marginPct: 79.7,
-            jobCode: null,
-            hasLink: false,
-            startDt: null,
-            endDt: null,
-            status: null,
-            actRevenue: null,
-            actExpense: null,
-            profitDollar: null,
-            profitPct: null,
-            varDollar: -3849,
-            varPct: -100,
-        },
-        {
-            id: '12',
-            quoteNo: 'C-18568',
-            customer: 'U.S. STEEL CORPORATION',
-            date: '23/05/2024',
-            estimatedDollar: 1763,
-            expenseDollar: 38,
-            netProfit: 1725,
-            marginPct: 97.8,
-            jobCode: null,
-            hasLink: false,
-            startDt: null,
-            endDt: null,
-            status: null,
-            actRevenue: null,
-            actExpense: null,
-            profitDollar: null,
-            profitPct: null,
-            varDollar: -1725,
-            varPct: -100,
-        },
-        {
-            id: '13',
-            quoteNo: 'C-18570',
-            customer: 'U.S. STEEL CORPORATION',
-            date: '23/05/2024',
-            estimatedDollar: 8611,
-            expenseDollar: 190,
-            netProfit: 8421,
-            marginPct: 97.8,
-            jobCode: null,
-            hasLink: false,
-            startDt: null,
-            endDt: null,
-            status: null,
-            actRevenue: null,
-            actExpense: null,
-            profitDollar: null,
-            profitPct: null,
-            varDollar: -8421,
-            varPct: -100,
-        },
-        {
-            id: '14',
-            quoteNo: 'C-18619',
-            customer: 'Asplundh Construction',
-            date: '03/06/2024',
-            estimatedDollar: 4818,
-            expenseDollar: 1175,
-            netProfit: 3643,
-            marginPct: 75.6,
-            jobCode: null,
-            hasLink: false,
-            startDt: null,
-            endDt: null,
-            status: null,
-            actRevenue: null,
-            actExpense: null,
-            profitDollar: null,
-            profitPct: null,
-            varDollar: -3643,
-            varPct: -100,
-        },
-        {
-            id: '15',
-            quoteNo: 'C-18620',
-            customer: 'CCI Commercial Contracting Inc.',
-            date: '03/06/2024',
-            estimatedDollar: 9713,
-            expenseDollar: 1677,
-            netProfit: 6036,
-            marginPct: 62.1,
-            jobCode: null,
-            hasLink: false,
-            startDt: null,
-            endDt: null,
-            status: null,
-            actRevenue: null,
-            actExpense: null,
-            profitDollar: null,
-            profitPct: null,
-            varDollar: -6036,
-            varPct: -100,
-        },
-        {
-            id: '16',
-            quoteNo: 'C-18654',
-            customer: 'DTE ENERGY - ST. CLAIR PP',
-            date: '12/06/2024',
-            estimatedDollar: 10621,
-            expenseDollar: 4316,
-            netProfit: 6306,
-            marginPct: 58.4,
-            jobCode: null,
-            hasLink: false,
-            startDt: null,
-            endDt: null,
-            status: null,
-            actRevenue: null,
-            actExpense: null,
-            profitDollar: null,
-            profitPct: null,
-            varDollar: -6306,
-            varPct: -100,
-        },
-        {
-            id: '17',
-            quoteNo: 'C-18659',
-            customer: "Shier's Welding & Construction",
-            date: '13/06/2024',
-            estimatedDollar: 3469,
-            expenseDollar: 907,
-            netProfit: 2562,
-            marginPct: 73.9,
-            jobCode: null,
-            hasLink: false,
-            startDt: null,
-            endDt: null,
-            status: null,
-            actRevenue: null,
-            actExpense: null,
-            profitDollar: null,
-            profitPct: null,
-            varDollar: -2562,
-            varPct: -100,
-        },
-        {
-            id: '18',
-            quoteNo: 'C-18713',
-            customer: 'LAMAR',
-            date: '26/06/2024',
-            estimatedDollar: 4139,
-            expenseDollar: 77,
-            netProfit: 4062,
-            marginPct: 98.2,
-            jobCode: null,
-            hasLink: false,
-            startDt: null,
-            endDt: null,
-            status: null,
-            actRevenue: null,
-            actExpense: null,
-            profitDollar: null,
-            profitPct: null,
-            varDollar: -4062,
-            varPct: -100,
-        },
-        {
-            id: '19',
-            quoteNo: 'C-18719',
-            customer: 'Great Luxury Homes',
-            date: '27/06/2024',
-            estimatedDollar: 1355,
-            expenseDollar: 414,
-            netProfit: 942,
-            marginPct: 69.5,
-            jobCode: null,
-            hasLink: false,
-            startDt: null,
-            endDt: null,
-            status: null,
-            actRevenue: null,
-            actExpense: null,
-            profitDollar: null,
-            profitPct: null,
-            varDollar: -942,
-            varPct: -100,
-        },
-        {
-            id: '20',
-            quoteNo: 'C-18720',
-            customer: 'Lowe Construction',
-            date: '27/06/2024',
-            estimatedDollar: 36077,
-            expenseDollar: 8566,
-            netProfit: 26511,
-            marginPct: 73.5,
-            jobCode: null,
-            hasLink: false,
-            startDt: null,
-            endDt: null,
-            status: null,
-            actRevenue: null,
-            actExpense: null,
-            profitDollar: null,
-            profitPct: null,
-            varDollar: -26511,
-            varPct: -100,
-        },
-        {
-            id: '21',
-            quoteNo: 'C-18727',
-            customer: 'COOLSAET CONSTRUCTION COMPANY',
-            date: '27/06/2024',
-            estimatedDollar: 7234,
-            expenseDollar: 1942,
-            netProfit: 5291,
-            marginPct: 73.1,
-            jobCode: null,
-            hasLink: false,
-            startDt: null,
-            endDt: null,
-            status: null,
-            actRevenue: null,
-            actExpense: null,
-            profitDollar: null,
-            profitPct: null,
-            varDollar: -5291,
-            varPct: -100,
-        },
-        {
-            id: '22',
-            quoteNo: 'C-18728',
-            customer: 'COOLSAET CONSTRUCTION COMPANY',
-            date: '28/06/2024',
-            estimatedDollar: 5066,
-            expenseDollar: 1182,
-            netProfit: 3884,
-            marginPct: 76.7,
-            jobCode: null,
-            hasLink: false,
-            startDt: null,
-            endDt: null,
-            status: null,
-            actRevenue: null,
-            actExpense: null,
-            profitDollar: null,
-            profitPct: null,
-            varDollar: -3884,
-            varPct: -100,
-        },
-    ];
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [rows, setRows] = useState<any[]>([]);
+
+    useEffect(() => {
+        const fetch = async () => {
+            try {
+                setLoading(true);
+                setError(null);
+
+                const requestBody = {
+                    datasetName: 'quote_profit_forecast',
+                    groupBySegments: ['QuoteNumber', 'CreatedBy', 'CreatedDate', 'Item'],
+                    metrics: [
+                        { metricName: 'Revenue' },
+                        { metricName: 'TotalExpense' },
+                        { metricName: 'DirectExpense' },
+                        { metricName: 'IndirectExpense' },
+                    ],
+                    limit: 2000,
+                };
+
+                const res = await api.post('/bi/query', requestBody);
+                if (!res.data?.success || !res.data?.data?.data) {
+                    throw new Error('Invalid response from BI query');
+                }
+                setRows(res.data.data.data);
+            } catch (err: any) {
+                console.error('Error fetching comparison data:', err);
+                setError(err.response?.data?.message || err.message || 'Failed to load comparison data');
+                setRows([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetch();
+    }, []);
+
+    const gridData: ComparisonGridData[] = useMemo(() => {
+        const start = dateRange.start;
+        const end = dateRange.end;
+        const inRange = (iso?: string | null) => {
+            if (!start && !end) return true;
+            if (!iso) return true;
+            const dt = DateTime.fromISO(iso);
+            if (!dt.isValid) return true;
+            if (start && dt < start.startOf('day')) return false;
+            if (end && dt > end.endOf('day')) return false;
+            return true;
+        };
+
+        const matchSalesperson = filters.salesperson !== 'All' ? filters.salesperson : null;
+        const filtered = rows
+            .filter((r) => inRange(r.CreatedDate))
+            .filter((r) => (matchSalesperson ? r.CreatedBy === matchSalesperson : true));
+
+        const byQuote = new Map<string, { est?: any; act?: any }>();
+        for (const r of filtered) {
+            const key = String(r.QuoteNumber ?? '');
+            if (!key) continue;
+            const entry = byQuote.get(key) ?? {};
+            if (r.Item === true) entry.act = r;
+            else if (r.Item === false) entry.est = r;
+            else entry.est = entry.est ?? r;
+            byQuote.set(key, entry);
+        }
+
+        const out: ComparisonGridData[] = [];
+        let idx = 0;
+        for (const [quoteNo, pair] of byQuote.entries()) {
+            const estRev = Number(pair.est?.Revenue ?? 0);
+            const estExp = Number(pair.est?.TotalExpense ?? (Number(pair.est?.DirectExpense ?? 0) + Number(pair.est?.IndirectExpense ?? 0)));
+            const estProfit = estRev - estExp;
+            const marginPct = estRev !== 0 ? (estProfit / estRev) * 100 : 0;
+
+            const actRev = pair.act ? Number(pair.act?.Revenue ?? 0) : null;
+            const actExp = pair.act
+                ? Number(pair.act?.TotalExpense ?? (Number(pair.act?.DirectExpense ?? 0) + Number(pair.act?.IndirectExpense ?? 0)))
+                : null;
+            const actProfit = actRev !== null && actExp !== null ? actRev - actExp : null;
+            const profitPct = actRev !== null && actRev !== 0 && actProfit !== null ? (actProfit / actRev) * 100 : null;
+
+            const varDollar = actProfit !== null ? actProfit - estProfit : -estProfit;
+            const varPct = estProfit !== 0 ? (varDollar / estProfit) * 100 : null;
+
+            const createdDateIso = pair.est?.CreatedDate ?? pair.act?.CreatedDate ?? null;
+            const createdDate = createdDateIso ? DateTime.fromISO(createdDateIso).toFormat('MM/dd/yyyy') : '';
+
+            out.push({
+                id: String(idx++),
+                quoteNo,
+                customer: pair.est?.CreatedBy ?? pair.act?.CreatedBy ?? '-', // dataset no trae Customer
+                date: createdDate,
+                estimatedDollar: estRev,
+                expenseDollar: estExp,
+                netProfit: estProfit,
+                marginPct,
+                jobCode: null,
+                hasLink: Boolean(pair.act),
+                startDt: null,
+                endDt: null,
+                status: pair.act ? 'Finished' : null,
+                actRevenue: actRev,
+                actExpense: actExp,
+                profitDollar: actProfit,
+                profitPct,
+                varDollar,
+                varPct,
+            });
+        }
+
+        return out.sort((a, b) => (b.estimatedDollar ?? 0) - (a.estimatedDollar ?? 0)).slice(0, 200);
+    }, [rows, dateRange.start, dateRange.end, filters.salesperson]);
 
     return (
         <Box sx={{ p: 4, height: '100%', display: 'flex', flexDirection: 'column', gap: 4 }}>
             <Typography variant="h5" fontWeight="bold" gutterBottom>
                 Quote Profit Forecast Vs. Actual Job Profit %
             </Typography>
+
+            {error && (
+                <Typography color="error" variant="body2">
+                    {error}
+                </Typography>
+            )}
+            {loading && (
+                <Typography variant="body2" color="text.secondary">
+                    Cargando...
+                </Typography>
+            )}
 
             {/* Filters */}
             <ComparisonFilters

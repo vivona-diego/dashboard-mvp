@@ -5,7 +5,7 @@ import KPIGrid from '@/app/components/dashboard/KPIGrid';
 import SalespersonTable, { SalespersonData } from '@/app/components/dashboard/SalespersonTable';
 import SegmentSelector from '@/app/components/dashboard/SegmentSelector';
 import { Box, Stack, Typography, Grid } from '@mui/material';
-import api from '@/app/api/axiosClient';
+import api from '@/app/lib/axiosClient';
 
 import { useState, useEffect } from 'react';
 

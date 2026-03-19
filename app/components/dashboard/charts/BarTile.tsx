@@ -1,6 +1,6 @@
 'use client'
 
-import api from '@/app/api/axiosClient';
+import api from '@/app/lib/axiosClient';
 import BarChart from './BarChart';
 import formatter from '@/app/helpers/formatter';
 import {
@@ -30,7 +30,7 @@ const BarTile = (props: BarTileProps) => {
     } = props;
 
     const [results, set_results] = useState<any>(null);
-    const [loading, set_loading] = useState(false);
+    const [/* loading */, set_loading] = useState(false);
 
     useEffect(() => {
         const refresh_data = async () => {

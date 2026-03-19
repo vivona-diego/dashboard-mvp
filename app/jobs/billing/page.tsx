@@ -4,7 +4,7 @@ import { Box, Stack, Typography, CircularProgress, Grid } from '@mui/material';
 import { useState, useEffect } from 'react';
 import SegmentSelector from '../../components/dashboard/SegmentSelector';
 import JobsUnbilledTable, { JobsUnbilledData } from '../../components/dashboard/JobsUnbilledTable';
-import api from '../../api/axiosClient';
+import api from '@/app/lib/axiosClient';
 
 export default function JobsBilledUnbilledRecurringPage() {
     const DATASET_NAME = 'jobs_profit_loss'; // Using consistent dataset

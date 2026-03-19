@@ -1,9 +1,10 @@
 'use client';
 
 import { Box, Typography } from '@mui/material';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import BillingFilters from '@/app/components/quote/billing/BillingFilters';
 import BillingGrid, { BillingGridData } from '@/app/components/quote/billing/BillingGrid';
+import api from '@/app/lib/axiosClient';
 
 export default function BillingPage() {
     const [filters, setFilters] = useState({
@@ -15,128 +16,115 @@ export default function BillingPage() {
         setFilters(prev => ({ ...prev, [key]: value }));
     };
 
-    // Mock Data based on screenshot
-    const gridData: BillingGridData[] = [
-        {
-            id: '1',
-            billingCodeId: 1,
-            billingCode: 'Cartage Lot',
-            measure: 'Each',
-            effStartDt: '01/01/2021',
-            effEndDt: '31/12/2026',
-            equipmentHourly: 0.00,
-            laborHourly: 0.00,
-            unionHourly: 0,
-            wcHourly: 0.00,
-            directCost: 0.00,
-            materialBurden: 0.00,
-            laborBurden: 0.00,
-            totalCost: 0.00
-        },
-        {
-            id: '4',
-            billingCodeId: 4,
-            billingCode: 'Oakland County Permit',
-            measure: 'Each',
-            effStartDt: '01/01/2021',
-            effEndDt: '31/12/2026',
-            equipmentHourly: 0.00,
-            laborHourly: 0.00,
-            unionHourly: 0,
-            wcHourly: 0.00,
-            directCost: 57.92,
-            materialBurden: 1.00,
-            laborBurden: 0.00,
-            totalCost: 58.92
-        },
-        {
-            id: '6',
-            billingCodeId: 6,
-            billingCode: '80 Ton CP Bare Rental',
-            measure: 'Weeks',
-            effStartDt: '01/01/2021',
-            effEndDt: '31/12/2026',
-            equipmentHourly: 53.92,
-            laborHourly: 0.00,
-            unionHourly: 0,
-            wcHourly: 0.00,
-            directCost: 53.92,
-            materialBurden: 0.00,
-            laborBurden: 0.00,
-            totalCost: 53.92
-        },
-        {
-            id: '7',
-            billingCodeId: 7,
-            billingCode: '22 Ton CP Bare Rental',
-            measure: 'Weeks',
-            effStartDt: '01/01/2021',
-            effEndDt: '31/12/2026',
-            equipmentHourly: 6.02,
-            laborHourly: 0.00,
-            unionHourly: 0,
-            wcHourly: 0.00,
-            directCost: 6.02,
-            materialBurden: 0.00,
-            laborBurden: 0.00,
-            totalCost: 6.02
-        },
-         {
-            id: '8',
-            billingCodeId: 8,
-            billingCode: '440 Ton MC Hourly Rate',
-            measure: 'Hours',
-            effStartDt: '01/01/2021',
-            effEndDt: '31/12/2026',
-            equipmentHourly: 335.08,
-            laborHourly: 0.00,
-            unionHourly: 0,
-            wcHourly: 0.00,
-            directCost: 335.08,
-            materialBurden: 0.00,
-            laborBurden: 0.00,
-            totalCost: 335.08
-        },
-        {
-            id: '37',
-            billingCodeId: 37,
-            billingCode: 'Operator Straight Time',
-            measure: 'Hours',
-            effStartDt: '04/12/2024',
-            effEndDt: '31/12/2026',
-            equipmentHourly: 0.00,
-            laborHourly: 42.15,
-            unionHourly: 33.02,
-            wcHourly: 3.72,
-            directCost: 78.89,
-            materialBurden: 0.00,
-            laborBurden: 48.47,
-            totalCost: 127.36
-        },
-        {
-            id: '38',
-            billingCodeId: 38,
-            billingCode: 'Operator Time And Half',
-            measure: 'Hours',
-            effStartDt: '04/12/2024',
-            effEndDt: '31/12/2026',
-            equipmentHourly: 0.00,
-            laborHourly: 107.51,
-            unionHourly: 64.04,
-            wcHourly: 6.32,
-            directCost: 177.87,
-            materialBurden: 0.00,
-            laborBurden: 123.64,
-            totalCost: 301.51
-        },
-        // Add more rows if needed, but this covers the types
-    ];
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [rows, setRows] = useState<any[]>([]);
+
+    useEffect(() => {
+        const fetch = async () => {
+            try {
+                setLoading(true);
+                setError(null);
+
+                // Usamos BillingDescription + Measure porque el dataset no trae
+                // fechas efectivas de billing code. Calculamos costos "por unidad"
+                // usando Quantity cuando exista.
+                const requestBody = {
+                    datasetName: 'quote_profit_forecast',
+                    groupBySegments: ['BillingDescription', 'Measure', 'BillingCodeID'],
+                    metrics: [
+                        { metricName: 'Quantity' },
+                        { metricName: 'EquipmentExpense' },
+                        { metricName: 'LaborExpense' },
+                        { metricName: 'UnionExpense' },
+                        { metricName: 'WCExpense' },
+                        { metricName: 'MatExpense' },
+                        { metricName: 'DirectExpense' },
+                        { metricName: 'IndirectExpense' },
+                        { metricName: 'TotalExpense' },
+                    ],
+                    limit: 2000,
+                };
+
+                const res = await api.post('/bi/query', requestBody);
+                if (!res.data?.success || !res.data?.data?.data) {
+                    throw new Error('Invalid response from BI query');
+                }
+                setRows(res.data.data.data);
+            } catch (err: any) {
+                console.error('Error fetching billing data:', err);
+                setError(err.response?.data?.message || err.message || 'Failed to load billing data');
+                setRows([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetch();
+    }, []);
+
+    const gridData: BillingGridData[] = useMemo(() => {
+        const matchBilling = filters.billingCode !== 'All' ? filters.billingCode : null;
+        const matchMeasure = filters.measure !== 'All' ? filters.measure : null;
+
+        const safeDiv = (a: number, b: number) => (b !== 0 ? a / b : 0);
+
+        const mapped = rows
+            .filter((r) => (matchBilling ? r.BillingDescription === matchBilling : true))
+            .filter((r) => (matchMeasure ? r.Measure === matchMeasure : true))
+            .map((r, idx) => {
+                const qty = Number(r.Quantity ?? 0);
+
+                const equipment = Number(r.EquipmentExpense ?? 0);
+                const labor = Number(r.LaborExpense ?? 0);
+                const union = Number(r.UnionExpense ?? 0);
+                const wc = Number(r.WCExpense ?? 0);
+                const mat = Number(r.MatExpense ?? 0);
+
+                const direct = Number(r.DirectExpense ?? 0);
+                const indirect = Number(r.IndirectExpense ?? 0);
+                const total = Number(r.TotalExpense ?? (direct + indirect));
+
+                return {
+                    id: String(idx),
+                    billingCodeId: Number(r.BillingCodeID ?? 0),
+                    billingCode: r.BillingDescription ?? '',
+                    measure: r.Measure ?? '',
+                    effStartDt: '',
+                    effEndDt: '',
+                    equipmentHourly: safeDiv(equipment, qty),
+                    laborHourly: safeDiv(labor, qty),
+                    unionHourly: safeDiv(union, qty),
+                    wcHourly: safeDiv(wc, qty),
+                    directCost: safeDiv(direct, qty),
+                    materialBurden: safeDiv(mat, qty),
+                    laborBurden: safeDiv(indirect, qty),
+                    totalCost: safeDiv(total, qty),
+                };
+            });
+
+        // Ordenar por billingCode (texto) y limitar por performance
+        return mapped
+            .sort((a, b) => (a.billingCode || '').localeCompare(b.billingCode || ''))
+            .slice(0, 300);
+    }, [rows, filters.billingCode, filters.measure]);
 
     return (
         <Box sx={{ p: 4, height: '100%', display: 'flex', flexDirection: 'column', gap: 4 }}>
             <Typography variant="h5" fontWeight="bold" gutterBottom>
                 Billing Codes, Costs & Calculations
             </Typography>
+
+            {error && (
+                <Typography color="error" variant="body2">
+                    {error}
+                </Typography>
+            )}
+            {loading && (
+                <Typography variant="body2" color="text.secondary">
+                    Cargando...
+                </Typography>
+            )}
 
             {/* Filters and Explanatory Text */}
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '1fr 2fr' }, gap: 4 }}>

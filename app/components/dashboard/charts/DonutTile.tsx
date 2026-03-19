@@ -8,7 +8,7 @@ import {
 import { DateTime } from 'luxon';
 import { useEffect, useState } from 'react';
 import DonutChart from './DonutChart';
-import api from '@/app/api/axiosClient';
+import api from '@/app/lib/axiosClient';
 
 interface DonutTileProps {
     title: string;
@@ -30,7 +30,7 @@ const DonutTile = (props: DonutTileProps) => {
     } = props;
 
     const [results, set_results] = useState<any>(null);
-    const [loading, set_loading] = useState(false);
+    const [/* loading */, set_loading] = useState(false);
 
     useEffect(() => {
         const refresh_data = async () => {

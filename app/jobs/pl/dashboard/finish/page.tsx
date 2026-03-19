@@ -2,7 +2,7 @@
 
 import { Box, Card, CardContent, Grid, Skeleton, Stack, TextField, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
-import api from '../../../../api/axiosClient';
+import api from '@/app/lib/axiosClient';
 import SegmentSelector from '../../../../components/dashboard/SegmentSelector';
 import MultiMetricQueryChart from '../../../../components/dashboard/charts/MultiMetricQueryChart';
 import QueryChart from '../../../../components/dashboard/charts/QueryChart';

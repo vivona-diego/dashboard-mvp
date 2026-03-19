@@ -5,7 +5,7 @@ import { Box, Button, Typography, Stack } from '@mui/material';
 import { useSearchParams, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useDataset } from '../contexts/DatasetContext';
-import api from '../api/axiosClient';
+import api from '@/app/lib/axiosClient';
 
 interface Dataset {
   name: string;
@@ -35,7 +35,7 @@ export default function Header() {
       try {
         setLoading(true);
         setError(null);
-        const response = await api.get('/bi/datasets');
+        const response = await api.get('api/bi/datasets');
 
         // Handle response structure: response.data.data.datasets
         const datasetsArray = response.data?.data?.datasets || response.data?.datasets || response.data;

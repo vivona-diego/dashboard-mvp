@@ -1,10 +1,11 @@
 'use client';
 
 import { Box, Typography } from '@mui/material';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { DateTime } from 'luxon';
 import DetailFilters from '@/app/components/quote/forecast/DetailFilters';
 import DetailGrid, { DetailGridData } from '@/app/components/quote/forecast/DetailGrid';
+import api from '@/app/lib/axiosClient';
 
 export default function QuoteProfitForecastDetailPage() {
     // State for filters
@@ -25,106 +26,138 @@ export default function QuoteProfitForecastDetailPage() {
         setFilters(prev => ({ ...prev, [key]: value }));
     };
 
-    // Mock Data based on screenshot
-    const gridData: DetailGridData[] = [
-        {
-            id: '1',
-            quoteNo: 'C-17910',
-            status: 'Did Job',
-            salesperson: 'Chad McComas',
-            customer: 'Port City Marine Services Canada Inc.',
-            date: '01/01/2024',
-            line: 1,
-            billingDesc: '115 Ton Truck Crane',
-            measure: 'Hours',
-            qty: 8,
-            rate: 265.00,
-            estimated: 1960,
-            totalHrlyCost: 122,
-            expense: 979,
-            netProfit: 981,
-            margin: 50.0
-        },
-        {
-            id: '2',
-            quoteNo: 'C-17910',
-            status: 'Did Job',
-            salesperson: 'Chad McComas',
-            customer: 'Port City Marine Services Canada Inc.',
-            date: '01/01/2024',
-            line: 3,
-            billingDesc: 'City of Detroit Permit',
-            measure: 'Each',
-            qty: 1,
-            rate: 450.00,
-            estimated: 400,
-            totalHrlyCost: 435,
-            expense: 435,
-            netProfit: -35,
-            margin: -8.7
-        },
-        {
-            id: '3',
-            quoteNo: 'C-17910',
-            status: 'Did Job',
-            salesperson: 'Chad McComas',
-            customer: 'Port City Marine Services Canada Inc.',
-            date: '01/01/2024',
-            line: 6,
-            billingDesc: 'Fuel Surcharge',
-            measure: 'Percent',
-            qty: 1,
-            rate: 7.00,
-            estimated: 213,
-            totalHrlyCost: 0,
-            expense: 0,
-            netProfit: 213,
-            margin: 100.0
-        },
-        // Adding more rows similar to screenshot
-        {
-            id: '4',
-            quoteNo: 'C-17911',
-            status: 'Did Job',
-            salesperson: 'Chad McComas',
-            customer: 'Limbach Company LLC',
-            date: '02/01/2024',
-            line: 1,
-            billingDesc: '80 ton Truck Crane',
-            measure: 'Hours',
-            qty: 6,
-            rate: 245.00,
-            estimated: 1356,
-            totalHrlyCost: 128,
-            expense: 765,
-            netProfit: 591,
-            margin: 43.6
-        },
-        {
-            id: '5',
-            quoteNo: 'C-17912',
-            status: 'Budgetary',
-            salesperson: 'Matt McVittie',
-            customer: 'COMMERCIAL CONTRACTING CORP',
-            date: '03/01/2024',
-            line: 1,
-            billingDesc: '50 Ton ML Hourly',
-            measure: 'Hours',
-            qty: 40,
-            rate: 215.00,
-            estimated: 8400,
-            totalHrlyCost: 31,
-            expense: 1246,
-            netProfit: 7154,
-            margin: 85.2
-        },
-    ];
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [rawRows, setRawRows] = useState<any[]>([]);
+
+    useEffect(() => {
+        const fetchDetailRows = async () => {
+            try {
+                setLoading(true);
+                setError(null);
+
+                const requestBody = {
+                    datasetName: 'quote_profit_forecast',
+                    groupBySegments: [
+                        'QuoteNumber',
+                        'BillingDescription',
+                        'Measure',
+                        'CreatedBy',
+                        'CreatedDate',
+                        'Item',
+                    ],
+                    metrics: [
+                        { metricName: 'Revenue' },
+                        { metricName: 'Quantity' },
+                        { metricName: 'TotalExpense' },
+                        { metricName: 'DirectExpense' },
+                        { metricName: 'IndirectExpense' },
+                    ],
+                    limit: 500,
+                };
+
+                const res = await api.post('/bi/query', requestBody);
+                if (!res.data?.success || !res.data?.data?.data) {
+                    throw new Error('Invalid response from BI query');
+                }
+
+                setRawRows(res.data.data.data);
+            } catch (err: any) {
+                console.error('Error fetching quote detail rows:', err);
+                setError(
+                    err.response?.data?.message ||
+                        err.message ||
+                        'Failed to load quote detail data'
+                );
+                setRawRows([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchDetailRows();
+    }, []);
+
+    const gridData: DetailGridData[] = useMemo(() => {
+        const start = dateRange.start;
+        const end = dateRange.end;
+        const inRange = (iso?: string | null) => {
+            if (!start && !end) return true;
+            if (!iso) return true;
+            const dt = DateTime.fromISO(iso);
+            if (!dt.isValid) return true;
+            if (start && dt < start.startOf('day')) return false;
+            if (end && dt > end.endOf('day')) return false;
+            return true;
+        };
+
+        const matchSalesperson =
+            filters.salesperson && filters.salesperson !== 'All'
+                ? filters.salesperson
+                : null;
+        const matchStatus =
+            filters.status && filters.status !== 'All' ? filters.status : null;
+
+        const rows = rawRows
+            .filter((r) => inRange(r.CreatedDate))
+            .filter((r) =>
+                matchSalesperson ? r.CreatedBy === matchSalesperson : true
+            )
+            .map((r, idx) => {
+                const estimated = Number(r.Revenue ?? 0);
+                const direct = Number(r.DirectExpense ?? 0);
+                const indirect = Number(r.IndirectExpense ?? 0);
+                const expense = Number(r.TotalExpense ?? direct + indirect);
+                const netProfit = estimated - expense;
+                const qty = Number(r.Quantity ?? 0);
+                const rate = qty > 0 ? estimated / qty : 0;
+                const totalHrlyCost = qty > 0 ? expense / qty : 0;
+                const margin = estimated !== 0 ? (netProfit / estimated) * 100 : 0;
+
+                const status =
+                    r.Item === true
+                        ? 'Did Job'
+                        : r.Item === false
+                          ? 'Budgetary'
+                          : '';
+
+                return {
+                    id: String(idx),
+                    quoteNo: r.QuoteNumber ?? '',
+                    status,
+                    salesperson: r.CreatedBy ?? '',
+                    customer: '-', // no existe en el dataset
+                    date: r.CreatedDate
+                        ? DateTime.fromISO(r.CreatedDate).toFormat('MM/dd/yyyy')
+                        : '',
+                    line: idx + 1,
+                    billingDesc: r.BillingDescription ?? '',
+                    measure: r.Measure ?? '',
+                    qty,
+                    rate,
+                    estimated,
+                    totalHrlyCost,
+                    expense,
+                    netProfit,
+                    margin,
+                };
+            })
+            .filter((r) => (matchStatus ? r.status === matchStatus : true));
+
+        return rows;
+    }, [rawRows, dateRange.start, dateRange.end, filters.salesperson, filters.status]);
 
     return (
         <Box sx={{ p: 4, height: '100%', display: 'flex', flexDirection: 'column', gap: 4 }}>
             <Typography variant="h5" fontWeight="bold" gutterBottom>
                 Quote Profit Forecast - Detail
             </Typography>
+
+            {error && (
+                <Typography color="error" variant="body2">
+                    {error}
+                </Typography>
+            )}
 
             {/* Filters */}
             <DetailFilters 
@@ -137,6 +170,11 @@ export default function QuoteProfitForecastDetailPage() {
             {/* Grid */}
             <Box sx={{ flexGrow: 1 }}>
                 <DetailGrid data={gridData} />
+                {loading && (
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                        Cargando...
+                    </Typography>
+                )}
             </Box>
         </Box>
     );

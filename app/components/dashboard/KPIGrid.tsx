@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CircularProgress, Grid, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
-import api from '@/app/api/axiosClient';
+import api from '@/app/lib/axiosClient';
 import formatter from '@/app/helpers/formatter';
 
 interface MetricConfig {

@@ -1,4 +1,4 @@
-import api from '@/app/api/axiosClient';
+import api from '@/app/lib/axiosClient';
 import formatter from '@/app/helpers/formatter';
 import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Grid, Skeleton, Stack, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';

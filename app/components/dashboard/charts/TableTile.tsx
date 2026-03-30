@@ -28,6 +28,15 @@ interface TableTileProps {
     onRowClick?: (row: any) => void;
 }
 
+const formatHeader = (text: string) => {
+    if (!text) return '';
+    // Split by capital letters: "JobRevenue" -> "Job Revenue"
+    return text
+        .replace(/([a-z])([A-Z])/g, '$1 $2')
+        .replace(/([A-Z])([A-Z][a-z])/g, '$1 $2')
+        .trim();
+};
+
 const TableTile = (props: TableTileProps) => {
     const { title, datasetName, groupBySegments, metrics, filters, useDrilldown, headerAction, height } = props;
 
@@ -154,7 +163,7 @@ const TableTile = (props: TableTileProps) => {
                                         }}
                                         align={['JobRevenue', 'TotalExpenses', 'Profit', 'ProfitPercent', 'LaborExpenses', 'LaborBurden', 'LaborUnion', 'LaborWC', 'EquipmentExpenses', 'Materials', 'MaterialsOverhead', 'Overhead', 'LaborHours'].includes(col) || typeof data[0]?.[col] === 'number' ? 'right' : 'left'}
                                     >
-                                        {col}
+                                        {formatHeader(col)}
                                     </TableCell>
                                 ))}
                             </TableRow>
@@ -244,9 +253,9 @@ const TableTile = (props: TableTileProps) => {
                 <Table size="small" stickyHeader>
                     <TableHead>
                         <TableRow>
-                            <TableCell sx={{ fontWeight: 'bold', bgcolor: 'primary.main', color: 'common.white' }}>{segmentName}</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold', bgcolor: 'primary.main', color: 'common.white' }}>{formatHeader(segmentName)}</TableCell>
                             {metrics.map(m => (
-                                <TableCell key={m} align="right" sx={{ fontWeight: 'bold', bgcolor: 'primary.main', color: 'common.white' }}>{m}</TableCell>
+                                <TableCell key={m} align="right" sx={{ fontWeight: 'bold', bgcolor: 'primary.main', color: 'common.white' }}>{formatHeader(m)}</TableCell>
                             ))}
                             {hasJobs && hasCost && (
                                 <TableCell align="right" sx={{ fontWeight: 'bold', bgcolor: 'primary.main', color: 'common.white' }}>Avg Job Value</TableCell>

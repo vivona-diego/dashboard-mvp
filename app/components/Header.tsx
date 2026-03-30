@@ -80,14 +80,14 @@ export default function Header() {
   }, [datasets, forecastParam]);
 
   const jobMenuItems = [
-    { text: 'Job Forecast', path: '/jobs/revenue/forecast' },
-    { text: 'Job P/L Dashboard', path: '/jobs/pl/dashboard' },
-    { text: 'Finish Jobs Dashboard', path: '/jobs/pl/dashboard/finish' },
-    { text: 'Job Profit/(Loss) Drilldown', path: '/jobs/pl/drilldown' },
-    { text: 'Jobs Revenue Report', path: '/jobs/revenue' },
-    { text: 'Jobs Unbilled', path: '/jobs/billing' },
-    { text: 'Jobs Revenue Forecast Details', path: '/jobs/revenue/forecast/details' },
-    { text: 'Jobs Revenue Forecast Report By Salesperson', path: '/jobs/revenue/forecast/salesperson' },
+    { text: 'Forecast', path: '/jobs/revenue/forecast' },
+    { text: 'P/L Dashboard', path: '/jobs/pl/dashboard' },
+    { text: 'Finish Jobs', path: '/jobs/pl/dashboard/finish' },
+    { text: 'Job Profit/Loss', path: '/jobs/pl/drilldown' },
+    { text: 'Revenue Report', path: '/jobs/revenue' },
+    { text: 'Unbilled', path: '/jobs/billing' },
+    { text: 'Revenue Forecast Details', path: '/jobs/revenue/forecast/details' },
+    { text: 'Revenue Forecast By Salesperson', path: '/jobs/revenue/forecast/salesperson' },
   ];
 
   const quoteMenuItems = [

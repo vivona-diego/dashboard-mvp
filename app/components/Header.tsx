@@ -16,8 +16,8 @@ export default function Header() {
   const { selectedDataset, setSelectedDataset } = useDataset();
   const searchParams = useSearchParams();
   const pathname = usePathname();
-  const forecastParam = searchParams.get('forecast'); // 'job' or 'quote' or null
-  const featureParam = searchParams.get('feature'); // 'job' or null
+  const forecastParam = searchParams.get('forecast'); // 'job' or 'quote' or 'equipment' or null
+  const featureParam = searchParams.get('feature'); // 'job' or 'quote' or 'equipment' or null
   const [datasets, setDatasets] = useState<Dataset[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -75,8 +75,12 @@ export default function Header() {
       return datasets; // Show all datasets if no forecast filter
     }
 
-    const prefixes = forecastParam === 'job' ? 'job_' : 'quote_';
-    return datasets.filter((dataset) => dataset.name.toLowerCase().startsWith(prefixes));
+    let prefix = '';
+    if (forecastParam === 'job') prefix = 'job_';
+    else if (forecastParam === 'quote') prefix = 'quote_';
+    else if (forecastParam === 'equipment') prefix = 'equipment_';
+
+    return datasets.filter((dataset) => dataset.name.toLowerCase().startsWith(prefix));
   }, [datasets, forecastParam]);
 
   const jobMenuItems = [
@@ -91,12 +95,14 @@ export default function Header() {
   ];
 
   const quoteMenuItems = [
-    { text: 'Quote Profit Forecast', path: '/quote/forecast/profit' },
-    { text: 'Quote Profit Detail', path: '/quote/forecast/detail' },
-    { text: 'Quote Forecast Comparison', path: '/quote/forecast/comparison' },
+    { text: 'Profit Forecast', path: '/quote/forecast/profit' },
+    { text: 'Profit Detail', path: '/quote/forecast/detail' },
+    { text: 'Forecast Comparison', path: '/quote/forecast/comparison' },
     { text: 'QPF YoY Analysis', path: '/quote/forecast/yoy' },
     { text: 'Billing', path: '/quote/billing' },
   ];
+
+  const equipmentMenuItems = [{ text: 'Revenue', path: '/equipment/revenue' }];
 
   if (!isMounted) {
     return null;
@@ -249,6 +255,37 @@ export default function Header() {
             })}
           {featureParam === 'quote' &&
             quoteMenuItems.map((item) => {
+              const isActive = pathname === item.path;
+              return (
+                <Button
+                  key={item.path}
+                  component={Link}
+                  href={`${item.path}?feature=${featureParam}&forecast=${featureParam}`}
+                  variant={isActive ? 'contained' : 'outlined'}
+                  color="inherit"
+                  sx={{
+                    borderRadius: '50px',
+                    textTransform: 'none',
+                    fontWeight: 'medium',
+                    px: 2,
+                    py: 0.5,
+                    whiteSpace: 'nowrap',
+                    flexShrink: 0,
+                    borderColor: isActive ? 'transparent' : 'divider',
+                    bgcolor: isActive ? 'action.selected' : 'transparent',
+                    boxShadow: 'none',
+                    '&:hover': {
+                      bgcolor: isActive ? 'action.selected' : 'action.hover',
+                      borderColor: isActive ? 'transparent' : 'divider',
+                    },
+                  }}
+                >
+                  {item.text}
+                </Button>
+              );
+            })}
+          {featureParam === 'equipment' &&
+            equipmentMenuItems.map((item) => {
               const isActive = pathname === item.path;
               return (
                 <Button

@@ -108,7 +108,7 @@ export default function Page() {
     set_mounted(true);
   }, []);
 
-  // Fetch dataset info (segments and date ranges) when dataset changes
+  // Fetch dataset info when dataset changes
   useEffect(() => {
     const fetchDatasetInfo = async () => {
       // Reset segment selection when dataset changes
@@ -127,7 +127,7 @@ export default function Page() {
       try {
         const response = await api.get(`/bi/datasets/${selectedDataset}`);
 
-        // Handle the response structure: response.data.data.dataset
+        // Handle the response structure
         const datasetData =
           response.data?.data?.dataset ||
           response.data?.dataset ||
@@ -139,20 +139,9 @@ export default function Page() {
           Array.isArray(datasetData.datasetSegments)
         ) {
           const segments = datasetData.datasetSegments
-            .filter((ds: DatasetSegment) => ds.isFilterable !== false) // Only include filterable segments
+            .filter((ds: DatasetSegment) => ds.isFilterable !== false)
             .map((ds: DatasetSegment) => ds.segment.segmentName);
           set_available_segments(segments);
-
-          // Restore segment from URL if applicable
-          const urlSegment = searchParams.get("segment");
-          const urlDataset = searchParams.get("dataset");
-          if (
-            urlDataset === selectedDataset &&
-            urlSegment &&
-            segments.includes(urlSegment)
-          ) {
-            set_selected_segment(urlSegment);
-          }
         } else {
           set_available_segments([]);
         }
@@ -170,7 +159,7 @@ export default function Page() {
           set_available_metrics([]);
         }
 
-        // Extract date ranges if available in the response
+        // Extract date ranges if available
         if (
           response.data?.data?.dateRanges &&
           Array.isArray(response.data.data.dateRanges)
@@ -201,7 +190,25 @@ export default function Page() {
     };
 
     fetchDatasetInfo();
-  }, [selectedDataset, searchParams]);
+  }, [selectedDataset]);
+
+  // Sync segment from URL when segments are loaded or URL changes
+  useEffect(() => {
+    if (available_segments.length > 0) {
+      const urlSegment = searchParams.get("segment");
+      const urlDataset = searchParams.get("dataset");
+      
+      // Only set from URL if the dataset matches the current selected one
+      if (
+        urlDataset === selectedDataset &&
+        urlSegment &&
+        available_segments.includes(urlSegment) &&
+        urlSegment !== selected_segment
+      ) {
+        set_selected_segment(urlSegment);
+      }
+    }
+  }, [available_segments, searchParams, selectedDataset, selected_segment]);
 
   // Set ready when segments and metrics are available
   useEffect(() => {
@@ -220,6 +227,10 @@ export default function Page() {
 
   // Determine date segment name based on dataset
   const getDateSegmentName = (datasetName: string): string => {
+    // Specifically handle quote_profit_forecast to return CreatedDate as requested
+    if (datasetName === "quote_profit_forecast") {
+      return "CreatedDate";
+    }
     if (datasetName.toLowerCase().includes("quote")) {
       return "QuoteDate";
     }

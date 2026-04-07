@@ -102,7 +102,10 @@ export default function Header() {
     { text: 'Billing', path: '/quote/billing' },
   ];
 
-  const equipmentMenuItems = [{ text: 'Revenue', path: '/equipment/revenue' }];
+  const equipmentMenuItems = [
+    { text: 'Summary', path: '/equipment/summary' },
+    { text: 'Revenue', path: '/equipment/revenue' },
+  ];
 
   if (!isMounted) {
     return null;

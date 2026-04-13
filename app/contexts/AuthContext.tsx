@@ -58,7 +58,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const currentTime = Math.floor(Date.now() / 1000);
 
           // Validation requirements: non-expired and username "aryzhanskiy"
-          if (payload && payload.exp && payload.exp > currentTime && payload.username === 'aryzhanskiy') {
+          if (payload && payload.exp && payload.exp > currentTime) {
             console.log('Valid URL token found for user:', payload.username);
             localStorage.setItem('auth_token', urlToken);
             const mockUser = { username: payload.username };

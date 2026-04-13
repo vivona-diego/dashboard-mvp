@@ -13,11 +13,11 @@ import {
 import { DateTime } from "luxon";
 import { useEffect, useState, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import QueryChart from "./components/dashboard/charts/QueryChart";
-import TableTile from "./components/dashboard/charts/TableTile";
+import QueryChart from "@/app/components/dashboard/charts/QueryChart";
+import TableTile from "@/app/components/dashboard/charts/TableTile";
 import api from "@/app/lib/axiosClient";
-import SegmentSelector from "./components/dashboard/SegmentSelector";
-import { useDataset } from "./contexts/DatasetContext";
+import SegmentSelector from "@/app/components/dashboard/SegmentSelector";
+import { useDataset } from "@/app/contexts/DatasetContext";
 
 interface DateRange {
   id: string;

@@ -5,6 +5,8 @@ import { Box, Button, Typography, Stack } from '@mui/material';
 import { useSearchParams, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useDataset } from '../contexts/DatasetContext';
+import { useAuth } from '../contexts/AuthContext';
+import LogoutIcon from '@mui/icons-material/Logout';
 import api from '@/app/lib/axiosClient';
 
 interface Dataset {
@@ -32,10 +34,18 @@ export default function Header() {
 
   useEffect(() => {
     const fetchDatasets = async () => {
+      // Solo cargar si estamos autenticados
+      const token = localStorage.getItem('auth_token');
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
         setError(null);
-        const response = await api.get('api/bi/datasets');
+        // Fixed URL with leading slash
+        const response = await api.get('/api/bi/datasets');
 
         // Handle response structure: response.data.data.datasets
         const datasetsArray = response.data?.data?.datasets || response.data?.datasets || response.data;
@@ -68,6 +78,8 @@ export default function Header() {
   const handleDatasetClick = (datasetName: string) => {
     setSelectedDataset(datasetName);
   };
+
+  const { logout } = useAuth();
 
   // Filter datasets based on forecast parameter
   const filteredDatasets = useMemo(() => {
@@ -105,6 +117,10 @@ export default function Header() {
   const equipmentMenuItems = [
     { text: 'Summary', path: '/equipment/summary' },
     { text: 'Revenue', path: '/equipment/revenue' },
+    { text: 'Down Report', path: '/equipment/down' },
+    { text: 'Yearly Utilization', path: '/equipment/utilization' },
+    { text: 'Utilization Summary', path: '/equipment/utilization/summary' },
+    { text: 'CY vs PY Utilization', path: '/equipment/utilization/yearly/cyvspy' },
   ];
 
   if (!isMounted) {
@@ -137,61 +153,91 @@ export default function Header() {
           </Typography>
         </Stack>
 
-        {/* Right: Navigation & Datasets */}
         <Stack
           direction="row"
-          spacing={1}
+          spacing={2}
           alignItems="center"
-          sx={{
-            maxWidth: '100%',
-            minWidth: 0,
-            overflowX: 'auto',
-            pb: { xs: 1, md: 0 },
-            // Restore scrollbar for mouse users, style it nicely
-            '&::-webkit-scrollbar': { height: '6px' },
-            '&::-webkit-scrollbar-track': { background: 'transparent' },
-            '&::-webkit-scrollbar-thumb': {
-              backgroundColor: 'rgba(0,0,0,0.1)',
-              borderRadius: '4px',
-              '&:hover': { backgroundColor: 'rgba(0,0,0,0.2)' },
-            },
-            scrollbarWidth: 'thin', // Firefox
-          }}
+          sx={{ minWidth: 0, flex: 1, justifyContent: 'flex-end', overflow: 'hidden' }}
         >
-          {/* Navigation Items (converted from Tabs) */}
-          {pathname === '/' &&
-            !loading &&
-            !error &&
-            filteredDatasets.length > 0 &&
-            filteredDatasets.map((item) => {
-              const isActive = selectedDataset === item.name;
-              return (
-                <Button
-                  key={item.name}
-                  variant={isActive ? 'contained' : 'outlined'}
-                  onClick={() => handleDatasetClick(item.name)}
-                  sx={{
-                    borderRadius: '50px',
-                    textTransform: 'none',
-                    fontWeight: 'medium',
-                    px: 2,
-                    py: 0.5,
-                    whiteSpace: 'nowrap',
-                    flexShrink: 0,
-                    color: isActive ? 'text.primary' : 'text.secondary',
-                    borderColor: isActive ? 'transparent' : 'divider',
-                    bgcolor: isActive ? 'action.selected' : 'transparent',
-                    boxShadow: 'none',
-                    '&:hover': {
-                      bgcolor: isActive ? 'action.selected' : 'action.hover',
+          {/* Right: Navigation & Datasets */}
+          <Stack
+            direction="row"
+            spacing={1}
+            alignItems="center"
+            sx={{
+              maxWidth: '100%',
+              minWidth: 0,
+              overflowX: 'auto',
+              pb: { xs: 1, md: 0 },
+              '&::-webkit-scrollbar': { height: '6px' },
+              '&::-webkit-scrollbar-track': { background: 'transparent' },
+              '&::-webkit-scrollbar-thumb': {
+                backgroundColor: 'rgba(0,0,0,0.1)',
+                borderRadius: '4px',
+                '&:hover': { backgroundColor: 'rgba(0,0,0,0.2)' },
+              },
+              scrollbarWidth: 'thin',
+            }}
+          >
+            {/* Navigation Items (converted from Tabs) */}
+            {pathname === '/' &&
+              !loading &&
+              !error &&
+              filteredDatasets.length > 0 &&
+              filteredDatasets.map((item) => {
+                const isActive = selectedDataset === item.name;
+                return (
+                  <Button
+                    key={item.name}
+                    variant={isActive ? 'contained' : 'outlined'}
+                    onClick={() => handleDatasetClick(item.name)}
+                    sx={{
+                      borderRadius: '50px',
+                      textTransform: 'none',
+                      fontWeight: 'medium',
+                      px: 2,
+                      py: 0.5,
+                      whiteSpace: 'nowrap',
+                      flexShrink: 0,
+                      color: isActive ? 'text.primary' : 'text.secondary',
                       borderColor: isActive ? 'transparent' : 'divider',
-                    },
-                  }}
-                >
-                  {item.name.replace(/_/g, ' ')}
-                </Button>
-              );
-            })}
+                      bgcolor: isActive ? 'action.selected' : 'transparent',
+                      boxShadow: 'none',
+                      '&:hover': {
+                        bgcolor: isActive ? 'action.selected' : 'action.hover',
+                        borderColor: isActive ? 'transparent' : 'divider',
+                      },
+                    }}
+                  >
+                    {item.name.replace(/_/g, ' ')}
+                  </Button>
+                );
+              })}
+          </Stack>
+
+          {/* Logout Section */}
+          <Button
+            variant="outlined"
+            onClick={logout}
+            startIcon={<LogoutIcon />}
+            size="small"
+            sx={{
+              borderRadius: '50px',
+              textTransform: 'none',
+              fontWeight: 'medium',
+              whiteSpace: 'nowrap',
+              flexShrink: 0,
+              color: 'text.secondary',
+              borderColor: 'divider',
+              '&:hover': {
+                bgcolor: 'error.lighter',
+                color: 'error.main',
+                borderColor: 'error.light',
+              },
+            }}
+          >
+            Logout
+          </Button>
         </Stack>
       </Box>
 

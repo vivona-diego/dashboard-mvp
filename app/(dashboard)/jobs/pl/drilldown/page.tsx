@@ -3,9 +3,9 @@
 import { Box, Grid, Stack, TextField, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 import api from '@/app/lib/axiosClient';
-import SegmentSelector from '../../../components/dashboard/SegmentSelector';
-import QueryChart from '../../../components/dashboard/charts/QueryChart';
-import TableTile from '../../../components/dashboard/charts/TableTile';
+import SegmentSelector from '@/app/components/dashboard/SegmentSelector';
+import QueryChart from '@/app/components/dashboard/charts/QueryChart';
+import TableTile from '@/app/components/dashboard/charts/TableTile';
 
 const DATASET_NAME = 'jobs_profit_loss';
 

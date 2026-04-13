@@ -29,7 +29,7 @@ import { DateTime } from 'luxon';
 // Icons
 import AddIcon from '@mui/icons-material/Add';
 import FilterListIcon from '@mui/icons-material/FilterList';
-import TableSkeleton from '../components/ui/TableSkeleton';
+import TableSkeleton from '@/app/components/ui/TableSkeleton';
 
 interface FilterItem {
   segmentName: string;

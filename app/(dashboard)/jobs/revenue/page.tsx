@@ -3,10 +3,10 @@
 import { Box, Stack, Typography, Grid, Card, CardContent, Skeleton } from '@mui/material';
 import { useState, useEffect } from 'react';
 import api from '@/app/lib/axiosClient';
-import SegmentSelector from '../../components/dashboard/SegmentSelector';
-import MultiMetricQueryChart from '../../components/dashboard/charts/MultiMetricQueryChart';
-import DetailedMonthlyTable, { MonthlyDetailedData } from '../../components/dashboard/DetailedMonthlyTable';
-import CustomerRevenueTable, { CustomerRevenueData } from '../../components/dashboard/CustomerRevenueTable';
+import SegmentSelector from '@/app/components/dashboard/SegmentSelector';
+import MultiMetricQueryChart from '@/app/components/dashboard/charts/MultiMetricQueryChart';
+import DetailedMonthlyTable, { MonthlyDetailedData } from '@/app/components/dashboard/DetailedMonthlyTable';
+import CustomerRevenueTable, { CustomerRevenueData } from '@/app/components/dashboard/CustomerRevenueTable';
 
 interface KPI {
     name: string;

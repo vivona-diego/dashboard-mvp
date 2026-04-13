@@ -2,8 +2,8 @@
 
 import { Box, Stack, Typography, Grid, Paper, CircularProgress } from '@mui/material';
 import { useEffect, useState } from 'react';
-import ForecastDetailsTable, { ForecastDetailRow } from '../../../../components/dashboard/ForecastDetailsTable';
-import SegmentSelector from '../../../../components/dashboard/SegmentSelector';
+import ForecastDetailsTable, { ForecastDetailRow } from '@/app/components/dashboard/ForecastDetailsTable';
+import SegmentSelector from '@/app/components/dashboard/SegmentSelector';
 import formatter from '@/app/helpers/formatter';
 import api from '@/app/lib/axiosClient';
 

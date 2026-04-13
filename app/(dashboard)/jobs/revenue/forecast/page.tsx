@@ -3,7 +3,7 @@
 import { Box, Stack, Typography, Grid, Card, CardContent, Skeleton } from '@mui/material';
 import formatter from '@/app/helpers/formatter';
 import api from '@/app/lib/axiosClient';
-import MultiMetricQueryChart from '../../../components/dashboard/charts/MultiMetricQueryChart';
+import MultiMetricQueryChart from '@/app/components/dashboard/charts/MultiMetricQueryChart';
 import { useState, useEffect } from 'react';
 
 interface KPI {

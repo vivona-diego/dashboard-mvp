@@ -27,6 +27,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const router = useRouter();
   const isVerifying = useRef(false);
 
+  const login = React.useCallback(async (username: string, password: string): Promise<boolean> => {
+    try {
+      const response = await api.post('/api/auth/login', {
+        username,
+        password,
+      });
+
+      if (response.data && response.data.data && response.data.data.token) {
+        const { token } = response.data.data;
+
+        // Save token
+        localStorage.setItem('auth_token', token);
+
+        // Fetch user info immediately after login
+        const userResponse = await api.get('/api/auth/me');
+        const userData = userResponse.data.data;
+
+        setUser(userData);
+        localStorage.setItem('auth_user', JSON.stringify(userData));
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error('Login error:', err);
+      return false;
+    }
+  }, []);
+
   useEffect(() => {
     const verifyToken = async () => {
       if (isVerifying.current) return;
@@ -57,16 +85,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const payload = parseJwt(urlToken);
           const currentTime = Math.floor(Date.now() / 1000);
 
-          // Validation requirements: non-expired and username "aryzhanskiy"
+          // Validation requirements: non-expired only
           if (payload && payload.exp && payload.exp > currentTime) {
-            console.log('Valid URL token found for user:', payload.username);
-            localStorage.setItem('auth_token', urlToken);
-            const mockUser = { username: payload.username };
-            setUser(mockUser);
-            localStorage.setItem('auth_user', JSON.stringify(mockUser));
-            setIsLoading(false);
-            isVerifying.current = false;
-            // We still continue to optional server verification, but UI is now unblocked
+            console.log('Valid URL token found, performing automatic demo login');
+            const success = await login('demo', 'demo1234');
+            
+            if (success) {
+              // Clean URL to prevent re-triggering and keep address bar clean
+              const url = new URL(window.location.href);
+              url.searchParams.delete('token');
+              window.history.replaceState({}, '', url.pathname + url.search);
+              
+              setIsLoading(false);
+              isVerifying.current = false;
+              return; // Stop further verification as we are now logged in
+            }
           } else {
             console.warn('Invalid or expired URL token');
             // Remove potential bad token from storage if it matches
@@ -78,12 +111,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         // 2. Fallback to localStorage (standard flow)
         const storedToken = localStorage.getItem('auth_token');
-        const tokenToVerify = storedToken; // urlToken is already handled above or failed
+        const tokenToVerify = storedToken;
 
         if (tokenToVerify && !user) {
-          // Only verify if we haven't already set user from URL token
           try {
-            // Verify token and get user info
             const response = await api.get('/api/auth/me');
             if (response.data && response.data.data) {
               setUser(response.data.data);
@@ -107,35 +138,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     verifyToken();
-  }, []);
+  }, [login, user]);
 
-  const login = async (username: string, password: string): Promise<boolean> => {
-    try {
-      const response = await api.post('/api/auth/login', {
-        username,
-        password,
-      });
-
-      if (response.data && response.data.data && response.data.data.token) {
-        const { token } = response.data.data;
-
-        // Save token
-        localStorage.setItem('auth_token', token);
-
-        // Fetch user info immediately after login
-        const userResponse = await api.get('/api/auth/me');
-        const userData = userResponse.data.data;
-
-        setUser(userData);
-        localStorage.setItem('auth_user', JSON.stringify(userData));
-        return true;
-      }
-      return false;
-    } catch (err) {
-      console.error('Login error:', err);
-      return false;
-    }
-  };
 
   const logout = () => {
     setUser(null);

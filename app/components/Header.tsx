@@ -123,6 +123,18 @@ export default function Header() {
     { text: 'CY vs PY Utilization', path: '/equipment/utilization/yearly/cyvspy' },
   ];
 
+  const maintenanceMenuItems = [
+    { text: 'Past Due', path: '/maintenance' },
+    { text: 'Coming Due', path: '/maintenance/coming-due' },
+    { text: 'Detail Report', path: '/maintenance/detail-report' },
+  ];
+
+  const woMenuItems = [
+    { text: 'Work Order Details', path: '/wo/details' },
+    { text: 'Summary CY Vs. PY', path: '/wo/summary' },
+  ];
+
+
   if (!isMounted) {
     return null;
   }
@@ -341,6 +353,68 @@ export default function Header() {
                   key={item.path}
                   component={Link}
                   href={`${item.path}?feature=${featureParam}&forecast=${featureParam}`}
+                  variant={isActive ? 'contained' : 'outlined'}
+                  color="inherit"
+                  sx={{
+                    borderRadius: '50px',
+                    textTransform: 'none',
+                    fontWeight: 'medium',
+                    px: 2,
+                    py: 0.5,
+                    whiteSpace: 'nowrap',
+                    flexShrink: 0,
+                    borderColor: isActive ? 'transparent' : 'divider',
+                    bgcolor: isActive ? 'action.selected' : 'transparent',
+                    boxShadow: 'none',
+                    '&:hover': {
+                      bgcolor: isActive ? 'action.selected' : 'action.hover',
+                      borderColor: isActive ? 'transparent' : 'divider',
+                    },
+                  }}
+                >
+                  {item.text}
+                </Button>
+              );
+            })}
+          {featureParam === 'maintenance' &&
+            maintenanceMenuItems.map((item) => {
+              const isActive = pathname === item.path;
+              return (
+                <Button
+                  key={item.path}
+                  component={Link}
+                  href={`${item.path}?feature=${featureParam}`}
+                  variant={isActive ? 'contained' : 'outlined'}
+                  color="inherit"
+                  sx={{
+                    borderRadius: '50px',
+                    textTransform: 'none',
+                    fontWeight: 'medium',
+                    px: 2,
+                    py: 0.5,
+                    whiteSpace: 'nowrap',
+                    flexShrink: 0,
+                    borderColor: isActive ? 'transparent' : 'divider',
+                    bgcolor: isActive ? 'action.selected' : 'transparent',
+                    boxShadow: 'none',
+                    '&:hover': {
+                      bgcolor: isActive ? 'action.selected' : 'action.hover',
+                      borderColor: isActive ? 'transparent' : 'divider',
+                    },
+                  }}
+                >
+                  {item.text}
+                </Button>
+              );
+            })}
+          {featureParam === 'wo' &&
+            woMenuItems.map((item) => {
+              const isActive = pathname === item.path;
+              return (
+                <Button
+                  key={item.path}
+                  component={Link}
+                  href={`${item.path}?feature=${featureParam}`}
                   variant={isActive ? 'contained' : 'outlined'}
                   color="inherit"
                   sx={{

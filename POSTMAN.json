@@ -1,0 +1,959 @@
+{
+  "info": {
+    "_postman_id": "f1a2b3c4-d5e6-7890-abcd-ef1234567890",
+    "name": "BI Equipment Datasets - Front Ready",
+    "description": "Colección para integrar en Front los 4 datasets de Equipment:\n- Equipment_Profit_Loss\n- Equipment_Utilization\n- Preventive_Maintenance\n- WO_Dashboard\n\nBase URL: https://saasanalytic.fleetcostcare.com",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://saasanalytic.fleetcostcare.com",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "0) Health & Datasets List",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            }
+          }
+        },
+        {
+          "name": "List All Datasets",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/bi/datasets",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bi", "datasets"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "1) Equipment_Profit_Loss",
+      "description": "Revenue, Expenses (Labor, Material, Overhead), Profit by Unit, Company, Yard, Department, Month/Year.\n\nSegmentos: UnitCode, UnitType, Company, Yard, Department, Year, Month, InvoiceDate\nMétricas: TotalRevenue, TotalExpenses, TotalProfit, AvgProfitPercent, LaborExpenses, MaterialExpenses, OverheadExpenses, UnitCount",
+      "item": [
+        {
+          "name": "Dataset Details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/bi/datasets/Equipment_Profit_Loss",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bi", "datasets", "Equipment_Profit_Loss"]
+            }
+          }
+        },
+        {
+          "name": "Segment Values - Company",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/bi/segment-values?datasetName=Equipment_Profit_Loss&segmentName=Company&limit=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bi", "segment-values"],
+              "query": [
+                { "key": "datasetName", "value": "Equipment_Profit_Loss" },
+                { "key": "segmentName", "value": "Company" },
+                { "key": "limit", "value": "50" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Segment Values - UnitType",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/bi/segment-values?datasetName=Equipment_Profit_Loss&segmentName=UnitType&limit=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bi", "segment-values"],
+              "query": [
+                { "key": "datasetName", "value": "Equipment_Profit_Loss" },
+                { "key": "segmentName", "value": "UnitType" },
+                { "key": "limit", "value": "50" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Segment Values - Yard",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/bi/segment-values?datasetName=Equipment_Profit_Loss&segmentName=Yard&limit=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bi", "segment-values"],
+              "query": [
+                { "key": "datasetName", "value": "Equipment_Profit_Loss" },
+                { "key": "segmentName", "value": "Yard" },
+                { "key": "limit", "value": "50" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Segment Values - Year",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/bi/segment-values?datasetName=Equipment_Profit_Loss&segmentName=Year&limit=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bi", "segment-values"],
+              "query": [
+                { "key": "datasetName", "value": "Equipment_Profit_Loss" },
+                { "key": "segmentName", "value": "Year" },
+                { "key": "limit", "value": "50" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Segment Values - Department",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/bi/segment-values?datasetName=Equipment_Profit_Loss&segmentName=Department&limit=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bi", "segment-values"],
+              "query": [
+                { "key": "datasetName", "value": "Equipment_Profit_Loss" },
+                { "key": "segmentName", "value": "Department" },
+                { "key": "limit", "value": "50" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Query - Revenue/Expenses/Profit by Company",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"datasetName\": \"Equipment_Profit_Loss\",\n  \"groupBySegments\": [\"Company\"],\n  \"metrics\": [\n    { \"metricName\": \"TotalRevenue\" },\n    { \"metricName\": \"TotalExpenses\" },\n    { \"metricName\": \"TotalProfit\" }\n  ],\n  \"pagination\": { \"page\": 1, \"pageSize\": 50 }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/bi/query",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bi", "query"]
+            }
+          }
+        },
+        {
+          "name": "Query - Revenue/Profit by UnitType",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"datasetName\": \"Equipment_Profit_Loss\",\n  \"groupBySegments\": [\"UnitType\"],\n  \"metrics\": [\n    { \"metricName\": \"TotalRevenue\" },\n    { \"metricName\": \"TotalProfit\" },\n    { \"metricName\": \"AvgProfitPercent\" },\n    { \"metricName\": \"UnitCount\" }\n  ],\n  \"pagination\": { \"page\": 1, \"pageSize\": 50 }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/bi/query",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bi", "query"]
+            }
+          }
+        },
+        {
+          "name": "Query - Revenue/Profit by Yard",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"datasetName\": \"Equipment_Profit_Loss\",\n  \"groupBySegments\": [\"Yard\"],\n  \"metrics\": [\n    { \"metricName\": \"TotalRevenue\" },\n    { \"metricName\": \"TotalExpenses\" },\n    { \"metricName\": \"TotalProfit\" },\n    { \"metricName\": \"UnitCount\" }\n  ],\n  \"pagination\": { \"page\": 1, \"pageSize\": 50 }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/bi/query",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bi", "query"]
+            }
+          }
+        },
+        {
+          "name": "Query - Revenue/Expenses by Year",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"datasetName\": \"Equipment_Profit_Loss\",\n  \"groupBySegments\": [\"Year\"],\n  \"metrics\": [\n    { \"metricName\": \"TotalRevenue\" },\n    { \"metricName\": \"TotalExpenses\" },\n    { \"metricName\": \"TotalProfit\" }\n  ],\n  \"orderBy\": [{ \"field\": \"Year\", \"direction\": \"ASC\" }],\n  \"pagination\": { \"page\": 1, \"pageSize\": 50 }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/bi/query",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bi", "query"]
+            }
+          }
+        },
+        {
+          "name": "Query - Expense Breakdown by Company",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"datasetName\": \"Equipment_Profit_Loss\",\n  \"groupBySegments\": [\"Company\"],\n  \"metrics\": [\n    { \"metricName\": \"LaborExpenses\" },\n    { \"metricName\": \"MaterialExpenses\" },\n    { \"metricName\": \"OverheadExpenses\" },\n    { \"metricName\": \"TotalExpenses\" }\n  ],\n  \"pagination\": { \"page\": 1, \"pageSize\": 50 }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/bi/query",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bi", "query"]
+            }
+          }
+        },
+        {
+          "name": "Query - Revenue/Profit by Year+Month (trend)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"datasetName\": \"Equipment_Profit_Loss\",\n  \"groupBySegments\": [\"Year\", \"Month\"],\n  \"metrics\": [\n    { \"metricName\": \"TotalRevenue\" },\n    { \"metricName\": \"TotalProfit\" }\n  ],\n  \"pagination\": { \"page\": 1, \"pageSize\": 100 }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/bi/query",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bi", "query"]
+            }
+          }
+        },
+        {
+          "name": "Query - P&L by Department",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"datasetName\": \"Equipment_Profit_Loss\",\n  \"groupBySegments\": [\"Department\"],\n  \"metrics\": [\n    { \"metricName\": \"TotalRevenue\" },\n    { \"metricName\": \"TotalExpenses\" },\n    { \"metricName\": \"TotalProfit\" },\n    { \"metricName\": \"AvgProfitPercent\" }\n  ],\n  \"pagination\": { \"page\": 1, \"pageSize\": 50 }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/bi/query",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bi", "query"]
+            }
+          }
+        },
+        {
+          "name": "Query - With Filter (Company)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"datasetName\": \"Equipment_Profit_Loss\",\n  \"groupBySegments\": [\"Yard\"],\n  \"metrics\": [\n    { \"metricName\": \"TotalRevenue\" },\n    { \"metricName\": \"TotalProfit\" }\n  ],\n  \"filters\": [\n    { \"segmentName\": \"Company\", \"operator\": \"eq\", \"value\": \"J.J. Curran Equipment Company\" }\n  ],\n  \"pagination\": { \"page\": 1, \"pageSize\": 50 }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/bi/query",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bi", "query"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2) Equipment_Utilization",
+      "description": "Target Hours, Downtime, Utilization % by Unit, Company, Yard, Month/Year.\n\nSegmentos: UnitCode, UnitType, Company, Yard, Year, Month\nMétricas: TotalTargetHours, TotalAvailableHours, AvgUtilization, TotalDowntimeDays, TotalDowntimeHours, UnitCount",
+      "item": [
+        {
+          "name": "Dataset Details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/bi/datasets/Equipment_Utilization",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bi", "datasets", "Equipment_Utilization"]
+            }
+          }
+        },
+        {
+          "name": "Segment Values - Company",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/bi/segment-values?datasetName=Equipment_Utilization&segmentName=Company&limit=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bi", "segment-values"],
+              "query": [
+                { "key": "datasetName", "value": "Equipment_Utilization" },
+                { "key": "segmentName", "value": "Company" },
+                { "key": "limit", "value": "50" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Segment Values - UnitType",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/bi/segment-values?datasetName=Equipment_Utilization&segmentName=UnitType&limit=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bi", "segment-values"],
+              "query": [
+                { "key": "datasetName", "value": "Equipment_Utilization" },
+                { "key": "segmentName", "value": "UnitType" },
+                { "key": "limit", "value": "50" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Segment Values - Yard",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/bi/segment-values?datasetName=Equipment_Utilization&segmentName=Yard&limit=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bi", "segment-values"],
+              "query": [
+                { "key": "datasetName", "value": "Equipment_Utilization" },
+                { "key": "segmentName", "value": "Yard" },
+                { "key": "limit", "value": "50" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Query - Utilization by Company",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"datasetName\": \"Equipment_Utilization\",\n  \"groupBySegments\": [\"Company\"],\n  \"metrics\": [\n    { \"metricName\": \"TotalTargetHours\" },\n    { \"metricName\": \"TotalAvailableHours\" },\n    { \"metricName\": \"AvgUtilization\" },\n    { \"metricName\": \"UnitCount\" }\n  ],\n  \"pagination\": { \"page\": 1, \"pageSize\": 50 }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/bi/query",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bi", "query"]
+            }
+          }
+        },
+        {
+          "name": "Query - Utilization by UnitType",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"datasetName\": \"Equipment_Utilization\",\n  \"groupBySegments\": [\"UnitType\"],\n  \"metrics\": [\n    { \"metricName\": \"TotalTargetHours\" },\n    { \"metricName\": \"TotalAvailableHours\" },\n    { \"metricName\": \"AvgUtilization\" }\n  ],\n  \"pagination\": { \"page\": 1, \"pageSize\": 50 }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/bi/query",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bi", "query"]
+            }
+          }
+        },
+        {
+          "name": "Query - Downtime by Yard",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"datasetName\": \"Equipment_Utilization\",\n  \"groupBySegments\": [\"Yard\"],\n  \"metrics\": [\n    { \"metricName\": \"TotalDowntimeDays\" },\n    { \"metricName\": \"TotalDowntimeHours\" },\n    { \"metricName\": \"AvgUtilization\" },\n    { \"metricName\": \"UnitCount\" }\n  ],\n  \"pagination\": { \"page\": 1, \"pageSize\": 50 }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/bi/query",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bi", "query"]
+            }
+          }
+        },
+        {
+          "name": "Query - Utilization Trend by Year",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"datasetName\": \"Equipment_Utilization\",\n  \"groupBySegments\": [\"Year\"],\n  \"metrics\": [\n    { \"metricName\": \"TotalTargetHours\" },\n    { \"metricName\": \"TotalDowntimeHours\" },\n    { \"metricName\": \"AvgUtilization\" }\n  ],\n  \"orderBy\": [{ \"field\": \"Year\", \"direction\": \"ASC\" }],\n  \"pagination\": { \"page\": 1, \"pageSize\": 50 }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/bi/query",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bi", "query"]
+            }
+          }
+        },
+        {
+          "name": "Query - Utilization Trend by Year+Month",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"datasetName\": \"Equipment_Utilization\",\n  \"groupBySegments\": [\"Year\", \"Month\"],\n  \"metrics\": [\n    { \"metricName\": \"TotalTargetHours\" },\n    { \"metricName\": \"TotalAvailableHours\" },\n    { \"metricName\": \"AvgUtilization\" }\n  ],\n  \"pagination\": { \"page\": 1, \"pageSize\": 100 }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/bi/query",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bi", "query"]
+            }
+          }
+        },
+        {
+          "name": "Query - Top Units by Downtime",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"datasetName\": \"Equipment_Utilization\",\n  \"groupBySegments\": [\"UnitCode\"],\n  \"metrics\": [\n    { \"metricName\": \"TotalDowntimeDays\" },\n    { \"metricName\": \"TotalDowntimeHours\" },\n    { \"metricName\": \"AvgUtilization\" }\n  ],\n  \"orderBy\": [{ \"field\": \"TotalDowntimeHours\", \"direction\": \"DESC\" }],\n  \"pagination\": { \"page\": 1, \"pageSize\": 20 }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/bi/query",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bi", "query"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3) Preventive_Maintenance",
+      "description": "Coming Due, Past Due, Activities by Unit, Company, Yard, Schedule Type.\n\nSegmentos: UnitCode, UnitType, Company, Yard, Activity, ScheduleType, DueStatus, Year, Month\nMétricas: TotalActivities, PastDueCount, ComingDueCount, UnitCount",
+      "item": [
+        {
+          "name": "Dataset Details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/bi/datasets/Preventive_Maintenance",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bi", "datasets", "Preventive_Maintenance"]
+            }
+          }
+        },
+        {
+          "name": "Segment Values - DueStatus",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/bi/segment-values?datasetName=Preventive_Maintenance&segmentName=DueStatus&limit=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bi", "segment-values"],
+              "query": [
+                { "key": "datasetName", "value": "Preventive_Maintenance" },
+                { "key": "segmentName", "value": "DueStatus" },
+                { "key": "limit", "value": "50" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Segment Values - Activity",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/bi/segment-values?datasetName=Preventive_Maintenance&segmentName=Activity&limit=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bi", "segment-values"],
+              "query": [
+                { "key": "datasetName", "value": "Preventive_Maintenance" },
+                { "key": "segmentName", "value": "Activity" },
+                { "key": "limit", "value": "50" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Segment Values - ScheduleType",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/bi/segment-values?datasetName=Preventive_Maintenance&segmentName=ScheduleType&limit=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bi", "segment-values"],
+              "query": [
+                { "key": "datasetName", "value": "Preventive_Maintenance" },
+                { "key": "segmentName", "value": "ScheduleType" },
+                { "key": "limit", "value": "50" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Segment Values - Company",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/bi/segment-values?datasetName=Preventive_Maintenance&segmentName=Company&limit=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bi", "segment-values"],
+              "query": [
+                { "key": "datasetName", "value": "Preventive_Maintenance" },
+                { "key": "segmentName", "value": "Company" },
+                { "key": "limit", "value": "50" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Query - Summary by DueStatus",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"datasetName\": \"Preventive_Maintenance\",\n  \"groupBySegments\": [\"DueStatus\"],\n  \"metrics\": [\n    { \"metricName\": \"TotalActivities\" },\n    { \"metricName\": \"PastDueCount\" },\n    { \"metricName\": \"ComingDueCount\" },\n    { \"metricName\": \"UnitCount\" }\n  ],\n  \"pagination\": { \"page\": 1, \"pageSize\": 50 }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/bi/query",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bi", "query"]
+            }
+          }
+        },
+        {
+          "name": "Query - By Activity",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"datasetName\": \"Preventive_Maintenance\",\n  \"groupBySegments\": [\"Activity\"],\n  \"metrics\": [\n    { \"metricName\": \"TotalActivities\" },\n    { \"metricName\": \"PastDueCount\" },\n    { \"metricName\": \"UnitCount\" }\n  ],\n  \"pagination\": { \"page\": 1, \"pageSize\": 50 }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/bi/query",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bi", "query"]
+            }
+          }
+        },
+        {
+          "name": "Query - By ScheduleType",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"datasetName\": \"Preventive_Maintenance\",\n  \"groupBySegments\": [\"ScheduleType\"],\n  \"metrics\": [\n    { \"metricName\": \"TotalActivities\" },\n    { \"metricName\": \"PastDueCount\" },\n    { \"metricName\": \"ComingDueCount\" }\n  ],\n  \"pagination\": { \"page\": 1, \"pageSize\": 50 }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/bi/query",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bi", "query"]
+            }
+          }
+        },
+        {
+          "name": "Query - By Company",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"datasetName\": \"Preventive_Maintenance\",\n  \"groupBySegments\": [\"Company\"],\n  \"metrics\": [\n    { \"metricName\": \"TotalActivities\" },\n    { \"metricName\": \"PastDueCount\" },\n    { \"metricName\": \"ComingDueCount\" },\n    { \"metricName\": \"UnitCount\" }\n  ],\n  \"pagination\": { \"page\": 1, \"pageSize\": 50 }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/bi/query",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bi", "query"]
+            }
+          }
+        },
+        {
+          "name": "Query - By Yard",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"datasetName\": \"Preventive_Maintenance\",\n  \"groupBySegments\": [\"Yard\"],\n  \"metrics\": [\n    { \"metricName\": \"TotalActivities\" },\n    { \"metricName\": \"PastDueCount\" },\n    { \"metricName\": \"UnitCount\" }\n  ],\n  \"pagination\": { \"page\": 1, \"pageSize\": 50 }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/bi/query",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bi", "query"]
+            }
+          }
+        },
+        {
+          "name": "Query - By UnitType",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"datasetName\": \"Preventive_Maintenance\",\n  \"groupBySegments\": [\"UnitType\"],\n  \"metrics\": [\n    { \"metricName\": \"TotalActivities\" },\n    { \"metricName\": \"PastDueCount\" },\n    { \"metricName\": \"ComingDueCount\" }\n  ],\n  \"pagination\": { \"page\": 1, \"pageSize\": 50 }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/bi/query",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bi", "query"]
+            }
+          }
+        },
+        {
+          "name": "Query - Past Due Only (filter)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"datasetName\": \"Preventive_Maintenance\",\n  \"groupBySegments\": [\"Activity\"],\n  \"metrics\": [\n    { \"metricName\": \"TotalActivities\" },\n    { \"metricName\": \"PastDueCount\" },\n    { \"metricName\": \"UnitCount\" }\n  ],\n  \"filters\": [\n    { \"segmentName\": \"DueStatus\", \"operator\": \"eq\", \"value\": \"1\" }\n  ],\n  \"pagination\": { \"page\": 1, \"pageSize\": 50 }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/bi/query",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bi", "query"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4) WO_Dashboard",
+      "description": "Work Order Details - Labor, Materials, Status, Priority, Reason by Unit, Company, Yard.\n\nSegmentos: WorkOrderNumber, WOStatus, WOPriority, WOReason, UnitCode, UnitType, Company, Yard, Customer, Year, Month\nMétricas: TotalWorkOrders, TotalLaborHours, TotalLaborCost, TotalMaterialCost, TotalWOCost, AvgWOCost, AvgLaborHours, TotalEmployees, UnitCount",
+      "item": [
+        {
+          "name": "Dataset Details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/bi/datasets/WO_Dashboard",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bi", "datasets", "WO_Dashboard"]
+            }
+          }
+        },
+        {
+          "name": "Segment Values - WOStatus",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/bi/segment-values?datasetName=WO_Dashboard&segmentName=WOStatus&limit=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bi", "segment-values"],
+              "query": [
+                { "key": "datasetName", "value": "WO_Dashboard" },
+                { "key": "segmentName", "value": "WOStatus" },
+                { "key": "limit", "value": "50" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Segment Values - WOPriority",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/bi/segment-values?datasetName=WO_Dashboard&segmentName=WOPriority&limit=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bi", "segment-values"],
+              "query": [
+                { "key": "datasetName", "value": "WO_Dashboard" },
+                { "key": "segmentName", "value": "WOPriority" },
+                { "key": "limit", "value": "50" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Segment Values - WOReason",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/bi/segment-values?datasetName=WO_Dashboard&segmentName=WOReason&limit=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bi", "segment-values"],
+              "query": [
+                { "key": "datasetName", "value": "WO_Dashboard" },
+                { "key": "segmentName", "value": "WOReason" },
+                { "key": "limit", "value": "50" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Segment Values - Company",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/bi/segment-values?datasetName=WO_Dashboard&segmentName=Company&limit=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bi", "segment-values"],
+              "query": [
+                { "key": "datasetName", "value": "WO_Dashboard" },
+                { "key": "segmentName", "value": "Company" },
+                { "key": "limit", "value": "50" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Segment Values - UnitType",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/bi/segment-values?datasetName=WO_Dashboard&segmentName=UnitType&limit=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bi", "segment-values"],
+              "query": [
+                { "key": "datasetName", "value": "WO_Dashboard" },
+                { "key": "segmentName", "value": "UnitType" },
+                { "key": "limit", "value": "50" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Query - WO Summary by Status",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"datasetName\": \"WO_Dashboard\",\n  \"groupBySegments\": [\"WOStatus\"],\n  \"metrics\": [\n    { \"metricName\": \"TotalWorkOrders\" },\n    { \"metricName\": \"TotalLaborCost\" },\n    { \"metricName\": \"TotalMaterialCost\" },\n    { \"metricName\": \"TotalWOCost\" }\n  ],\n  \"pagination\": { \"page\": 1, \"pageSize\": 50 }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/bi/query",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bi", "query"]
+            }
+          }
+        },
+        {
+          "name": "Query - WO by Priority",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"datasetName\": \"WO_Dashboard\",\n  \"groupBySegments\": [\"WOPriority\"],\n  \"metrics\": [\n    { \"metricName\": \"TotalWorkOrders\" },\n    { \"metricName\": \"AvgWOCost\" },\n    { \"metricName\": \"TotalWOCost\" }\n  ],\n  \"pagination\": { \"page\": 1, \"pageSize\": 50 }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/bi/query",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bi", "query"]
+            }
+          }
+        },
+        {
+          "name": "Query - WO by Reason",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"datasetName\": \"WO_Dashboard\",\n  \"groupBySegments\": [\"WOReason\"],\n  \"metrics\": [\n    { \"metricName\": \"TotalWorkOrders\" },\n    { \"metricName\": \"TotalWOCost\" },\n    { \"metricName\": \"UnitCount\" }\n  ],\n  \"pagination\": { \"page\": 1, \"pageSize\": 50 }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/bi/query",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bi", "query"]
+            }
+          }
+        },
+        {
+          "name": "Query - WO Costs by Company",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"datasetName\": \"WO_Dashboard\",\n  \"groupBySegments\": [\"Company\"],\n  \"metrics\": [\n    { \"metricName\": \"TotalWorkOrders\" },\n    { \"metricName\": \"TotalLaborHours\" },\n    { \"metricName\": \"TotalLaborCost\" },\n    { \"metricName\": \"TotalMaterialCost\" },\n    { \"metricName\": \"TotalWOCost\" },\n    { \"metricName\": \"UnitCount\" }\n  ],\n  \"pagination\": { \"page\": 1, \"pageSize\": 50 }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/bi/query",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bi", "query"]
+            }
+          }
+        },
+        {
+          "name": "Query - WO by Yard",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"datasetName\": \"WO_Dashboard\",\n  \"groupBySegments\": [\"Yard\"],\n  \"metrics\": [\n    { \"metricName\": \"TotalWorkOrders\" },\n    { \"metricName\": \"TotalLaborCost\" },\n    { \"metricName\": \"TotalMaterialCost\" },\n    { \"metricName\": \"TotalWOCost\" }\n  ],\n  \"pagination\": { \"page\": 1, \"pageSize\": 50 }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/bi/query",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bi", "query"]
+            }
+          }
+        },
+        {
+          "name": "Query - WO by UnitType",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"datasetName\": \"WO_Dashboard\",\n  \"groupBySegments\": [\"UnitType\"],\n  \"metrics\": [\n    { \"metricName\": \"TotalWorkOrders\" },\n    { \"metricName\": \"AvgLaborHours\" },\n    { \"metricName\": \"TotalEmployees\" },\n    { \"metricName\": \"UnitCount\" }\n  ],\n  \"pagination\": { \"page\": 1, \"pageSize\": 50 }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/bi/query",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bi", "query"]
+            }
+          }
+        },
+        {
+          "name": "Query - WO Trend by Year",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"datasetName\": \"WO_Dashboard\",\n  \"groupBySegments\": [\"Year\"],\n  \"metrics\": [\n    { \"metricName\": \"TotalWorkOrders\" },\n    { \"metricName\": \"TotalLaborCost\" },\n    { \"metricName\": \"TotalMaterialCost\" },\n    { \"metricName\": \"TotalWOCost\" }\n  ],\n  \"orderBy\": [{ \"field\": \"Year\", \"direction\": \"ASC\" }],\n  \"pagination\": { \"page\": 1, \"pageSize\": 50 }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/bi/query",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bi", "query"]
+            }
+          }
+        },
+        {
+          "name": "Query - WO Trend by Year+Month",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"datasetName\": \"WO_Dashboard\",\n  \"groupBySegments\": [\"Year\", \"Month\"],\n  \"metrics\": [\n    { \"metricName\": \"TotalWorkOrders\" },\n    { \"metricName\": \"TotalWOCost\" }\n  ],\n  \"pagination\": { \"page\": 1, \"pageSize\": 100 }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/bi/query",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bi", "query"]
+            }
+          }
+        },
+        {
+          "name": "Query - WO by Customer",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"datasetName\": \"WO_Dashboard\",\n  \"groupBySegments\": [\"Customer\"],\n  \"metrics\": [\n    { \"metricName\": \"TotalWorkOrders\" },\n    { \"metricName\": \"TotalWOCost\" }\n  ],\n  \"pagination\": { \"page\": 1, \"pageSize\": 20 }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/bi/query",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bi", "query"]
+            }
+          }
+        },
+        {
+          "name": "Query - Open WOs Only (filter)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"datasetName\": \"WO_Dashboard\",\n  \"groupBySegments\": [\"WOPriority\"],\n  \"metrics\": [\n    { \"metricName\": \"TotalWorkOrders\" },\n    { \"metricName\": \"TotalWOCost\" },\n    { \"metricName\": \"TotalLaborHours\" }\n  ],\n  \"filters\": [\n    { \"segmentName\": \"WOStatus\", \"operator\": \"eq\", \"value\": \"Open\" }\n  ],\n  \"pagination\": { \"page\": 1, \"pageSize\": 50 }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/bi/query",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bi", "query"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5) Generic Templates",
+      "description": "Templates genéricos para armar queries custom. Cambiar datasetName, segmentName, metricName según necesidad.",
+      "item": [
+        {
+          "name": "Template - Get Segment Values",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/bi/segment-values?datasetName=Equipment_Profit_Loss&segmentName=Company&limit=100&search=",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bi", "segment-values"],
+              "query": [
+                { "key": "datasetName", "value": "Equipment_Profit_Loss" },
+                { "key": "segmentName", "value": "Company" },
+                { "key": "limit", "value": "100" },
+                { "key": "search", "value": "" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Template - BI Query with Filters",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"datasetName\": \"Equipment_Profit_Loss\",\n  \"groupBySegments\": [\"Company\"],\n  \"metrics\": [\n    { \"metricName\": \"TotalRevenue\" },\n    { \"metricName\": \"TotalProfit\" }\n  ],\n  \"filters\": [\n    { \"segmentName\": \"Year\", \"operator\": \"eq\", \"value\": \"2025\" }\n  ],\n  \"orderBy\": [\n    { \"field\": \"TotalRevenue\", \"direction\": \"DESC\" }\n  ],\n  \"pagination\": { \"page\": 1, \"pageSize\": 50 }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/bi/query",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bi", "query"]
+            }
+          }
+        },
+        {
+          "name": "Template - Multi-Segment Group By",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"datasetName\": \"WO_Dashboard\",\n  \"groupBySegments\": [\"Company\", \"WOStatus\"],\n  \"metrics\": [\n    { \"metricName\": \"TotalWorkOrders\" },\n    { \"metricName\": \"TotalWOCost\" }\n  ],\n  \"pagination\": { \"page\": 1, \"pageSize\": 100 }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/bi/query",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bi", "query"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

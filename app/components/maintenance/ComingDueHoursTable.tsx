@@ -11,18 +11,23 @@ import {
   Box,
   Typography,
 } from '@mui/material';
+interface HoursTableData {
+  unitCode: string;
+  cnt: number;
+  activity: string;
+  dueLower: number;
+  currentLower: number;
+  dueUpper: number;
+  currentUpper: number;
+  comingDueHours: number;
+}
 
-const MOCK_DATA = [
-  { unitCode: 'AT15', cnt: 1, activity: '300 Hr. Service - Upper', dueLower: 960, currentLower: 2331, dueUpper: 0, currentUpper: 6635, comingDueHours: 103 },
-  { unitCode: 'AT155-2', cnt: 1, activity: '300 Hr. Service - Lower', dueLower: 1830, currentLower: 1810, dueUpper: 0, currentUpper: 6786, comingDueHours: 20 },
-  { unitCode: 'AT155-2', cnt: 1, activity: '300 Hr. Service - Upper', dueLower: 0, currentLower: 1810, dueUpper: 0, currentUpper: 6786, comingDueHours: 239 },
-  { unitCode: 'AT80-01', cnt: 1, activity: '300 Hr. Service - Upper', dueLower: 0, currentLower: 1682, dueUpper: 0, currentUpper: 1936, comingDueHours: 0 },
-  { unitCode: 'BT26-01', cnt: 1, activity: '300 Hr. Service - Lower', dueLower: 4855, currentLower: 4569, dueUpper: 0, currentUpper: 0, comingDueHours: 286 },
-  { unitCode: 'BT3', cnt: 1, activity: '300 Hr. Service - Lower', dueLower: 10285, currentLower: 9985, dueUpper: 39359.70, currentUpper: 0, comingDueHours: 300 },
-];
+interface ComingDueHoursTableProps {
+  data: HoursTableData[];
+}
 
-export default function ComingDueHoursTable() {
-  const totals = MOCK_DATA.reduce(
+export default function ComingDueHoursTable({ data }: ComingDueHoursTableProps) {
+  const totals = data.reduce(
     (acc, curr) => ({
       cnt: acc.cnt + curr.cnt,
       comingDueHours: acc.comingDueHours + curr.comingDueHours,
@@ -65,7 +70,7 @@ export default function ComingDueHoursTable() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {MOCK_DATA.map((row, idx) => (
+            {data.map((row, idx) => (
               <TableRow key={idx} hover sx={{ '&:nth-of-type(even)': { bgcolor: '#F5F5F5' } }}>
                 <TableCell>{row.unitCode}</TableCell>
                 <TableCell>{row.cnt}</TableCell>
@@ -79,9 +84,9 @@ export default function ComingDueHoursTable() {
             ))}
             <TableRow sx={{ '& td': { fontWeight: 'bold' } }}>
               <TableCell>Total</TableCell>
-              <TableCell>39</TableCell>
+              <TableCell>{totals.cnt}</TableCell>
               <TableCell colSpan={5}></TableCell>
-              <TableCell align="right">169</TableCell>
+              <TableCell align="right">{totals.comingDueHours}</TableCell>
             </TableRow>
           </TableBody>
         </Table>

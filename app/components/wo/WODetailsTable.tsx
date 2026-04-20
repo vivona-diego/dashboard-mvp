@@ -12,25 +12,22 @@ import {
   Typography,
 } from '@mui/material';
 
-const MOCK_DATA = [
-  { company: 'J. J. Curran Crane Company', yard: 'Detroit', wo: '7238', issueDate: '1/5/2026', status: 'Open', employeeName: 'KENYON, CHRISTOPHER', laborAmount: 2390 },
-  { company: 'J. J. Curran Crane Company', yard: 'Detroit', wo: '7239', issueDate: '1/5/2026', status: 'Open', employeeName: 'HOOVER, DANIEL J', laborAmount: 354 },
-  { company: 'J. J. Curran Crane Company', yard: 'Detroit', wo: '7239', issueDate: '1/5/2026', status: 'Open', employeeName: 'KENYON, CHRISTOPHER', laborAmount: 386 },
-  { company: 'J. J. Curran Crane Company', yard: 'Detroit', wo: '7240', issueDate: '1/5/2026', status: 'Work Finished', employeeName: 'HOOVER, DANIEL J', laborAmount: 89 },
-  { company: 'J. J. Curran Crane Company', yard: 'Detroit', wo: '7240', issueDate: '1/5/2026', status: 'Work Finished', employeeName: 'KENYON, CHRISTOPHER', laborAmount: 772 },
-  { company: 'J. J. Curran Crane Company', yard: 'Detroit', wo: '7241', issueDate: '1/7/2026', status: 'Work Finished', employeeName: 'HOOVER, DANIEL J', laborAmount: 421 },
-  { company: 'J. J. Curran Crane Company', yard: 'Detroit', wo: '7241', issueDate: '1/7/2026', status: 'Work Finished', employeeName: 'KENYON, CHRISTOPHER', laborAmount: 386 },
-  { company: 'J. J. Curran Crane Company', yard: 'Detroit', wo: '7242', issueDate: '1/8/2026', status: 'Work Finished', employeeName: 'KENYON, CHRISTOPHER', laborAmount: 543 },
-  { company: 'J. J. Curran Crane Company', yard: 'Detroit', wo: '7245', issueDate: '1/8/2026', status: 'Work Finished', employeeName: 'KENYON, CHRISTOPHER', laborAmount: 459 },
-  { company: 'J. J. Curran Crane Company', yard: 'Detroit', wo: '7246', issueDate: '1/9/2026', status: 'Work Finished', employeeName: 'KENYON, CHRISTOPHER', laborAmount: 386 },
-  { company: 'J. J. Curran Crane Company', yard: 'Detroit', wo: '7247', issueDate: '1/9/2026', status: 'Work Finished', employeeName: 'HOOVER, DANIEL J', laborAmount: 199 },
-  { company: 'J. J. Curran Crane Company', yard: 'Detroit', wo: '7248', issueDate: '1/12/2026', status: 'Open', employeeName: 'HOOVER, DANIEL J', laborAmount: 487 },
-  { company: 'J. J. Curran Crane Company', yard: 'Detroit', wo: '7248', issueDate: '1/12/2026', status: 'Open', employeeName: 'KENYON, CHRISTOPHER', laborAmount: 628 },
-  { company: 'J. J. Curran Crane Company', yard: 'Detroit', wo: '7249', issueDate: '1/12/2026', status: 'Open', employeeName: 'HOOVER, DANIEL J', laborAmount: 708 },
-];
+interface WODetailRow {
+  company: string;
+  yard: string;
+  wo: string;
+  issueDate: string;
+  status: string;
+  employeeName: string;
+  laborAmount: number;
+}
 
-export default function WODetailsTable() {
-  const totalLaborAmount = MOCK_DATA.reduce((acc, curr) => acc + curr.laborAmount, 0);
+interface WODetailsTableProps {
+  data: WODetailRow[];
+}
+
+export default function WODetailsTable({ data }: WODetailsTableProps) {
+  const totalLaborAmount = data.reduce((acc, curr) => acc + curr.laborAmount, 0);
 
   return (
     <Box sx={{ width: '100%', bgcolor: 'background.paper', borderRadius: 1, overflow: 'hidden', boxShadow: 1 }}>
@@ -68,7 +65,7 @@ export default function WODetailsTable() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {MOCK_DATA.map((row, idx) => (
+            {data.map((row, idx) => (
               <TableRow key={idx} hover sx={{ '&:nth-of-type(even)': { bgcolor: '#FAFAFA' } }}>
                 <TableCell>{row.company}</TableCell>
                 <TableCell>{row.yard}</TableCell>

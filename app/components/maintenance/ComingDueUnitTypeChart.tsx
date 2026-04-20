@@ -8,28 +8,11 @@ interface ChartData {
   value: number;
 }
 
-const MOCK_DATA: ChartData[] = [
-  { name: 'Truck', value: 21 },
-  { name: 'Trailer', value: 14 },
-  { name: '35 Ton RT Class', value: 4 },
-  { name: '50 Ton Mobilift', value: 4 },
-  { name: 'Gas Detector', value: 4 },
-  { name: '15 Ton Carry...', value: 3 },
-  { name: '50 Ton RT Class', value: 3 },
-  { name: '80 Ton AT Class', value: 3 },
-  { name: '8k telescopic...', value: 3 },
-  { name: '115 Ton Truck...', value: 2 },
-  { name: '330 ton crawler', value: 2 },
-  { name: '45 Ton RT Class', value: 2 },
-  { name: '65 ton RT', value: 2 },
-  { name: '75 Ton RT', value: 2 },
-  { name: '155 Ton AT CL...', value: 1 },
-  { name: '175 Ton AT CL...', value: 1 },
-  { name: '18 Ton Carry...', value: 1 },
-  { name: '23 Ton BT Class', value: 1 },
-];
+interface ComingDueUnitTypeChartProps {
+  data: ChartData[];
+}
 
-export default function ComingDueUnitTypeChart() {
+export default function ComingDueUnitTypeChart({ data }: ComingDueUnitTypeChartProps) {
   const theme = useTheme();
 
   const option = {
@@ -46,7 +29,7 @@ export default function ComingDueUnitTypeChart() {
     },
     xAxis: {
       type: 'category',
-      data: MOCK_DATA.map(d => d.name),
+      data: data.map(d => d.name),
       axisLabel: {
         fontSize: 9,
         color: theme.palette.text.secondary,
@@ -92,7 +75,7 @@ export default function ComingDueUnitTypeChart() {
       {
         name: 'Coming Due Units',
         type: 'bar',
-        data: MOCK_DATA.map(d => d.value),
+        data: data.map(d => d.value),
         barWidth: '70%',
         itemStyle: {
           color: '#E57373', // Red/Pink from screenshot

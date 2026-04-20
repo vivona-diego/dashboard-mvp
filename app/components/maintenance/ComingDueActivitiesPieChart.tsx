@@ -8,16 +8,11 @@ interface ChartData {
   value: number;
 }
 
-const MOCK_DATA: ChartData[] = [
-  { name: 'Fire Extinguisher Inspector', value: 32 }, // 40.51%
-  { name: '300 Hr. Service - Lower', value: 15 }, // 18.99%
-  { name: 'Maintenance Service', value: 11 }, // 13.92%
-  { name: 'Annual Crane Inspection', value: 8 }, // 10.13%
-  { name: 'Trailer Service', value: 8 }, // 10.13%
-  { name: '300 Hr. Service - Upper', value: 2 }, // 2.53%
-];
+interface ComingDueActivitiesPieChartProps {
+  data: ChartData[];
+}
 
-export default function ComingDueActivitiesPieChart() {
+export default function ComingDueActivitiesPieChart({ data }: ComingDueActivitiesPieChartProps) {
   const theme = useTheme();
 
   const option = {
@@ -65,7 +60,7 @@ export default function ComingDueActivitiesPieChart() {
           length: 10,
           length2: 5
         },
-        data: MOCK_DATA,
+        data: data,
         itemStyle: {
            borderColor: '#fff',
            borderWidth: 2

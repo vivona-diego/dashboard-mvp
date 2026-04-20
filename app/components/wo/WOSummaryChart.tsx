@@ -3,7 +3,17 @@
 import ReactECharts from 'echarts-for-react';
 import { Box, Typography, useTheme } from '@mui/material';
 
-export default function WOSummaryChart() {
+interface WOSummaryChartProps {
+  months: string[];
+  totalWOAmount: number[];
+  totalWOAmountPY: number[];
+  totalWO: number[];
+  totalWOPY: number[];
+}
+
+export default function WOSummaryChart({ 
+  months, totalWOAmount, totalWOAmountPY, totalWO, totalWOPY 
+}: WOSummaryChartProps) {
   const theme = useTheme();
 
   const option = {
@@ -33,7 +43,7 @@ export default function WOSummaryChart() {
     },
     xAxis: {
       type: 'category',
-      data: ['Jan'],
+      data: months,
       axisLabel: {
         fontSize: 11,
         color: theme.palette.text.secondary,
@@ -86,7 +96,7 @@ export default function WOSummaryChart() {
       {
         name: 'Total WO Amount',
         type: 'bar',
-        data: [22],
+        data: totalWOAmount,
         barWidth: '25%',
         itemStyle: {
           color: '#2196F3', // Light Blue
@@ -95,7 +105,7 @@ export default function WOSummaryChart() {
       {
         name: 'Total WO Amount PY',
         type: 'bar',
-        data: [36],
+        data: totalWOAmountPY,
         barWidth: '25%',
         itemStyle: {
           color: '#1A237E', // Dark Blue
@@ -106,7 +116,7 @@ export default function WOSummaryChart() {
         type: 'scatter',
         yAxisIndex: 1,
         symbolSize: 10,
-        data: [23],
+        data: totalWO,
         itemStyle: {
           color: '#FF7043', // Orange/Red
         }
@@ -116,7 +126,7 @@ export default function WOSummaryChart() {
         type: 'scatter',
         yAxisIndex: 1,
         symbolSize: 10,
-        data: [26],
+        data: totalWOPY,
         itemStyle: {
           color: '#6A1B9A', // Purple
         }

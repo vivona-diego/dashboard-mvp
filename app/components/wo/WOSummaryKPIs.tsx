@@ -2,12 +2,21 @@
 
 import { Box, Typography } from '@mui/material';
 
-export default function WOSummaryKPIs() {
+interface WOSummaryKPIsProps {
+  woAmountCY: number;
+  woAmountPY: number;
+  totalWOCY: number;
+  totalWOPY: number;
+}
+
+export default function WOSummaryKPIs({
+  woAmountCY, woAmountPY, totalWOCY, totalWOPY
+}: WOSummaryKPIsProps) {
   const kpis = [
-    { label: 'WO Amount CY', value: '$22K', color: '#00BCD4' },
-    { label: 'WO Amount PY', value: '$36K', color: '#00BCD4' },
-    { label: 'Total WO', value: '23', color: '#00BCD4' },
-    { label: 'Total WO PY', value: '26', color: '#00BCD4' },
+    { label: 'WO Amount CY', value: `$${(woAmountCY / 1000).toFixed(0)}K`, color: '#00BCD4' },
+    { label: 'WO Amount PY', value: `$${(woAmountPY / 1000).toFixed(0)}K`, color: '#00BCD4' },
+    { label: 'Total WO', value: totalWOCY.toString(), color: '#00BCD4' },
+    { label: 'Total WO PY', value: totalWOPY.toString(), color: '#00BCD4' },
   ];
 
   return (

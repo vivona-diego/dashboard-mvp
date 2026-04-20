@@ -1,8 +1,27 @@
 'use client';
 
-import { Box, Typography, TextField, MenuItem, Select } from '@mui/material';
+import { Box, Typography, TextField } from '@mui/material';
+import SegmentSelector from '@/app/components/dashboard/SegmentSelector';
 
-export default function ComingDueFilterPanel() {
+interface ComingDueFilterPanelProps {
+  scheduleTypes: string[];
+  selectedScheduleType: string | null;
+  onScheduleTypeChange: (val: string | null) => void;
+  activities: string[];
+  selectedActivity: string | null;
+  onActivityChange: (val: string | null) => void;
+  loadingFilters?: boolean;
+}
+
+export default function ComingDueFilterPanel({
+  scheduleTypes,
+  selectedScheduleType,
+  onScheduleTypeChange,
+  activities,
+  selectedActivity,
+  onActivityChange,
+  loadingFilters
+}: ComingDueFilterPanelProps) {
   return (
     <Box sx={{ width: '100%', height: '100%', bgcolor: 'background.default', display: 'flex', flexDirection: 'column' }}>
       {/* Header Strip */}
@@ -46,22 +65,24 @@ export default function ComingDueFilterPanel() {
 
         {/* Schedule Type */}
         <Box>
-            <Typography variant="body2" sx={{ fontWeight: 'normal', color: 'text.primary', mb: 1 }}>
-                 Schedule Type
-            </Typography>
-            <Select size="small" fullWidth value="All" sx={{ bgcolor: 'white' }}>
-                 <MenuItem value="All">All</MenuItem>
-            </Select>
+             <SegmentSelector 
+                 label='Schedule Type'
+                 segments={scheduleTypes} 
+                 selectedSegment={selectedScheduleType} 
+                 onSelect={onScheduleTypeChange}
+                 loading={loadingFilters}
+             />
         </Box>
 
         {/* Activity */}
         <Box>
-            <Typography variant="body2" sx={{ fontWeight: 'normal', color: 'text.primary', mb: 1 }}>
-                 Activity
-            </Typography>
-            <Select size="small" fullWidth value="All" sx={{ bgcolor: 'white' }}>
-                 <MenuItem value="All">All</MenuItem>
-            </Select>
+             <SegmentSelector 
+                 label='Activity'
+                 segments={activities} 
+                 selectedSegment={selectedActivity} 
+                 onSelect={onActivityChange}
+                 loading={loadingFilters}
+             />
         </Box>
 
       </Box>

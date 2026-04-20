@@ -11,24 +11,27 @@ import {
   Box,
   Typography,
 } from '@mui/material';
+interface DaysTableData {
+  unitCode: string;
+  cnt: number;
+  activity: string;
+  avgDays: number;
+  dueDate: string;
+}
 
-const MOCK_DATA = [
-  { unitCode: 'AT80-01', cnt: 1, activity: 'Fire Extinguisher Inspection', avgDays: 59, dueDate: '5/28/2026' },
-  { unitCode: 'BT26-01', cnt: 1, activity: 'Fire Extinguisher Inspection', avgDays: 59, dueDate: '5/28/2026' },
-  { unitCode: 'C1', cnt: 1, activity: 'Fire Extinguisher Inspection', avgDays: 59, dueDate: '5/28/2026' },
-  { unitCode: 'C11', cnt: 1, activity: 'Fire Extinguisher Inspection', avgDays: 59, dueDate: '5/28/2026' },
-  { unitCode: 'C16', cnt: 1, activity: 'Fire Extinguisher Inspection', avgDays: 59, dueDate: '5/28/2026' },
-  { unitCode: 'C17', cnt: 1, activity: 'Fire Extinguisher Inspection', avgDays: 59, dueDate: '5/28/2026' }
-];
+interface ComingDueDaysTableProps {
+  data: DaysTableData[];
+}
 
-export default function ComingDueDaysTable() {
-  const totals = MOCK_DATA.reduce(
+export default function ComingDueDaysTable({ data }: ComingDueDaysTableProps) {
+  const totals = data.reduce(
     (acc, curr) => ({
       cnt: acc.cnt + curr.cnt,
-      avgDays: 54 // Mocking the total average to match 54 in the screenshot
+      avgDays: data.length > 0 ? acc.avgDays + curr.avgDays : 0 
     }),
-    { cnt: 0, avgDays: 54 }
+    { cnt: 0, avgDays: 0 }
   );
+  if (data.length > 0) totals.avgDays = Math.round(totals.avgDays / data.length);
 
   return (
     <Box sx={{ width: '100%', height: '100%', bgcolor: 'background.paper', borderRadius: 2, overflow: 'hidden' }}>
@@ -62,7 +65,7 @@ export default function ComingDueDaysTable() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {MOCK_DATA.map((row, idx) => (
+            {data.map((row, idx) => (
               <TableRow key={idx} hover sx={{ '&:nth-of-type(even)': { bgcolor: '#F5F5F5' } }}>
                 <TableCell>{row.unitCode}</TableCell>
                 <TableCell>{row.cnt}</TableCell>
@@ -73,9 +76,9 @@ export default function ComingDueDaysTable() {
             ))}
             <TableRow sx={{ '& td': { fontWeight: 'bold' } }}>
               <TableCell>Total</TableCell>
-              <TableCell>59</TableCell>
+              <TableCell>{totals.cnt}</TableCell>
               <TableCell colSpan={1}></TableCell>
-              <TableCell align="right">54</TableCell>
+              <TableCell align="right">{totals.avgDays}</TableCell>
               <TableCell></TableCell>
             </TableRow>
           </TableBody>

@@ -12,27 +12,32 @@ import {
   Typography,
 } from '@mui/material';
 
-const MOCK_DATA = [
-  { unitType: '350 Ton AT Class', unitCode: 'AT15', cnt: 1, activity: '300 Hr. Service - Upper', pastDue: 0, pastDueDays: null, pastDueHours: null, dueLower: 960, currentLower: 2331, dueUpper: null, currentUpper: 6635, comingDueDays: null, comingDueHours: 103 },
-  { unitType: '350 Ton AT Class', unitCode: 'AT15', cnt: 1, activity: 'Annual Crane Inspection', pastDue: 0, pastDueDays: null, pastDueHours: null, dueLower: null, currentLower: 2331, dueUpper: null, currentUpper: 6635, comingDueDays: 296, comingDueHours: null },
-  { unitType: '350 Ton AT Class', unitCode: 'AT15', cnt: 1, activity: 'Fire Extinguisher Inspection', pastDue: 0, pastDueDays: null, pastDueHours: null, dueLower: null, currentLower: 2331, dueUpper: null, currentUpper: 6635, comingDueDays: 65, comingDueHours: null },
-  { unitType: '155 Ton AT Class', unitCode: 'AT155-2', cnt: 1, activity: '300 Hr. Service - Lower', pastDue: 0, pastDueDays: null, pastDueHours: null, dueLower: 1830, currentLower: 1810, dueUpper: null, currentUpper: 6786, comingDueDays: null, comingDueHours: 20 },
-  { unitType: '155 Ton AT Class', unitCode: 'AT155-2', cnt: 1, activity: '300 Hr. Service - Upper', pastDue: 0, pastDueDays: null, pastDueHours: null, dueLower: null, currentLower: 1810, dueUpper: null, currentUpper: 6786, comingDueDays: null, comingDueHours: 239 },
-  { unitType: '155 Ton AT Class', unitCode: 'AT155-2', cnt: 1, activity: 'Annual Crane Inspection', pastDue: 0, pastDueDays: null, pastDueHours: null, dueLower: 54, currentLower: 1810, dueUpper: null, currentUpper: 6786, comingDueDays: 201, comingDueHours: null },
-  { unitType: '155 Ton AT Class', unitCode: 'AT155-2', cnt: 1, activity: 'Fire Extinguisher Inspection', pastDue: 0, pastDueDays: null, pastDueHours: null, dueLower: null, currentLower: 1810, dueUpper: null, currentUpper: 6786, comingDueDays: 65, comingDueHours: null },
-  { unitType: '175 Ton AT Class', unitCode: 'AT175-01', cnt: 1, activity: '300 Hr. Service - Lower', pastDue: 0, pastDueDays: null, pastDueHours: null, dueLower: 1832, currentLower: 1405, dueUpper: null, currentUpper: 1253, comingDueDays: null, comingDueHours: 427 },
-  { unitType: '175 Ton AT Class', unitCode: 'AT175-01', cnt: 1, activity: 'Annual Crane Inspection', pastDue: 0, pastDueDays: null, pastDueHours: null, dueLower: null, currentLower: 1405, dueUpper: null, currentUpper: 1253, comingDueDays: 148, comingDueHours: null },
-  { unitType: '175 Ton AT Class', unitCode: 'AT175-01', cnt: 1, activity: 'Fire Extinguisher Inspection', pastDue: 0, pastDueDays: null, pastDueHours: null, dueLower: null, currentLower: 1405, dueUpper: null, currentUpper: 1253, comingDueDays: null, comingDueHours: null },
-  { unitType: '80 Ton AT Class', unitCode: 'AT80-01', cnt: 1, activity: '300 Hr. Service - Upper', pastDue: 0, pastDueDays: null, pastDueHours: null, dueLower: null, currentLower: 1682, dueUpper: null, currentUpper: 1936, comingDueDays: null, comingDueHours: null },
-  { unitType: '80 Ton AT Class', unitCode: 'AT80-01', cnt: 1, activity: 'Annual Crane Inspection', pastDue: 0, pastDueDays: null, pastDueHours: null, dueLower: null, currentLower: 1682, dueUpper: null, currentUpper: 1936, comingDueDays: 143, comingDueHours: null },
-  { unitType: '80 Ton AT Class', unitCode: 'AT80-01', cnt: 1, activity: 'Fire Extinguisher Inspection', pastDue: 0, pastDueDays: null, pastDueHours: null, dueLower: null, currentLower: 1682, dueUpper: null, currentUpper: 1936, comingDueDays: 59, comingDueHours: null },
-  { unitType: '80 Ton AT Class', unitCode: 'AT80-01', cnt: 1, activity: 'Maintenance Service', pastDue: 0, pastDueDays: null, pastDueHours: null, dueLower: null, currentLower: 1682, dueUpper: null, currentUpper: 1936, comingDueDays: null, comingDueHours: null },
-  { unitType: '26 Ton Boom Truck', unitCode: 'BT26-01', cnt: 1, activity: '300 Hr. Service - Lower', pastDue: 0, pastDueDays: null, pastDueHours: null, dueLower: 4855, currentLower: 4569, dueUpper: null, currentUpper: 0, comingDueDays: null, comingDueHours: 286 },
-  { unitType: '26 Ton Boom Truck', unitCode: 'BT26-01', cnt: 1, activity: 'Annual Crane Inspection', pastDue: 0, pastDueDays: null, pastDueHours: null, dueLower: 1759, currentLower: 4569, dueUpper: 28836.00, currentUpper: 0, comingDueDays: 319, comingDueHours: null },
-  { unitType: '26 Ton Boom Truck', unitCode: 'BT26-01', cnt: 1, activity: 'Annual Vehicle Inspection Report', pastDue: 0, pastDueDays: null, pastDueHours: null, dueLower: 1759, currentLower: 4569, dueUpper: 28836.00, currentUpper: 0, comingDueDays: 318, comingDueHours: null },
-];
+interface DetailTableData {
+  unitType: string;
+  unitCode: string;
+  cnt: number;
+  activity: string;
+  pastDue: number;
+  pastDueDays: number | null;
+  pastDueHours: number | null;
+  dueLower: number | null;
+  currentLower: number | null;
+  dueUpper: number | null;
+  currentUpper: number | null;
+  comingDueDays: number | null;
+  comingDueHours: number | null;
+}
 
-export default function MaintenanceDetailTable() {
+interface MaintenanceDetailTableProps {
+  data: DetailTableData[];
+}
+
+export default function MaintenanceDetailTable({ data }: MaintenanceDetailTableProps) {
+  const totals = data.reduce((acc, row) => {
+      acc.cnt += row.cnt;
+      acc.pastDue += row.pastDue;
+      return acc;
+  }, { cnt: 0, pastDue: 0 });
   return (
     <Box sx={{ width: '100%', bgcolor: 'background.paper' }}>
       <Box sx={{ 
@@ -74,7 +79,7 @@ export default function MaintenanceDetailTable() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {MOCK_DATA.map((row, idx) => (
+            {data.map((row, idx) => (
               <TableRow key={idx} hover sx={{ '&:nth-of-type(even)': { bgcolor: '#F5F5F5' } }}>
                 <TableCell>{row.unitType}</TableCell>
                 <TableCell>{row.unitCode}</TableCell>
@@ -93,9 +98,9 @@ export default function MaintenanceDetailTable() {
             ))}
             <TableRow sx={{ '& td': { fontWeight: 'bold' } }}>
               <TableCell colSpan={2}>Total</TableCell>
-              <TableCell align="right">151</TableCell>
+              <TableCell align="right">{totals.cnt}</TableCell>
               <TableCell></TableCell>
-              <TableCell align="right">0</TableCell>
+              <TableCell align="right">{totals.pastDue}</TableCell>
               <TableCell align="right">85</TableCell>
               <TableCell align="right">139.25</TableCell>
               <TableCell align="right"></TableCell>

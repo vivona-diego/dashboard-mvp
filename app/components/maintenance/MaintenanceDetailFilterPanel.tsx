@@ -1,49 +1,80 @@
 'use client';
 
 import { Box, Typography, MenuItem, Select, FormControlLabel, Checkbox, FormGroup } from '@mui/material';
+import SegmentSelector from '@/app/components/dashboard/SegmentSelector';
 
-export default function MaintenanceDetailFilterPanel() {
+interface MaintenanceDetailFilterPanelProps {
+  scheduleTypes: string[];
+  selectedScheduleType: string | null;
+  onScheduleTypeChange: (val: string | null) => void;
+  
+  unitTypes: string[];
+  selectedUnitType: string | null;
+  onUnitTypeChange: (val: string | null) => void;
+  
+  unitCodes: string[];
+  selectedUnitCode: string | null;
+  onUnitCodeChange: (val: string | null) => void;
+
+  activities: string[];
+  selectedActivity: string | null;
+  onActivityChange: (val: string | null) => void;
+
+  loadingFilters?: boolean;
+}
+
+export default function MaintenanceDetailFilterPanel({
+  scheduleTypes, selectedScheduleType, onScheduleTypeChange,
+  unitTypes, selectedUnitType, onUnitTypeChange,
+  unitCodes, selectedUnitCode, onUnitCodeChange,
+  activities, selectedActivity, onActivityChange,
+  loadingFilters
+}: MaintenanceDetailFilterPanelProps) {
   return (
     <Box sx={{ width: '100%', bgcolor: 'background.paper', display: 'flex', flexDirection: 'row', gap: 4, alignItems: 'flex-start', py: 2, px: 3, borderBottom: '1px solid #E0E0E0' }}>
         
         {/* Schedule Type */}
         <Box sx={{ flex: 1 }}>
-            <Typography variant="body2" sx={{ fontWeight: 'bold', color: 'text.primary', mb: 1 }}>
-                 Schedule Type
-            </Typography>
-            <Select size="small" fullWidth value="All" sx={{ bgcolor: 'white' }}>
-                 <MenuItem value="All">All</MenuItem>
-            </Select>
+             <SegmentSelector 
+                 label='Schedule Type'
+                 segments={scheduleTypes} 
+                 selectedSegment={selectedScheduleType} 
+                 onSelect={onScheduleTypeChange}
+                 loading={loadingFilters}
+             />
         </Box>
 
         {/* Unit Type */}
         <Box sx={{ flex: 1 }}>
-            <Typography variant="body2" sx={{ fontWeight: 'bold', color: 'text.primary', mb: 1 }}>
-                 Unit Type
-            </Typography>
-            <Select size="small" fullWidth value="All" sx={{ bgcolor: 'white' }}>
-                 <MenuItem value="All">All</MenuItem>
-            </Select>
+             <SegmentSelector 
+                 label='Unit Type'
+                 segments={unitTypes} 
+                 selectedSegment={selectedUnitType} 
+                 onSelect={onUnitTypeChange}
+                 loading={loadingFilters}
+             />
         </Box>
 
         {/* UnitCode */}
         <Box sx={{ flex: 1 }}>
-            <Typography variant="body2" sx={{ fontWeight: 'bold', color: 'text.primary', mb: 1 }}>
-                 UnitCode
-            </Typography>
-            <Select size="small" fullWidth value="All" sx={{ bgcolor: 'white' }}>
-                 <MenuItem value="All">All</MenuItem>
-            </Select>
+             <SegmentSelector 
+                 label='Unit Code'
+                 segments={unitCodes} 
+                 selectedSegment={selectedUnitCode} 
+                 onSelect={onUnitCodeChange}
+                 loading={loadingFilters}
+             />
         </Box>
 
         {/* Activity */}
         <Box sx={{ flex: 1 }}>
-            <Typography variant="body2" sx={{ fontWeight: 'bold', color: 'text.primary', mb: 1 }}>
-                 Activity
-            </Typography>
-            <Select size="small" fullWidth value="All" sx={{ bgcolor: 'white' }}>
-                 <MenuItem value="All">All</MenuItem>
-            </Select>
+             <SegmentSelector 
+                 label='Activity'
+                 segments={activities} 
+                 selectedSegment={selectedActivity} 
+                 onSelect={onActivityChange}
+                 loading={loadingFilters}
+             />
         </Box>
 
         {/* Past Due Checkboxes */}

@@ -1,216 +1,242 @@
 'use client';
 
-import { Box, Typography, Paper, FormControl, Select, MenuItem, Grid, Button, ButtonGroup } from '@mui/material';
-import { useState } from 'react';
+import { 
+    Box, Typography, Paper, Grid, Button, ButtonGroup, 
+    CircularProgress, Stack 
+} from '@mui/material';
+import { useState, useEffect } from 'react';
+import SegmentSelector from '@/app/components/dashboard/SegmentSelector';
 import DownUnitChart from '@/app/components/equipment/DownUnitChart';
 import DownUnitTable from '@/app/components/equipment/DownUnitTable';
-import { SelectChangeEvent } from '@mui/material';
+import api from '@/app/lib/axiosClient';
 
-const MOCK_CHART_DATA = {
-  months: [
-    'January',
-    'February',
-    'March',
-    'April',
-    'May',
-    'June',
-    'July',
-    'August',
-    'September',
-    'October',
-    'November',
-    'December',
-  ],
-  currentYear: [168, 193, 115, 184, 92, 61, 23, 92, 206, 168, 99, 75],
-  lastYear: [16, 143, 84, 8, 16, 75, 23, 66, 179, 72, 15, 15],
-};
-
-const MOCK_TABLE_DATA = [
-  {
-    unitCode: 'AT15',
-    startDt: '02/15/22',
-    endDt: '02/17/2022',
-    daysDown: 3,
-    downHours: 25.2,
-    reason: 'Down',
-    comments: 'walter payton going to be doing repairs to suspension, heaters, steering,',
-  },
-  {
-    unitCode: 'AT15',
-    startDt: '11/03/22',
-    endDt: '11/08/2022',
-    daysDown: 4,
-    downHours: 30.55,
-    reason: 'Down',
-    comments:
-      'walter payton coming to resolve issues\naux heater not working in upper\nif outrigger leaking\nhoist switch not working\npassenger side marker light on cab not working\nfuel gauge on upper not working',
-  },
-  {
-    unitCode: 'AT155-2',
-    startDt: '12/27/22',
-    endDt: '12/28/2022',
-    daysDown: 2,
-    downHours: 15.27,
-    reason: 'Down',
-    comments: 'service and install camera',
-  },
-  {
-    unitCode: 'BT26-01',
-    startDt: '04/28/22',
-    endDt: '05/04/2022',
-    daysDown: 5,
-    downHours: 38.91,
-    reason: 'Down',
-    comments:
-      'crane has error for can bus J1939 and computeris locked up and not seeing load charts, walter payton is goin',
-  },
-  {
-    unitCode: 'BT26-01',
-    startDt: '05/10/22',
-    endDt: '05/10/2022',
-    daysDown: 1,
-    downHours: 7.64,
-    reason: 'Down',
-    comments: 'taking to reefer peterbuilt to have dash checked out, fuel gauge',
-  },
-  {
-    unitCode: 'BT26-01',
-    startDt: '05/13/22',
-    endDt: '05/13/2022',
-    daysDown: 1,
-    downHours: 7.64,
-    reason: 'Down',
-    comments: 'taking to cummins to have them install new DEF gauge, pump',
-  },
-  {
-    unitCode: 'BT26-01',
-    startDt: '05/20/22',
-    endDt: '05/23/2022',
-    daysDown: 2,
-    downHours: 15.27,
-    reason: 'Down',
-    comments: 'ATB solinoid melted, have to order new part and walter payton is coming monday 5-23-22',
-  },
-  {
-    unitCode: 'BT26-01',
-    startDt: '09/12/22',
-    endDt: '09/12/2022',
-    daysDown: 1,
-    downHours: 7.64,
-    reason: 'Down',
-    comments: 'peterbuilt looking at truck today, gauges not working intermittinly',
-  },
-  {
-    unitCode: 'BT26-01',
-    startDt: '09/19/22',
-    endDt: '09/19/2022',
-    daysDown: 1,
-    downHours: 7.64,
-    reason: 'Down',
-    comments: 'Add Cameras',
-  },
-  {
-    unitCode: 'BT26-01',
-    startDt: '12/06/22',
-    endDt: '12/07/2022',
-    daysDown: 2,
-    downHours: 15.27,
-    reason: 'Down',
-    comments: 'replacing engine breather',
-  },
-  {
-    unitCode: 'TOTAL_REMAINDER', // For mock totals to match exactly
-    startDt: '',
-    endDt: '',
-    daysDown: 245,
-    downHours: 1168.69,
-    reason: 'N/A',
-    comments: 'Other miscellaneous unit downs',
-  },
-];
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 export default function DownUnitReportPage() {
-  const [selectedYear, setSelectedYear] = useState('2022');
-  const [unitType, setUnitType] = useState('All');
-  const [unitCode, setUnitCode] = useState('All');
+    const DATASET_NAME = 'Equipment_Utilization';
+    
+    // Filters State
+    const [selectedYear, setSelectedYear] = useState('2022');
+    const [unitType, setUnitType] = useState<string | null>(null);
+    const [unitCode, setUnitCode] = useState<string | null>(null);
 
-  const handleUnitTypeChange = (event: SelectChangeEvent) => {
-    setUnitType(event.target.value);
-  };
+    // Segment Options
+    const [unitTypes, setUnitTypes] = useState<string[]>([]);
+    const [unitCodes, setUnitCodes] = useState<string[]>([]);
 
-  const handleUnitCodeChange = (event: SelectChangeEvent) => {
-    setUnitCode(event.target.value);
-  };
+    // Loading & Data Status
+    const [loadingFilters, setLoadingFilters] = useState(false);
+    const [loadingData, setLoadingData] = useState(false);
+    
+    const [tableData, setTableData] = useState<any[]>([]);
+    const [chartData, setChartData] = useState({
+        months: MONTHS,
+        currentYear: Array(12).fill(0),
+        lastYear: Array(12).fill(0),
+    });
 
-  const years = ['2022', '2023', '2024', '2025', '2026'];
+    const years = ['2022', '2023', '2024', '2025', '2026'];
 
-  return (
-    <Box
-      sx={{ p: 4, bgcolor: 'background.default', minHeight: '100vh', display: 'flex', flexDirection: 'column', gap: 4 }}
-    >
-      {/* Top Row: Title and Year Filter */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h5" fontWeight="bold" sx={{ color: '#00BCD4' }}>
-          Down Unit - Report
-        </Typography>
-        <ButtonGroup size="small" variant="outlined" sx={{ '& .MuiButton-root': { py: 0.5, px: 2 } }}>
-          {years.map((year) => (
-            <Button
-              key={year}
-              onClick={() => setSelectedYear(year)}
-              sx={{
-                color: selectedYear === year ? 'white' : 'text.secondary',
-                bgcolor: selectedYear === year ? '#424242' : 'transparent',
-                borderColor: 'divider',
-                '&:hover': {
-                  bgcolor: selectedYear === year ? '#424242' : 'action.hover',
-                  borderColor: 'divider',
+    const fetchFilterData = async (segmentName: string, setter: (data: string[]) => void) => {
+        try {
+            const res = await api.get('/bi/segment-values', {
+                params: {
+                    datasetName: DATASET_NAME,
+                    segmentName: segmentName,
+                    limit: 100,
                 },
-              }}
-            >
-              {year}
-            </Button>
-          ))}
-        </ButtonGroup>
-      </Box>
+            });
+            const values = res.data?.data?.values || res.data?.values || [];
+            setter(values.map((v: any) => v.displayValue));
+        } catch (error) {
+            console.error(`Error fetching ${segmentName}:`, error);
+        }
+    };
 
-      {/* Middle Section: Dropdown Filters and Chart */}
-      <Grid container spacing={4}>
-        <Grid size={{ xs: 12, md: 3 }}>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-            <Box>
-              <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 1, color: 'text.primary' }}>
-                Select a Unit Type
-              </Typography>
-              <FormControl fullWidth size="small">
-                <Select value={unitType} onChange={handleUnitTypeChange} sx={{ bgcolor: 'white' }}>
-                  <MenuItem value="All">All</MenuItem>
-                </Select>
-              </FormControl>
-            </Box>
-            <Box>
-              <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 1, color: 'text.primary' }}>
-                Select a Unit Code
-              </Typography>
-              <FormControl fullWidth size="small">
-                <Select value={unitCode} onChange={handleUnitCodeChange} sx={{ bgcolor: 'white' }}>
-                  <MenuItem value="All">All</MenuItem>
-                </Select>
-              </FormControl>
-            </Box>
-          </Box>
-        </Grid>
-        <Grid size={{ xs: 12, md: 9 }}>
-          <Paper elevation={0} sx={{ p: 0, borderRadius: 2, overflow: 'hidden' }}>
-            <DownUnitChart data={MOCK_CHART_DATA} />
-          </Paper>
-        </Grid>
-      </Grid>
+    useEffect(() => {
+        const loadFilters = async () => {
+            setLoadingFilters(true);
+            await Promise.all([
+                fetchFilterData('UnitType', setUnitTypes),
+                fetchFilterData('UnitCode', setUnitCodes),
+            ]);
+            setLoadingFilters(false);
+        };
+        loadFilters();
+    }, []);
 
-      {/* Bottom Section: Table */}
-      <Box sx={{ flexGrow: 1 }}>
-        <DownUnitTable data={MOCK_TABLE_DATA} />
-      </Box>
-    </Box>
-  );
+    useEffect(() => {
+        const fetchData = async () => {
+            setLoadingData(true);
+            try {
+                const baseFilters = [
+                    ...(unitType && unitType !== 'All' ? [{ segmentName: 'UnitType', operator: 'eq', value: unitType }] : []),
+                    ...(unitCode && unitCode !== 'All' ? [{ segmentName: 'UnitCode', operator: 'eq', value: unitCode }] : []),
+                ];
+
+                // 1. Fetch Chart Data (CY and LY)
+                const chartFiltersCY = [...baseFilters, { segmentName: 'Year', operator: 'eq', value: selectedYear }];
+                const chartFiltersLY = [...baseFilters, { segmentName: 'Year', operator: 'eq', value: (parseInt(selectedYear) - 1).toString() }];
+
+                const [resChartCY, resChartLY, resTable] = await Promise.all([
+                    api.post('/bi/query', {
+                        datasetName: DATASET_NAME,
+                        groupBySegments: ['Month'],
+                        metrics: [{ metricName: 'TotalDowntimeHours' }],
+                        ...(chartFiltersCY.length > 0 && { filters: chartFiltersCY }),
+                        pagination: { page: 1, pageSize: 50 }
+                    }).catch(() => null),
+                    api.post('/bi/query', {
+                        datasetName: DATASET_NAME,
+                        groupBySegments: ['Month'],
+                        metrics: [{ metricName: 'TotalDowntimeHours' }],
+                        ...(chartFiltersLY.length > 0 && { filters: chartFiltersLY }),
+                        pagination: { page: 1, pageSize: 50 }
+                    }).catch(() => null),
+                    api.post('/bi/query', {
+                         datasetName: DATASET_NAME,
+                         groupBySegments: ['UnitCode'],
+                         metrics: [{ metricName: 'TotalDowntimeDays' }, { metricName: 'TotalDowntimeHours' }],
+                         ...(chartFiltersCY.length > 0 && { filters: chartFiltersCY }),
+                         pagination: { page: 1, pageSize: 1000 }
+                    }).catch(() => null)
+                ]);
+
+                // Map Chart Data
+                const cyHours = Array(12).fill(0);
+                const lyHours = Array(12).fill(0);
+                
+                const processChartRes = (res: any, targetArray: number[]) => {
+                    if (res?.data?.success || (res?.data?.data && Array.isArray(res.data.data?.data))) {
+                        const rows = res.data.data?.data || res.data.data || [];
+                        rows.forEach((r: any) => {
+                            const monthIdx = parseInt(r.Month) - 1;
+                            if (monthIdx >= 0 && monthIdx < 12) {
+                                targetArray[monthIdx] = parseFloat(r.TotalDowntimeHours || 0);
+                            }
+                        });
+                    }
+                };
+
+                processChartRes(resChartCY, cyHours);
+                processChartRes(resChartLY, lyHours);
+
+                setChartData({ months: MONTHS, currentYear: cyHours, lastYear: lyHours });
+
+                // Map Table Data
+                if (resTable?.data?.success || (resTable?.data?.data && Array.isArray(resTable.data.data?.data))) {
+                    const rows = resTable.data.data?.data || resTable.data.data || [];
+                    const mappedRows = rows.map((r: any) => ({
+                         unitCode: r.UnitCode || 'Unknown',
+                         startDt: '',
+                         endDt: '',
+                         daysDown: parseFloat(r.TotalDowntimeDays || 0),
+                         downHours: parseFloat(r.TotalDowntimeHours || 0),
+                         reason: 'Down',
+                         comments: ''
+                    }));
+                    // Remove 0 records
+                    const filteredRows = mappedRows.filter((r: any) => r.daysDown > 0 || r.downHours > 0);
+                    // Sort descending by hours
+                    filteredRows.sort((a: any, b: any) => b.downHours - a.downHours);
+                    setTableData(filteredRows);
+                } else {
+                    setTableData([]);
+                }
+
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            } finally {
+                setLoadingData(false);
+            }
+        };
+
+        fetchData();
+    }, [selectedYear, unitType, unitCode]);
+
+
+    return (
+        <Box sx={{ p: 4, bgcolor: 'background.default', minHeight: '100vh', display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {/* Top Row: Title and Year Filter */}
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="h5" fontWeight="bold" sx={{ color: '#00BCD4' }}>
+                    Down Unit - Report
+                </Typography>
+                <ButtonGroup size="small" variant="outlined" sx={{ '& .MuiButton-root': { py: 0.5, px: 2 } }}>
+                    {years.map((year) => (
+                        <Button
+                            key={year}
+                            onClick={() => setSelectedYear(year)}
+                            sx={{
+                                color: selectedYear === year ? 'white' : 'text.secondary',
+                                bgcolor: selectedYear === year ? '#424242' : 'transparent',
+                                borderColor: 'divider',
+                                '&:hover': {
+                                    bgcolor: selectedYear === year ? '#424242' : 'action.hover',
+                                    borderColor: 'divider',
+                                },
+                            }}
+                        >
+                            {year}
+                        </Button>
+                    ))}
+                </ButtonGroup>
+            </Box>
+
+            {/* Middle Section: Dropdown Filters and Chart */}
+            <Grid container spacing={4} sx={{ position: 'relative' }}>
+                {loadingData && (
+                    <Box sx={{ 
+                        position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, 
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                        bgcolor: 'rgba(255,255,255,0.7)', zIndex: 1 
+                    }}>
+                        <CircularProgress />
+                    </Box>
+                )}
+                
+                <Grid size={{ xs: 12, md: 3 }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                        <Box>
+                            <SegmentSelector 
+                                label='Select a Unit Type'
+                                segments={unitTypes} 
+                                selectedSegment={unitType} 
+                                onSelect={setUnitType}
+                                loading={loadingFilters}
+                            />
+                        </Box>
+                        <Box>
+                             <SegmentSelector 
+                                label='Select a Unit Code'
+                                segments={unitCodes} 
+                                selectedSegment={unitCode} 
+                                onSelect={setUnitCode}
+                                loading={loadingFilters}
+                            />
+                        </Box>
+                    </Box>
+                </Grid>
+                <Grid size={{ xs: 12, md: 9 }}>
+                    <Paper elevation={0} sx={{ p: 0, borderRadius: 2, overflow: 'hidden' }}>
+                        <DownUnitChart data={chartData} />
+                    </Paper>
+                </Grid>
+            </Grid>
+
+            {/* Bottom Section: Table */}
+            <Box sx={{ flexGrow: 1, position: 'relative' }}>
+                {loadingData && (
+                    <Box sx={{ 
+                        position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, 
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                        bgcolor: 'rgba(255,255,255,0.7)', zIndex: 1 
+                    }}>
+                        <CircularProgress />
+                    </Box>
+                )}
+                <DownUnitTable data={tableData} />
+            </Box>
+        </Box>
+    );
 }

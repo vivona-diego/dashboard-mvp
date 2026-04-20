@@ -2,13 +2,21 @@
 
 import { Box, Typography } from '@mui/material';
 
-export default function ComingDueKPIs() {
+interface ComingDueKPIsProps {
+  data: {
+    units: number;
+    avgDays: number;
+    avgHours: number;
+  };
+}
+
+export default function ComingDueKPIs({ data }: ComingDueKPIsProps) {
   return (
     <Box sx={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', py: 2, width: '100%' }}>
       
       <Box sx={{ textAlign: 'center' }}>
         <Typography variant="h3" sx={{ fontWeight: 'normal', color: 'text.primary', mb: 0.5 }}>
-          79
+          {data.units}
         </Typography>
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
           Coming Due Units
@@ -17,7 +25,7 @@ export default function ComingDueKPIs() {
 
       <Box sx={{ textAlign: 'center' }}>
         <Typography variant="h3" sx={{ fontWeight: 'normal', color: 'text.primary', mb: 0.5 }}>
-          54
+          {data.avgDays}
         </Typography>
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
           Avg Coming Due Days
@@ -26,7 +34,7 @@ export default function ComingDueKPIs() {
 
       <Box sx={{ textAlign: 'center' }}>
         <Typography variant="h3" sx={{ fontWeight: 'normal', color: 'text.primary', mb: 0.5 }}>
-          31
+          {data.avgHours}
         </Typography>
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
           Avg Coming Due Hours

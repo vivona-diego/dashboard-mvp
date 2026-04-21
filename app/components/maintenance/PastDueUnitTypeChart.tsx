@@ -8,20 +8,7 @@ interface ChartData {
   value: number;
 }
 
-const MOCK_DATA: ChartData[] = [
-  { name: 'Trailer', value: 9 },
-  { name: 'Truck', value: 5 },
-  { name: '8k\ntelesc...', value: 2 },
-  { name: '18 Ton\nCarry\nDeck\nClass', value: 1 },
-  { name: '330 ton\ncrawler', value: 1 },
-  { name: '350 Ton\nAT Class', value: 1 },
-  { name: '45 Ton\nRT Class', value: 1 },
-  { name: '50 Ton\nMobilift', value: 1 },
-  { name: '50 Ton\nRT Class', value: 1 },
-  { name: '80 Ton\nAT Class', value: 1 },
-];
-
-export default function PastDueUnitTypeChart() {
+export default function PastDueUnitTypeChart({ data = [] }: { data?: ChartData[] }) {
   const theme = useTheme();
 
   const option = {
@@ -38,7 +25,7 @@ export default function PastDueUnitTypeChart() {
     },
     xAxis: {
       type: 'category',
-      data: MOCK_DATA.map(d => d.name),
+      data: data.map(d => d.name),
       axisLabel: {
         fontSize: 10,
         color: theme.palette.text.secondary,
@@ -83,7 +70,7 @@ export default function PastDueUnitTypeChart() {
       {
         name: 'Past Due Units',
         type: 'bar',
-        data: MOCK_DATA.map(d => d.value),
+        data: data.map(d => d.value),
         barWidth: '60%',
         itemStyle: {
           color: '#E57373', // Red/Pink from screenshot

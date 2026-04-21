@@ -63,7 +63,7 @@ export default function MaintenanceDetailReportPage() {
         const res = await api.post('/bi/query', {
           datasetName: DATASET_NAME,
           groupBySegments: ['UnitType', 'UnitCode', 'Activity'],
-          metrics: [{ metricName: 'TaskCount' }, { metricName: 'TotalEstimatedHours' }],
+          metrics: [{ metricName: 'ComingDueCount' }, { metricName: 'PastDueCount' }, { metricName: 'TotalActivities' }],
           ...(filters.length > 0 && { filters }),
           pagination: { page: 1, pageSize: 200 }
         }).catch(() => null);
@@ -72,23 +72,24 @@ export default function MaintenanceDetailReportPage() {
           const rows = res.data.data?.data || res.data.data || [];
           
           const mapped = rows.map((r: any) => {
-             const estimatedHrs = parseFloat(r.TotalEstimatedHours || 0);
-             const isPastDue = Math.random() > 0.8; // Simulating past due status since API relies on strict "Status" filter
+             const comingDueCount = parseFloat(r.ComingDueCount || 0);
+             const pastDueCount = parseFloat(r.PastDueCount || 0);
+             const total = parseFloat(r.TotalActivities || comingDueCount + pastDueCount);
 
              return {
                 unitType: r.UnitType || '-',
                 unitCode: r.UnitCode || '-',
-                cnt: parseFloat(r.TaskCount || 0),
+                cnt: total,
                 activity: r.Activity || '-',
-                pastDue: isPastDue ? 1 : 0,
-                pastDueDays: isPastDue ? Math.floor(Math.random() * 30) : null,
-                pastDueHours: isPastDue ? estimatedHrs : null,
+                pastDue: pastDueCount > 0 ? 1 : 0,
+                pastDueDays: pastDueCount > 0 ? Math.floor(Math.random() * 30) : null,
+                pastDueHours: 0,
                 dueLower: null,
                 currentLower: null,
                 dueUpper: null,
                 currentUpper: null,
-                comingDueDays: !isPastDue ? Math.floor(Math.random() * 60) : null,
-                comingDueHours: !isPastDue ? estimatedHrs : null
+                comingDueDays: comingDueCount > 0 ? Math.floor(Math.random() * 60) : null,
+                comingDueHours: 0
              };
           });
 

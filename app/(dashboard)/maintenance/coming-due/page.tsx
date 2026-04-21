@@ -51,7 +51,8 @@ export default function ComingDuePage() {
       setLoading(true);
       try {
         const baseFilters = [
-          { segmentName: 'Status', operator: 'eq', value: 'Scheduled' }, // assuming Coming Due is Scheduled status
+          // DueStatus: 0 = Coming Due, 1 = Past Due
+          { segmentName: 'DueStatus', operator: 'eq', value: '0' },
           ...(scheduleType && scheduleType !== 'All' ? [{ segmentName: 'ScheduleType', operator: 'eq', value: scheduleType }] : []),
           ...(activity && activity !== 'All' ? [{ segmentName: 'Activity', operator: 'eq', value: activity }] : [])
         ];
@@ -60,22 +61,22 @@ export default function ComingDuePage() {
           api.post('/bi/query', {
             datasetName: DATASET_NAME,
             groupBySegments: ['UnitType'],
-            metrics: [{ metricName: 'TaskCount' }],
+            metrics: [{ metricName: 'ComingDueCount' }],
             filters: baseFilters,
             pagination: { page: 1, pageSize: 50 },
-            orderBySegments: [{ segmentName: 'TaskCount', direction: 'desc' }]
+            orderBy: [{ field: 'ComingDueCount', direction: 'DESC' }]
           }).catch(() => null),
           api.post('/bi/query', {
             datasetName: DATASET_NAME,
             groupBySegments: ['Activity'],
-            metrics: [{ metricName: 'TaskCount' }],
+            metrics: [{ metricName: 'ComingDueCount' }],
             filters: baseFilters,
             pagination: { page: 1, pageSize: 50 }
           }).catch(() => null),
           api.post('/bi/query', {
             datasetName: DATASET_NAME,
             groupBySegments: ['UnitCode', 'Activity'],
-            metrics: [{ metricName: 'TaskCount' }, { metricName: 'TotalEstimatedHours' }],
+            metrics: [{ metricName: 'ComingDueCount' }],
             filters: baseFilters, // Apply same filters
             pagination: { page: 1, pageSize: 100 } // Get more rows for tables
           }).catch(() => null)
@@ -86,7 +87,7 @@ export default function ComingDuePage() {
           const rows = unitTypeRes.data.data?.data || unitTypeRes.data.data || [];
           setUnitTypeData(rows.map((r: any) => ({
             name: r.UnitType || 'Unknown',
-            value: parseFloat(r.TaskCount || 0)
+            value: parseFloat(r.ComingDueCount || 0)
           })).slice(0, 15)); // top 15
         } else {
             setUnitTypeData([]);
@@ -97,7 +98,7 @@ export default function ComingDuePage() {
           const rows = activityRes.data.data?.data || activityRes.data.data || [];
           setActivityData(rows.map((r: any) => ({
             name: r.Activity || 'Unknown',
-            value: parseFloat(r.TaskCount || 0)
+            value: parseFloat(r.ComingDueCount || 0)
           })));
         } else {
             setActivityData([]);
@@ -110,7 +111,7 @@ export default function ComingDuePage() {
             let totalUnits = 0;
             // Map rows to dynamic table data format
             const mappedTable = rows.map((r: any) => {
-                const cnt = parseFloat(r.TaskCount || 0);
+                const cnt = parseFloat(r.ComingDueCount || 0);
                 totalUnits += cnt;
                 return {
                     unitCode: r.UnitCode || 'Unknown',
@@ -122,7 +123,7 @@ export default function ComingDuePage() {
                     currentLower: 0,
                     dueUpper: 0,
                     currentUpper: 0,
-                    comingDueHours: parseFloat(r.TotalEstimatedHours || 0)
+                    comingDueHours: 0 // API lacks TotalEstimatedHours for this dataset
                 };
             });
             setTableData(mappedTable);

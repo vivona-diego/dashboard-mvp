@@ -7,166 +7,162 @@ import BillingGrid, { BillingGridData } from '@/app/components/quote/billing/Bil
 import api from '@/app/lib/axiosClient';
 
 export default function BillingPage() {
-    const [filters, setFilters] = useState({
-        billingCode: 'All',
-        measure: 'All'
-    });
+  const [filters, setFilters] = useState({
+    billingCode: 'All',
+    measure: 'All',
+  });
 
-    const handleFilterChange = (key: string, value: string) => {
-        setFilters(prev => ({ ...prev, [key]: value }));
-    };
+  const handleFilterChange = (key: string, value: string) => {
+    setFilters((prev) => ({ ...prev, [key]: value }));
+  };
 
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const [rows, setRows] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [rows, setRows] = useState<any[]>([]);
 
-    const billingCodeValue = filters.billingCode !== 'All' ? filters.billingCode : null;
-    const measureValue = filters.measure !== 'All' ? filters.measure : null;
+  const billingCodeValue = filters.billingCode !== 'All' ? filters.billingCode : null;
+  const measureValue = filters.measure !== 'All' ? filters.measure : null;
 
-    useEffect(() => {
-        const fetch = async () => {
-            try {
-                setLoading(true);
-                setError(null);
+  useEffect(() => {
+    const fetch = async () => {
+      try {
+        setLoading(true);
+        setError(null);
 
-                const requestFilters: any[] = [];
-                if (billingCodeValue) {
-                    requestFilters.push({
-                        segmentName: 'BillingDescription',
-                        operator: 'eq',
-                        value: billingCodeValue,
-                    });
-                }
-                if (measureValue) {
-                    requestFilters.push({
-                        segmentName: 'Measure',
-                        operator: 'eq',
-                        value: measureValue,
-                    });
-                }
+        const requestFilters: any[] = [];
+        if (billingCodeValue) {
+          requestFilters.push({
+            segmentName: 'BillingDescription',
+            operator: 'eq',
+            value: billingCodeValue,
+          });
+        }
+        if (measureValue) {
+          requestFilters.push({
+            segmentName: 'Measure',
+            operator: 'eq',
+            value: measureValue,
+          });
+        }
 
-                // Usamos BillingDescription + Measure porque el dataset no trae
-                // fechas efectivas de billing code. Calculamos costos "por unidad"
-                // usando Quantity cuando exista.
-                const requestBody = {
-                    datasetName: 'quote_profit_forecast',
-                    groupBySegments: ['BillingDescription', 'Measure', 'BillingCodeID'],
-                    metrics: [
-                        { metricName: 'Quantity' },
-                        { metricName: 'EquipmentExpense' },
-                        { metricName: 'LaborExpense' },
-                        { metricName: 'UnionExpense' },
-                        { metricName: 'WCExpense' },
-                        { metricName: 'MatExpense' },
-                        { metricName: 'DirectExpense' },
-                        { metricName: 'IndirectExpense' },
-                        { metricName: 'TotalExpense' },
-                    ],
-                    ...(requestFilters.length > 0 ? { filters: requestFilters } : {}),
-                    limit: 2000,
-                };
-
-                const res = await api.post('/bi/query', requestBody);
-                if (!res.data?.success || !res.data?.data?.data) {
-                    throw new Error('Invalid response from BI query');
-                }
-                setRows(res.data.data.data);
-            } catch (err: any) {
-                console.error('Error fetching billing data:', err);
-                setError(err.response?.data?.message || err.message || 'Failed to load billing data');
-                setRows([]);
-            } finally {
-                setLoading(false);
-            }
+        // Usamos BillingDescription + Measure porque el dataset no trae
+        // fechas efectivas de billing code. Calculamos costos "por unidad"
+        // usando Quantity cuando exista.
+        const requestBody = {
+          datasetName: 'quote_profit_forecast',
+          groupBySegments: ['BillingDescription', 'Measure', 'BillingCodeID'],
+          metrics: [
+            { metricName: 'Quantity' },
+            { metricName: 'EquipmentExpense' },
+            { metricName: 'LaborExpense' },
+            { metricName: 'UnionExpense' },
+            { metricName: 'WCExpense' },
+            { metricName: 'MatExpense' },
+            { metricName: 'DirectExpense' },
+            { metricName: 'IndirectExpense' },
+            { metricName: 'TotalExpense' },
+          ],
+          ...(requestFilters.length > 0 ? { filters: requestFilters } : {}),
+          limit: 1000,
         };
 
-        fetch();
-    }, [billingCodeValue, measureValue]);
+        const res = await api.post('/bi/query', requestBody);
+        if (!res.data?.success || !res.data?.data?.data) {
+          throw new Error('Invalid response from BI query');
+        }
+        setRows(res.data.data.data);
+      } catch (err: any) {
+        console.error('Error fetching billing data:', err);
+        setError(err.response?.data?.message || err.message || 'Failed to load billing data');
+        setRows([]);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    const gridData: BillingGridData[] = useMemo(() => {
-        const safeDiv = (a: number, b: number) => (b !== 0 ? a / b : 0);
+    fetch();
+  }, [billingCodeValue, measureValue]);
 
-        const mapped = rows.map((r, idx) => {
-                const qty = Number(r.Quantity ?? 0);
+  const gridData: BillingGridData[] = useMemo(() => {
+    const safeDiv = (a: number, b: number) => (b !== 0 ? a / b : 0);
 
-                const equipment = Number(r.EquipmentExpense ?? 0);
-                const labor = Number(r.LaborExpense ?? 0);
-                const union = Number(r.UnionExpense ?? 0);
-                const wc = Number(r.WCExpense ?? 0);
-                const mat = Number(r.MatExpense ?? 0);
+    const mapped = rows.map((r, idx) => {
+      const qty = Number(r.Quantity ?? 0);
 
-                const direct = Number(r.DirectExpense ?? 0);
-                const indirect = Number(r.IndirectExpense ?? 0);
-                const total = Number(r.TotalExpense ?? (direct + indirect));
+      const equipment = Number(r.EquipmentExpense ?? 0);
+      const labor = Number(r.LaborExpense ?? 0);
+      const union = Number(r.UnionExpense ?? 0);
+      const wc = Number(r.WCExpense ?? 0);
+      const mat = Number(r.MatExpense ?? 0);
 
-                return {
-                    id: String(idx),
-                    billingCodeId: Number(r.BillingCodeID ?? 0),
-                    billingCode: r.BillingDescription ?? '',
-                    measure: r.Measure ?? '',
-                    effStartDt: '',
-                    effEndDt: '',
-                    equipmentHourly: safeDiv(equipment, qty),
-                    laborHourly: safeDiv(labor, qty),
-                    unionHourly: safeDiv(union, qty),
-                    wcHourly: safeDiv(wc, qty),
-                    directCost: safeDiv(direct, qty),
-                    materialBurden: safeDiv(mat, qty),
-                    laborBurden: safeDiv(indirect, qty),
-                    totalCost: safeDiv(total, qty),
-                };
-            });
+      const direct = Number(r.DirectExpense ?? 0);
+      const indirect = Number(r.IndirectExpense ?? 0);
+      const total = Number(r.TotalExpense ?? direct + indirect);
 
-        // Ordenar por billingCode (texto) y limitar por performance
-        return mapped
-            .sort((a, b) => (a.billingCode || '').localeCompare(b.billingCode || ''))
-            .slice(0, 300);
-    }, [rows]);
+      return {
+        id: String(idx),
+        billingCodeId: Number(r.BillingCodeID ?? 0),
+        billingCode: r.BillingDescription ?? '',
+        measure: r.Measure ?? '',
+        effStartDt: '',
+        effEndDt: '',
+        equipmentHourly: safeDiv(equipment, qty),
+        laborHourly: safeDiv(labor, qty),
+        unionHourly: safeDiv(union, qty),
+        wcHourly: safeDiv(wc, qty),
+        directCost: safeDiv(direct, qty),
+        materialBurden: safeDiv(mat, qty),
+        laborBurden: safeDiv(indirect, qty),
+        totalCost: safeDiv(total, qty),
+      };
+    });
 
-    return (
-        <Box sx={{ p: 4, height: '100%', display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <Typography variant="h5" fontWeight="bold" gutterBottom>
-                Billing Codes, Costs & Calculations
-            </Typography>
+    // Ordenar por billingCode (texto) y limitar por performance
+    return mapped.sort((a, b) => (a.billingCode || '').localeCompare(b.billingCode || '')).slice(0, 300);
+  }, [rows]);
 
-            {error && (
-                <Typography color="error" variant="body2">
-                    {error}
-                </Typography>
-            )}
-            {loading && (
-                <Typography variant="body2" color="text.secondary">
-                    Cargando...
-                </Typography>
-            )}
+  return (
+    <Box sx={{ p: 4, height: '100%', display: 'flex', flexDirection: 'column', gap: 4 }}>
+      <Typography variant="h5" fontWeight="bold" gutterBottom>
+        Billing Codes, Costs & Calculations
+      </Typography>
 
-            {/* Filters and Explanatory Text */}
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '1fr 2fr' }, gap: 4 }}>
-                <BillingFilters
-                    filters={filters}
-                    onFilterChange={handleFilterChange}
-                />
-                
-                <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 2 }}>
-                    <Typography variant="body2" color="text.secondary">
-                        <strong>Direct Costs (Total)</strong> = Equipment + Labor + Union + WC Costs (Represented hourly, measure conversion applied for totals)
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                        <strong>Indirect Cost</strong> = Burden Cost
-                    </Typography>
-                     <Typography variant="body2" color="text.secondary">
-                        <strong>Gross Profit $</strong> = Estimate - Direct Costs
-                    </Typography>
-                     <Typography variant="body2" color="text.secondary">
-                        <strong>Net Profit</strong> = Estimate - (Direct Costs + Indirect Cost)
-                    </Typography>
-                </Box>
-            </Box>
+      {error && (
+        <Typography color="error" variant="body2">
+          {error}
+        </Typography>
+      )}
+      {loading && (
+        <Typography variant="body2" color="text.secondary">
+          Cargando...
+        </Typography>
+      )}
 
-            {/* Grid */}
-            <Box sx={{ flexGrow: 1 }}>
-                <BillingGrid data={gridData} />
-            </Box>
+      {/* Filters and Explanatory Text */}
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '1fr 2fr' }, gap: 4 }}>
+        <BillingFilters filters={filters} onFilterChange={handleFilterChange} />
+
+        <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 2 }}>
+          <Typography variant="body2" color="text.secondary">
+            <strong>Direct Costs (Total)</strong> = Equipment + Labor + Union + WC Costs (Represented hourly, measure
+            conversion applied for totals)
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            <strong>Indirect Cost</strong> = Burden Cost
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            <strong>Gross Profit $</strong> = Estimate - Direct Costs
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            <strong>Net Profit</strong> = Estimate - (Direct Costs + Indirect Cost)
+          </Typography>
         </Box>
-    );
+      </Box>
+
+      {/* Grid */}
+      <Box sx={{ flexGrow: 1 }}>
+        <BillingGrid data={gridData} />
+      </Box>
+    </Box>
+  );
 }

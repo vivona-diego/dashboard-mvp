@@ -102,13 +102,13 @@ export default function YearlyUtilizationPage() {
         const filterCY = [...baseFilters, { segmentName: 'Year', operator: 'eq', value: year }];
         const filterSPLY = [...baseFilters, { segmentName: 'Year', operator: 'eq', value: splyYear }];
 
-        const [utilCY, utilSPLY, plCY, plSPLY] = await Promise.all([
+        const [utilCY, utilSPLY] = await Promise.all([
           api
             .post('/bi/query', {
               datasetName: DATASET_UTIL,
               groupBySegments: ['Month'],
               metrics: [
-                { metricName: 'TotalAvailableHours' }, // Mapping as approx Billed Hours
+                { metricName: 'AvailableHours' }, // Mapping as approx Billed Hours
                 { metricName: 'AvgUtilization' },
                 { metricName: 'UnitCount' },
               ],
@@ -120,25 +120,7 @@ export default function YearlyUtilizationPage() {
             .post('/bi/query', {
               datasetName: DATASET_UTIL,
               groupBySegments: ['Month'],
-              metrics: [{ metricName: 'TotalAvailableHours' }],
-              ...(filterSPLY.length > 0 && { filters: filterSPLY }),
-              pagination: { page: 1, pageSize: 20 },
-            })
-            .catch(() => null),
-          api
-            .post('/bi/query', {
-              datasetName: DATASET_PL,
-              groupBySegments: ['Month'],
-              metrics: [{ metricName: 'TotalRevenue' }],
-              ...(filterCY.length > 0 && { filters: filterCY }),
-              pagination: { page: 1, pageSize: 20 },
-            })
-            .catch(() => null),
-          api
-            .post('/bi/query', {
-              datasetName: DATASET_PL,
-              groupBySegments: ['Month'],
-              metrics: [{ metricName: 'TotalRevenue' }],
+              metrics: [{ metricName: 'AvailableHours' }],
               ...(filterSPLY.length > 0 && { filters: filterSPLY }),
               pagination: { page: 1, pageSize: 20 },
             })
@@ -172,18 +154,12 @@ export default function YearlyUtilizationPage() {
         };
 
         processRes(utilCY, (r, dataRow) => {
-          dataRow.billedHours = parseFloat(r.TotalAvailableHours || 0);
+          dataRow.billedHours = parseFloat(r.AvailableHours || 0);
           dataRow.hoursUtil = parseFloat(r.AvgUtilization || 0);
           dataRow.noOfUnits = parseFloat(r.UnitCount || 0);
         });
         processRes(utilSPLY, (r, dataRow) => {
-          dataRow.billedHoursSPLY = parseFloat(r.TotalAvailableHours || 0);
-        });
-        processRes(plCY, (r, dataRow) => {
-          dataRow.billedDol = parseFloat(r.TotalRevenue || 0);
-        });
-        processRes(plSPLY, (r, dataRow) => {
-          dataRow.billedDolSPLY = parseFloat(r.TotalRevenue || 0);
+          dataRow.billedHoursSPLY = parseFloat(r.AvailableHours || 0);
         });
 
         // Calculate derived metrics

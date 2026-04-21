@@ -68,36 +68,21 @@ export default function EquipmentUtilizationPage() {
       try {
         const filters = [{ segmentName: 'Year', operator: 'eq', value: year }];
 
-        // We need Utilization metrics and Revenue metrics to match the mock UI
-        const [resUtil, resProfit] = await Promise.all([
-          api
-            .post('/bi/query', {
-              datasetName: 'Equipment_Utilization',
-              groupBySegments: ['UnitType', 'Month'],
-              metrics: [{ metricName: 'AvgUtilization' }, { metricName: 'TotalTargetHours' }],
-              filters,
-              pagination: { page: 1, pageSize: 2000 },
-            })
-            .catch(() => null),
-          api
-            .post('/bi/query', {
-              datasetName: 'Equipment',
-              groupBySegments: ['UnitType', 'Month'],
-              metrics: [{ metricName: 'TotalRevenue' }],
-              filters,
-              pagination: { page: 1, pageSize: 2000 },
-            })
-            .catch(() => null),
-        ]);
+        // We need Utilization metrics
+        const resUtil = await api
+          .post('/bi/query', {
+            datasetName: 'Equipment',
+            groupBySegments: ['UnitType', 'Month'],
+            metrics: [{ metricName: 'AvgUtilization' }, { metricName: 'TargetHours' }],
+            filters,
+            pagination: { page: 1, pageSize: 1000 },
+          })
+          .catch(() => null);
 
         // Map of UnitType -> MonthIdx -> Data
         const mappedObj: Record<string, Record<number, MonthlyData>> = {};
         const utilResRows =
           resUtil?.data?.success || resUtil?.data?.data ? resUtil.data.data?.data || resUtil.data.data || [] : [];
-        const profitResRows =
-          resProfit?.data?.success || resProfit?.data?.data
-            ? resProfit.data.data?.data || resProfit.data.data || []
-            : [];
 
         // Process utilization
         utilResRows.forEach((r: any) => {
@@ -108,21 +93,12 @@ export default function EquipmentUtilizationPage() {
             if (!mappedObj[unit][mIdx])
               mappedObj[unit][mIdx] = { month: MONTHS_SHORT[mIdx], billed: 0, hoursUtil: 0, targetHours: 0 };
             mappedObj[unit][mIdx].hoursUtil = parseFloat(r.AvgUtilization || 0);
-            mappedObj[unit][mIdx].targetHours = parseFloat(r.TotalTargetHours || 0);
+            mappedObj[unit][mIdx].targetHours = parseFloat(r.TargetHours || 0);
           }
         });
 
-        // Process profit for "Billed $"
-        profitResRows.forEach((r: any) => {
-          const unit = r.UnitType || 'Unknown';
-          const mIdx = parseInt(r.Month) - 1;
-          if (mIdx >= 0 && mIdx < 12) {
-            if (!mappedObj[unit]) mappedObj[unit] = {};
-            if (!mappedObj[unit][mIdx])
-              mappedObj[unit][mIdx] = { month: MONTHS_SHORT[mIdx], billed: 0, hoursUtil: 0, targetHours: 0 };
-            mappedObj[unit][mIdx].billed = parseFloat(r.TotalRevenue || 0);
-          }
-        });
+        // NOTE: The 'Equipment' dataset does not contain Revenue/Expense metrics.
+        // Billed columns will show '-' or 0.
 
         const formattedData = Object.keys(mappedObj).map((unitType) => {
           const monthsRecord: Record<string, MonthlyData> = {};

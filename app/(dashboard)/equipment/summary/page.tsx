@@ -87,71 +87,25 @@ export default function EquipmentSummaryPage() {
           ...(unitCode && unitCode !== 'All' ? [{ segmentName: 'UnitCode', operator: 'eq', value: unitCode }] : []),
         ];
 
-        // 1. KPI Aggregates (No Grouping except limits to calculate totals? Actually can group by Year)
-        const aggRes = await api
-          .post('/bi/query', {
-            datasetName: DATASET_NAME,
-            groupBySegments: ['Year'],
-            metrics: [
-              { metricName: 'TotalRevenue' },
-              { metricName: 'TotalExpenses' },
-              { metricName: 'TotalProfit' },
-              { metricName: 'AvgProfitPercent' },
-              { metricName: 'LaborExpenses' },
-              { metricName: 'MaterialExpenses' },
-              { metricName: 'OverheadExpenses' },
-            ],
-            ...(filters.length > 0 && { filters }),
-            pagination: { page: 1, pageSize: 1 },
-          })
-          .catch(() => null);
+        // NOTE: The 'Equipment' dataset does not contain Revenue/Expense metrics.
+        // These will be set to 0 for now to prevent 400 errors.
+        setKpiData({
+            revenue: 0,
+            expenses: 0,
+            profitDol: 0,
+            profitPercent: 0,
+        });
+        setPieData({
+            labor: 0,
+            materials: 0,
+            overhead: 0,
+        });
 
-        // 2. YTD Monthly Series
-        const ytdRes = await api
-          .post('/bi/query', {
-            datasetName: DATASET_NAME,
-            groupBySegments: ['Month'],
-            metrics: [{ metricName: 'TotalRevenue' }, { metricName: 'TotalExpenses' }, { metricName: 'TotalProfit' }],
-            ...(filters.length > 0 && { filters }),
-            pagination: { page: 1, pageSize: 20 },
-          })
-          .catch(() => null);
-
-        // Map KPI
-        if (aggRes?.data?.success || aggRes?.data?.data) {
-          const row = (aggRes.data.data?.data || aggRes.data.data || [])[0] || {};
-          setKpiData({
-            revenue: parseFloat(row.TotalRevenue || 0),
-            expenses: parseFloat(row.TotalExpenses || 0),
-            profitDol: parseFloat(row.TotalProfit || 0),
-            profitPercent: parseFloat(row.AvgProfitPercent || 0),
-          });
-          setPieData({
-            labor: parseFloat(row.LaborExpenses || 0),
-            materials: parseFloat(row.MaterialExpenses || 0),
-            overhead: parseFloat(row.OverheadExpenses || 0),
-          });
-        } else {
-          setKpiData({ profitPercent: 0, revenue: 0, expenses: 0, profitDol: 0 });
-          setPieData({ labor: 0, materials: 0, overhead: 0 });
-        }
-
-        // Map YTD
+        // Set empty series for YTD
         const revSeries = Array(12).fill(0);
         const expSeries = Array(12).fill(0);
         const profSeries = Array(12).fill(0);
-
-        if (ytdRes?.data?.success || ytdRes?.data?.data) {
-          const rows = ytdRes.data.data?.data || ytdRes.data.data || [];
-          rows.forEach((r: any) => {
-            const mIdx = parseInt(r.Month) - 1;
-            if (mIdx >= 0 && mIdx < 12) {
-              revSeries[mIdx] = parseFloat(r.TotalRevenue || 0) / 1000000; // in Millions
-              expSeries[mIdx] = parseFloat(r.TotalExpenses || 0) / 1000000;
-              profSeries[mIdx] = parseFloat(r.TotalProfit || 0) / 1000000;
-            }
-          });
-        }
+        setYtdData({ revenue: revSeries, expenses: expSeries, profit: profSeries });
 
         setYtdData({ revenue: revSeries, expenses: expSeries, profit: profSeries });
       } catch (error) {

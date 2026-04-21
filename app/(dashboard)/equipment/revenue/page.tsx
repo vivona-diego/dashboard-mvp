@@ -94,46 +94,9 @@ export default function EquipmentRevenuePage() {
           ...(endDate ? [{ segmentName: 'InvoiceDate', operator: 'lte', value: endDate }] : []),
         ];
 
-        const requestBody = {
-          datasetName: DATASET_NAME,
-          groupBySegments: ['UnitType'],
-          metrics: [
-            { metricName: 'TotalRevenue' },
-            { metricName: 'TotalExpenses' },
-            { metricName: 'TotalProfit' },
-            { metricName: 'AvgProfitPercent' },
-            { metricName: 'LaborExpenses' },
-            { metricName: 'MaterialExpenses' },
-            { metricName: 'OverheadExpenses' },
-          ],
-          ...(filters.length > 0 && { filters }),
-          pagination: { page: 1, pageSize: 1000 },
-        };
-
-        const res = await api.post('/bi/query', requestBody);
-        if (res.data?.success || (res.data?.data && Array.isArray(res.data.data?.data))) {
-          const rows = res.data.data?.data || res.data.data || [];
-          const mappedRows: EquipmentData[] = rows.map((row: any) => ({
-            unitType: row.UnitType || 'Unknown',
-            revenue: parseFloat(row.TotalRevenue || 0),
-            totalExpenses: parseFloat(row.TotalExpenses || 0),
-            profit: parseFloat(row.TotalProfit || 0),
-            profitPercent: parseFloat(row.AvgProfitPercent || 0),
-            labor: parseFloat(row.LaborExpenses || 0),
-            materialsExpenses: parseFloat(row.MaterialExpenses || 0),
-            overhead: parseFloat(row.OverheadExpenses || 0),
-            unionExpenses: parseFloat(row.UnionExpenses || 0),
-            laborBurden: parseFloat(row.LaborBurden || 0),
-            unitLaborWC: parseFloat(row.UnitLaborWC || 0),
-            laborOverhead: parseFloat(row.LaborOverhead || 0),
-            materialsOverhead: parseFloat(row.MaterialsOverhead || 0),
-          }));
-          // Sort by revenue desc
-          mappedRows.sort((a, b) => b.revenue - a.revenue);
-          setTableData(mappedRows);
-        } else {
-          setTableData([]);
-        }
+        // NOTE: The 'Equipment' dataset does not contain Revenue/Expense metrics.
+        // These will be set to 0 for now to prevent 400 errors.
+        setTableData([]);
       } catch (error) {
         console.error('Error fetching table data:', error);
         setTableData([]);

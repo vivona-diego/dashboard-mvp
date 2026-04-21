@@ -13,7 +13,7 @@ import api from '@/app/lib/axiosClient';
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 export default function DownUnitReportPage() {
-    const DATASET_NAME = 'Equipment_Utilization';
+    const DATASET_NAME = 'Equipment';
     
     // Filters State
     const [selectedYear, setSelectedYear] = useState('2022');
@@ -82,21 +82,21 @@ export default function DownUnitReportPage() {
                     api.post('/bi/query', {
                         datasetName: DATASET_NAME,
                         groupBySegments: ['Month'],
-                        metrics: [{ metricName: 'TotalDowntimeHours' }],
+                        metrics: [{ metricName: 'DowntimeHours' }],
                         ...(chartFiltersCY.length > 0 && { filters: chartFiltersCY }),
                         pagination: { page: 1, pageSize: 50 }
                     }).catch(() => null),
                     api.post('/bi/query', {
                         datasetName: DATASET_NAME,
                         groupBySegments: ['Month'],
-                        metrics: [{ metricName: 'TotalDowntimeHours' }],
+                        metrics: [{ metricName: 'DowntimeHours' }],
                         ...(chartFiltersLY.length > 0 && { filters: chartFiltersLY }),
                         pagination: { page: 1, pageSize: 50 }
                     }).catch(() => null),
                     api.post('/bi/query', {
                          datasetName: DATASET_NAME,
                          groupBySegments: ['UnitCode'],
-                         metrics: [{ metricName: 'TotalDowntimeDays' }, { metricName: 'TotalDowntimeHours' }],
+                         metrics: [{ metricName: 'DowntimeDays' }, { metricName: 'DowntimeHours' }],
                          ...(chartFiltersCY.length > 0 && { filters: chartFiltersCY }),
                          pagination: { page: 1, pageSize: 1000 }
                     }).catch(() => null)
@@ -112,7 +112,7 @@ export default function DownUnitReportPage() {
                         rows.forEach((r: any) => {
                             const monthIdx = parseInt(r.Month) - 1;
                             if (monthIdx >= 0 && monthIdx < 12) {
-                                targetArray[monthIdx] = parseFloat(r.TotalDowntimeHours || 0);
+                                targetArray[monthIdx] = parseFloat(r.DowntimeHours || 0);
                             }
                         });
                     }
@@ -130,8 +130,8 @@ export default function DownUnitReportPage() {
                          unitCode: r.UnitCode || 'Unknown',
                          startDt: '',
                          endDt: '',
-                         daysDown: parseFloat(r.TotalDowntimeDays || 0),
-                         downHours: parseFloat(r.TotalDowntimeHours || 0),
+                         daysDown: parseFloat(r.DowntimeDays || 0),
+                         downHours: parseFloat(r.DowntimeHours || 0),
                          reason: 'Down',
                          comments: ''
                     }));

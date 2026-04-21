@@ -101,8 +101,8 @@ export default function UtilizationSummaryPage() {
           data: data.map((d) => {
              // Mock idle computation based on target hours down percentage context
              // Down is actual hours vs target, so utilization + down % + idle % = 100%
-             let downPercent = d.target > 0 ? (d.down / d.target) * 100 : 0;
-             let idle = 100 - d.utilization - downPercent;
+             const downPercent = d.target > 0 ? (d.down / d.target) * 100 : 0;
+             const idle = 100 - d.utilization - downPercent;
              return idle > 0 ? parseFloat(idle.toFixed(2)) : 0;
           }),
           itemStyle: { color: RED_COLOR },
@@ -114,7 +114,7 @@ export default function UtilizationSummaryPage() {
           label: { show: false },
           emphasis: { focus: 'series' },
           data: data.map((d) => {
-              let downPercent = d.target > 0 ? (d.down / d.target) * 100 : 0;
+              const downPercent = d.target > 0 ? (d.down / d.target) * 100 : 0;
               return parseFloat(downPercent.toFixed(2));
           }),
           itemStyle: { color: YELLOW_COLOR },
@@ -129,22 +129,22 @@ export default function UtilizationSummaryPage() {
         try {
             const filters = [{ segmentName: 'Year', operator: 'eq', value: year }];
             const metrics = [
-                { metricName: 'TotalTargetHours' },
-                { metricName: 'TotalAvailableHours' },
-                { metricName: 'TotalDowntimeHours' },
+                { metricName: 'TargetHours' },
+                { metricName: 'AvailableHours' },
+                { metricName: 'DowntimeHours' },
                 { metricName: 'AvgUtilization' }
             ];
 
             const [resCompany, resYard] = await Promise.all([
                 api.post('/bi/query', {
-                    datasetName: 'Equipment_Utilization',
+                    datasetName: 'Equipment',
                     groupBySegments: ['Company'],
                     metrics,
                     filters,
                     pagination: { page: 1, pageSize: 50 }
                 }).catch(() => null),
                 api.post('/bi/query', {
-                    datasetName: 'Equipment_Utilization',
+                    datasetName: 'Equipment',
                     groupBySegments: ['Yard'],
                     metrics,
                     filters,
@@ -157,9 +157,9 @@ export default function UtilizationSummaryPage() {
                     const rows = res.data.data?.data || res.data.data || [];
                     return rows.map((r: any) => ({
                         name: r[nameField] || 'Unknown',
-                        target: parseFloat(r.TotalTargetHours || 0),
-                        actual: parseFloat(r.TotalAvailableHours || 0),
-                        down: parseFloat(r.TotalDowntimeHours || 0),
+                        target: parseFloat(r.TargetHours || 0),
+                        actual: parseFloat(r.AvailableHours || 0),
+                        down: parseFloat(r.DowntimeHours || 0),
                         utilization: parseFloat(r.AvgUtilization || 0)
                     })).sort((a: any, b: any) => b.utilization - a.utilization);
                 }

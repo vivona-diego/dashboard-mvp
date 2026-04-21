@@ -12,18 +12,8 @@ import {
   Typography,
 } from '@mui/material';
 
-const MOCK_DATA = [
-  { unitCode: 'TRL38', cnt: 1, activity: 'Trailer Service', daysPastDue: 378, dueDate: '3/17/2025' },
-  { unitCode: 'TRL42', cnt: 1, activity: 'Annual Vehicle Inspection Report', daysPastDue: 289, dueDate: '6/14/2025' },
-  { unitCode: 'TRL38', cnt: 1, activity: 'Annual Vehicle Inspection Report', daysPastDue: 194, dueDate: '9/17/2025' },
-  { unitCode: 'TRL32', cnt: 1, activity: 'Annual Vehicle Inspection Report', daysPastDue: 170, dueDate: '10/11/2025' },
-  { unitCode: 'TRL35', cnt: 1, activity: 'Annual Vehicle Inspection Report', daysPastDue: 170, dueDate: '10/11/2025' },
-  { unitCode: 'TRL32', cnt: 1, activity: 'Trailer Service', daysPastDue: 108, dueDate: '12/12/2025' },
-  { unitCode: 'CR7', cnt: 1, activity: 'Annual Crane Inspection', daysPastDue: 73, dueDate: '1/16/2026' }
-];
-
-export default function PastDueDaysTable() {
-  const totals = MOCK_DATA.reduce(
+export default function PastDueDaysTable({ data = [] }: { data?: any[] }) {
+  const totals = data.reduce(
     (acc, curr) => ({
       cnt: acc.cnt + curr.cnt,
       daysPastDue: acc.daysPastDue + curr.daysPastDue,
@@ -63,7 +53,10 @@ export default function PastDueDaysTable() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {MOCK_DATA.map((row, idx) => (
+            {data.length === 0 && (
+              <TableRow><TableCell colSpan={5} align="center">No data</TableCell></TableRow>
+            )}
+            {data.map((row, idx) => (
               <TableRow key={idx} hover sx={{ '&:nth-of-type(even)': { bgcolor: '#F5F5F5' } }}>
                 <TableCell>{row.unitCode}</TableCell>
                 <TableCell>{row.cnt}</TableCell>
@@ -72,12 +65,14 @@ export default function PastDueDaysTable() {
                 <TableCell align="right">{row.dueDate}</TableCell>
               </TableRow>
             ))}
-            <TableRow sx={{ '& td': { fontWeight: 'bold' } }}>
-              <TableCell>Total</TableCell>
-              <TableCell>{totals.cnt}</TableCell>
-              <TableCell colSpan={2} align="center">{totals.daysPastDue / totals.cnt /* mock avg conceptually */}</TableCell>
-              <TableCell></TableCell>
-            </TableRow>
+            {data.length > 0 && (
+              <TableRow sx={{ '& td': { fontWeight: 'bold' } }}>
+                <TableCell>Total</TableCell>
+                <TableCell>{totals.cnt}</TableCell>
+                <TableCell colSpan={2} align="center">{totals.cnt > 0 ? (totals.daysPastDue / totals.cnt).toFixed(0) : 0}</TableCell>
+                <TableCell></TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </TableContainer>

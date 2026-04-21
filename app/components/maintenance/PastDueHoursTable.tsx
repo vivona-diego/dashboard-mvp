@@ -12,15 +12,8 @@ import {
   Typography,
 } from '@mui/material';
 
-const MOCK_DATA = [
-  { unitCode: 'AT80-01', cnt: 1, activity: '300 Hr. Service - Lower', dueLower: 1364, currentLower: 1682, dueUpper: 0, currentUpper: 1936, hoursPastDue: 317.00 },
-  { unitCode: 'RT50-01', cnt: 1, activity: '300 Hr. Service - Lower', dueLower: 10313, currentLower: 10409, dueUpper: 0, currentUpper: 0, hoursPastDue: 95.00 },
-  { unitCode: 'T9', cnt: 1, activity: 'Maintenance Service', dueLower: 15697, currentLower: 15791, dueUpper: 0, currentUpper: 101822.00, hoursPastDue: 94.00 },
-  { unitCode: 'AT15', cnt: 1, activity: '300 Hr. Service - Lower', dueLower: 2280, currentLower: 2331, dueUpper: 0, currentUpper: 6635, hoursPastDue: 51.00 },
-];
-
-export default function PastDueHoursTable() {
-  const totals = MOCK_DATA.reduce(
+export default function PastDueHoursTable({ data = [] }: { data?: any[] }) {
+  const totals = data.reduce(
     (acc, curr) => ({
       cnt: acc.cnt + curr.cnt,
       hoursPastDue: acc.hoursPastDue + curr.hoursPastDue,
@@ -63,7 +56,10 @@ export default function PastDueHoursTable() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {MOCK_DATA.map((row, idx) => (
+            {data.length === 0 && (
+              <TableRow><TableCell colSpan={8} align="center">No data</TableCell></TableRow>
+            )}
+            {data.map((row, idx) => (
               <TableRow key={idx} hover sx={{ '&:nth-of-type(even)': { bgcolor: '#F5F5F5' } }}>
                 <TableCell>{row.unitCode}</TableCell>
                 <TableCell>{row.cnt}</TableCell>
@@ -75,12 +71,14 @@ export default function PastDueHoursTable() {
                 <TableCell align="right">{row.hoursPastDue.toFixed(2)}</TableCell>
               </TableRow>
             ))}
-            <TableRow sx={{ '& td': { fontWeight: 'bold' } }}>
-              <TableCell>Total</TableCell>
-              <TableCell>{totals.cnt}</TableCell>
-              <TableCell colSpan={5}></TableCell>
-              <TableCell align="right">{totals.hoursPastDue.toFixed(2)}</TableCell>
-            </TableRow>
+            {data.length > 0 && (
+              <TableRow sx={{ '& td': { fontWeight: 'bold' } }}>
+                <TableCell>Total</TableCell>
+                <TableCell>{totals.cnt}</TableCell>
+                <TableCell colSpan={5}></TableCell>
+                <TableCell align="right">{totals.hoursPastDue.toFixed(2)}</TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </TableContainer>

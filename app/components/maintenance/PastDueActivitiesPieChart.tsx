@@ -8,15 +8,7 @@ interface ChartData {
   value: number;
 }
 
-const MOCK_DATA: ChartData[] = [
-  { name: 'Annual Vehicle Inspection...', value: 9 }, // 39.13%
-  { name: 'Annual Crane Inspection', value: 6 }, // 26.09%
-  { name: '300 Hr. Service - Lower', value: 3 }, // 13.04%
-  { name: 'Trailer Service', value: 3 }, // 13.04%
-  { name: 'Maintenance Service', value: 2 }, // 8.7%
-];
-
-export default function PastDueActivitiesPieChart() {
+export default function PastDueActivitiesPieChart({ data = [] }: { data?: ChartData[] }) {
   const theme = useTheme();
 
   const option = {
@@ -64,7 +56,7 @@ export default function PastDueActivitiesPieChart() {
           length: 10,
           length2: 10
         },
-        data: MOCK_DATA,
+        data: data,
         itemStyle: {
            borderColor: '#fff',
            borderWidth: 2

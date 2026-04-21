@@ -496,7 +496,7 @@ export default function Page() {
 
               {/* Demo Table for Jobs (Prioritize Customer segment as requested) */}
               {(() => {
-                const desiredMetrics = ["TotalJobs", "TotalCost"];
+                const desiredMetrics = ["JobCount", "WOCount", "Revenue", "TotalWOCost", "TotalJobs", "TotalCost"];
                 const tableMetrics = desiredMetrics.filter((m) =>
                   available_metrics.includes(m),
                 );
